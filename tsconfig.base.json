@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@packages/*": ["packages/*/src"],
+      "@app/*": ["apps/*/src"],
+      "@api/*": ["apps/api/src"],
+      "@web/*": ["apps/web/src"],
+      "@types/*": ["packages/types/src"]
+    },
+    "incremental": true
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}
