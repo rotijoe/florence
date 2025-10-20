@@ -4,19 +4,25 @@ Shared database package for Florence using Prisma ORM with Neon PostgreSQL.
 
 ## Setup
 
-1. Set the `DATABASE_URL` environment variable:
+1. Copy the example environment file:
 
 ```bash
-DATABASE_URL="postgresql://neondb_owner:npg_GoCBUvMD81TL@ep-solitary-shadow-abktkit3-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+cp .env.example .env
 ```
 
-2. Generate Prisma Client:
+2. Update `.env` with your actual `DATABASE_URL`:
+
+```bash
+DATABASE_URL="postgresql://username:password@hostname:port/database?sslmode=require"
+```
+
+3. Generate Prisma Client:
 
 ```bash
 pnpm db:generate
 ```
 
-3. Push schema changes to the database:
+4. Push schema changes to the database:
 
 ```bash
 pnpm db:push

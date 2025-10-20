@@ -6,9 +6,18 @@ This guide will help you test the complete Hono + Neon + Prisma + Better Auth in
 
 Make sure the API server is running:
 
+1. First, set up your environment variables:
+
 ```bash
 cd apps/api
-DATABASE_URL="postgresql://neondb_owner:npg_GoCBUvMD81TL@ep-solitary-shadow-abktkit3-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require" pnpm dev
+cp .env.example .env
+# Edit .env with your actual DATABASE_URL
+```
+
+2. Start the development server:
+
+```bash
+pnpm dev
 ```
 
 ## Test Sequence

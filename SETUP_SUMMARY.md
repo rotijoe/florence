@@ -104,7 +104,9 @@ The Hono API was enhanced with:
 
 ```bash
 cd apps/api
-DATABASE_URL="postgresql://neondb_owner:npg_GoCBUvMD81TL@ep-solitary-shadow-abktkit3-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require" pnpm dev
+cp .env.example .env
+# Edit .env with your actual DATABASE_URL
+pnpm dev
 ```
 
 The server will start on `http://localhost:8787`
@@ -172,16 +174,32 @@ curl http://localhost:8787/api/users \
 
 ### Required for API (`apps/api`)
 
+1. Copy the example environment file:
+
 ```bash
-DATABASE_URL="postgresql://neondb_owner:npg_GoCBUvMD81TL@ep-solitary-shadow-abktkit3-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+cp apps/api/.env.example apps/api/.env
+```
+
+2. Update `apps/api/.env` with your actual values:
+
+```bash
+DATABASE_URL="postgresql://username:password@hostname:port/database?sslmode=require"
 BASE_URL="http://localhost:8787"  # Optional, defaults to http://localhost:8787
 PORT=8787  # Optional, defaults to 8787
 ```
 
 ### Required for Database Package (`packages/database`)
 
+1. Copy the example environment file:
+
 ```bash
-DATABASE_URL="postgresql://neondb_owner:npg_GoCBUvMD81TL@ep-solitary-shadow-abktkit3-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+cp packages/database/.env.example packages/database/.env
+```
+
+2. Update `packages/database/.env` with your actual values:
+
+```bash
+DATABASE_URL="postgresql://username:password@hostname:port/database?sslmode=require"
 ```
 
 ## 📦 Package Structure

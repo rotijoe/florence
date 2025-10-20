@@ -6,12 +6,18 @@ Hono-based API for the Florence health tracking application.
 
 ### Environment Variables
 
-Set the following environment variables:
+1. Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Update `.env` with your actual values:
 
 ```bash
 PORT=8787
 BASE_URL=http://localhost:8787
-DATABASE_URL="postgresql://neondb_owner:npg_GoCBUvMD81TL@ep-solitary-shadow-abktkit3-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL="postgresql://username:password@hostname:port/database?sslmode=require"
 ```
 
 ### Development
