@@ -40,7 +40,7 @@ curl -X POST http://localhost:8787/api/auth/sign-up \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@florence.com",
-    "password": "TestPassword123!",
+    "password": "123456",
     "name": "Test User"
   }'
 # Expected: User creation response with session

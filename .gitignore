@@ -6,6 +6,4 @@ dist
 .turbo
 *.log, 
 .env*.local
-pnpm-lock.yaml
 .pnpm-store/
-.turbo/
