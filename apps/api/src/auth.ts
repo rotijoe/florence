@@ -7,6 +7,11 @@ export const auth = betterAuth({
     provider: 'postgresql'
   }),
   baseURL: process.env.BASE_URL || 'http://localhost:8787',
+  // Add trusted origins configuration
+  trustedOrigins: [
+    'http://localhost:3000', // Next.js dev server
+    process.env.TRUSTED_ORIGIN || '' // Production web app URL
+  ].filter(Boolean),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false

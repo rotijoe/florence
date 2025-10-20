@@ -51,7 +51,7 @@ app.get('/hello/:name', (c) => {
 
 app.route('/api', usersRoute)
 
-serve(
+const server = serve(
   {
     fetch: app.fetch,
     port: Number(process.env.PORT || 8787)
@@ -60,3 +60,20 @@ serve(
     console.log(`Server is running on http://localhost:${info.port}`)
   }
 )
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\nShutting down server...')
+  server.close(() => {
+    console.log('Server closed')
+    process.exit(0)
+  })
+})
+
+process.on('SIGTERM', () => {
+  console.log('\nShutting down server...')
+  server.close(() => {
+    console.log('Server closed')
+    process.exit(0)
+  })
+})

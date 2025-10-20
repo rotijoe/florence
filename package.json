@@ -11,6 +11,9 @@
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "start": "turbo run start --filter=apps/web..."
+    "start": "turbo run start --filter=apps/web...",
+    "dev:clean": "pkill -f 'tsx watch' && pkill -f 'next dev' && pnpm dev",
+    "kill-ports": "lsof -ti:3000,8787 | xargs kill -9",
+    "dev:reset": "pnpm kill-ports && pnpm dev"
   }
 }
