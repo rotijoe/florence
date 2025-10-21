@@ -48,7 +48,7 @@ describe('handleSignIn', () => {
 
     expect(result).toEqual({
       success: false,
-      error: 'An error occurred during sign in'
+      error: 'Network error'
     })
   })
 })

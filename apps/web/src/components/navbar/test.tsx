@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { Navbar } from './index'
 
 // Mock the auth client
@@ -55,7 +55,7 @@ describe('Navbar', () => {
     // Loading state should show a skeleton or loading indicator
   })
 
-  it('opens auth dialog when sign in button is clicked', () => {
+  it('opens auth dialog when sign in button is clicked', async () => {
     mockUseSession.mockReturnValue({
       data: null,
       isPending: false
@@ -64,10 +64,17 @@ describe('Navbar', () => {
     render(<Navbar />)
 
     const signInButton = screen.getByText('Sign In / Sign Up')
-    fireEvent.click(signInButton)
 
-    expect(screen.getByText('Welcome to Florence')).toBeInTheDocument()
-    expect(screen.getByText('Sign In')).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(signInButton)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Welcome to Florence')).toBeInTheDocument()
+    })
+
+    // Check for the tab button specifically to avoid ambiguity
+    expect(screen.getByRole('tab', { name: /sign in/i })).toBeInTheDocument()
   })
 
   it('calls sign out when sign out button is clicked', async () => {
@@ -90,7 +97,10 @@ describe('Navbar', () => {
     render(<Navbar />)
 
     const signOutButton = screen.getByText('Sign Out')
-    fireEvent.click(signOutButton)
+
+    await act(async () => {
+      fireEvent.click(signOutButton)
+    })
 
     // Note: In a real test, you'd need to properly mock the signOut function
     // and verify it was called

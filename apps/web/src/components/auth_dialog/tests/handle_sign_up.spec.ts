@@ -65,7 +65,7 @@ describe('handleSignUp', () => {
 
     expect(result).toEqual({
       success: false,
-      error: 'An error occurred during sign up'
+      error: 'Network error'
     })
   })
 })

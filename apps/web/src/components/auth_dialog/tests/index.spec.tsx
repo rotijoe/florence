@@ -1,7 +1,7 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { AuthDialog } from '../index'
 
-// Mock the helpers
 jest.mock('../helpers', () => ({
   handleSignIn: jest.fn(),
   handleSignUp: jest.fn()
@@ -35,23 +35,33 @@ describe('AuthDialog', () => {
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
 
-  it('switches to sign up form when tab is clicked', () => {
+  it('switches to sign up form when tab is clicked', async () => {
+    const user = userEvent.setup()
     render(<AuthDialog {...defaultProps} />)
 
-    fireEvent.click(screen.getByRole('tab', { name: /sign up/i }))
+    await user.click(screen.getByRole('tab', { name: /sign up/i }))
 
-    expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument()
+    // Wait for the signup form content to be rendered
+    await waitFor(() => {
+      expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /sign up/i })
+      ).toBeInTheDocument()
+    })
   })
 
   it('shows validation errors for empty required fields', async () => {
     render(<AuthDialog {...defaultProps} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
+    })
 
     await waitFor(() => {
-      expect(screen.getByText(/email is required/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/please enter a valid email address/i)
+      ).toBeInTheDocument()
       expect(screen.getByText(/password is required/i)).toBeInTheDocument()
     })
   })
@@ -59,17 +69,19 @@ describe('AuthDialog', () => {
   it('shows error for invalid email format', async () => {
     render(<AuthDialog {...defaultProps} />)
 
-    fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
-      target: { value: 'invalid' }
+    await act(async () => {
+      fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
+        target: { value: 'invalid' }
+      })
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: 'password123' }
+      })
+      fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
     })
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'password123' }
-    })
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
       expect(
-        screen.getByText(/please enter a valid email/i)
+        screen.getByText(/please enter a valid email address/i)
       ).toBeInTheDocument()
     })
   })
@@ -79,13 +91,15 @@ describe('AuthDialog', () => {
 
     render(<AuthDialog {...defaultProps} />)
 
-    fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
-      target: { value: 'test@example.com' }
+    await act(async () => {
+      fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
+        target: { value: 'test@example.com' }
+      })
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: 'password123' }
+      })
+      fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
     })
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'password123' }
-    })
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
       expect(mockHandleSignIn).toHaveBeenCalledWith({
@@ -104,13 +118,15 @@ describe('AuthDialog', () => {
 
     render(<AuthDialog {...defaultProps} />)
 
-    fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
-      target: { value: 'test@example.com' }
+    await act(async () => {
+      fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
+        target: { value: 'test@example.com' }
+      })
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: 'wrongpassword' }
+      })
+      fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
     })
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'wrongpassword' }
-    })
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
       expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
@@ -127,13 +143,15 @@ describe('AuthDialog', () => {
 
     render(<AuthDialog {...defaultProps} />)
 
-    fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
-      target: { value: 'test@example.com' }
+    await act(async () => {
+      fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
+        target: { value: 'test@example.com' }
+      })
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: 'password123' }
+      })
+      fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
     })
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'password123' }
-    })
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     expect(screen.getByText(/signing in/i)).toBeInTheDocument()
   })

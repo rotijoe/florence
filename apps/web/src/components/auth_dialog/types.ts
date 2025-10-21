@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { AUTH_DIALOG_CONSTANTS } from './constants'
 
 export const signInSchema = z.object({
-  email: z.email('Please enter a valid email address'),
+  email: z.string().email('Please enter a valid email address'),
   password: z
     .string()
     .min(1, 'Password is required')
@@ -21,7 +21,7 @@ export const signUpSchema = z
         AUTH_DIALOG_CONSTANTS.VALIDATION.MIN_NAME_LENGTH,
         `Name must be at least ${AUTH_DIALOG_CONSTANTS.VALIDATION.MIN_NAME_LENGTH} characters`
       ),
-    email: z.email('Please enter a valid email address'),
+    email: z.string().email('Please enter a valid email address'),
     password: z
       .string()
       .min(1, 'Password is required')
