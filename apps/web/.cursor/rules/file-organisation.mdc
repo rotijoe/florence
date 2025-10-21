@@ -1,0 +1,19 @@
+---
+description: Guide on how to organise file architecture
+alwaysApply: true
+---
+
+## File Organization
+
+### Component Structure
+
+```
+src/components/component-name/
+├── index.tsx
+├── helpers.ts
+├── constants.ts
+├── types.ts
+└── tests/
+    ├── index.spec.tsx
+    └── [helper-function-name].spec.ts
+```

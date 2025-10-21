@@ -1,0 +1,217 @@
+---
+description: Guide LLMs on generating Jest + RTL tests
+globs: *.spec.ts/tsx
+alwaysApply: false
+---
+
+# Cursor & LLM Testing Rules — Minimal, Deterministic, Context-Safe
+
+A compact, ordered rulebook for Cursor/LLMs to **generate Jest + React Testing Library unit tests** for this Next.js/React codebase. Goal: produce correct, readable tests while **minimising context bloat** and keeping generation deterministic.
+
+---
+
+## 1 — Purpose (1 sentence)
+
+Generate small, user-focused Jest tests that verify _user-visible behaviour_, accessibility, and public helper logic — not internal implementation.
+
+---
+
+## 2 — Hard constraints (must follow, highest priority)
+
+1. **Limit context**: include **only** the component’s prop types, a 2–3 line description of behaviour, and any helper function signatures used by the component. Do **not** include full source files, large fixtures, or third-party library internals.
+2. **Single responsibility per test file**: one `describe` per component, grouped tests for behaviors.
+3. **Query priority**: `getByRole` → `getByLabelText` → `getByPlaceholderText` → `getByText` → `findBy*` → `getByDisplayValue`. `getByTestId` only as last resort with explicit justification.
+4. **No implementation assertions**: never assert internal state, hooks, hooks arguments, or component internals. Only assert user-visible effects.
+5. **Imports & runtime**: tests must use RTL `render`, `screen`, `userEvent`. Use `jest.clearAllMocks()` in `beforeEach`.
+6. **Mocks**: only mock external APIs, browser APIs, timers, or heavy dependencies. Do not mock internal components unless necessary and justified.
+7. **Coverage target per file**: test primary user flows + edge cases; global 100% coverage requirement is unrealistic — generate tests for behavior listed, not to force arbitrary branch coverage.
+
+---
+
+## 3 — Minimal context payload (order + what to include)
+
+When calling the LLM, provide **only** the items below, in this exact order:
+
+1. **File path** (e.g. `src/components/Search/index.tsx`) — short.
+2. **Component signature / prop types** (TypeScript). Example: `interface Props { value?: string; onChange: (v:string)=>void; isLoading?: boolean }`
+3. **2–3 line behaviour spec** (bullet points): what users see, primary interactions, loading/error states.
+4. **List of external calls to mock** (e.g. `fetchSuggestions(query)`), or `none`.
+5. **Accessibility notes** (labels, roles, aria-live).
+6. **What NOT to test** (one-line), if any (e.g. "do not assert internal debounce implementation").
+7. **Desired tests** (ordered priority): e.g. `render`, `interaction`, `async fetch`, `accessibility`. Limit to ~5 tests.
+8. **Max token intent**: `max_tests: 10`, `max_lines_per_test: 25`.
+
+> **Always** omit full component code. If a helper is complex, include only its signature + 1-line behaviour.
+
+---
+
+## 4 — LLM instruction hierarchy (how to convert context → tests)
+
+1. **Read minimal payload (section 3).** If any item missing, stop and error with a one-line message.
+2. **Create imports**: `render, screen, waitFor, userEvent` and the component import path. Use `@testing-library/jest-dom`.
+3. **Create a concise `describe`** using the component filename.
+4. **Build `defaultProps`** from the provided prop types with safe defaults. Keep spies (`jest.fn()`) for callbacks.
+5. **Generate only the requested tests (max 5)**, ordered by priority. Each test must be user-facing and self-contained. Keep each test ≤ 15 lines (excluding imports).
+6. **Prefer `findBy` for async** and `waitFor` only when necessary. Use `await` on userEvent where needed.
+7. **Add minimal mocks** only for items in the payload. Reset mocks in `beforeEach`.
+8. **Return only the test file contents** — no extra commentary or code outside the file. If code cannot be generated (missing data), return one succinct error line describing the missing item.
+
+---
+
+## 5 — Test style & skeleton (canonical pattern)
+
+```ts
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MyComponent } from '../index'
+
+describe('MyComponent', () => {
+  const defaultProps = {
+    /* from payload */
+  }
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('renders primary UI and placeholder', () => {
+    render(<MyComponent {...defaultProps} />)
+    expect(
+      screen.getByRole('searchbox', { name: /search/i })
+    ).toBeInTheDocument()
+  })
+
+  it('calls onChange when user types', async () => {
+    render(<MyComponent {...defaultProps} />)
+    await userEvent.type(
+      screen.getByRole('searchbox', { name: /search/i }),
+      'a'
+    )
+    expect(defaultProps.onChange).toHaveBeenCalledTimes(1)
+  })
+})
+```
+
+- Keep assertions short and explicit.
+- Prefer explicit `toBeInTheDocument()`, `toHaveTextContent()`, `toHaveAttribute()`, and `toHaveBeenCalledWith()`.
+
+---
+
+## 6 — What to test (condensed)
+
+**Must test** (if present in payload):
+
+- Primary user workflows & interactions.
+- Loading, error, and success states that users see.
+- Keyboard navigation for interactive elements.
+- Accessibility attributes that affect screen readers.
+- Helper functions: normal, edge, and error inputs (co-located tests).
+
+**Never test**: React internals, third-party component behavior, repeated keystrokes, implementation specifics (e.g. internal debounce timers), or DOM structure that users do not rely on.
+
+---
+
+## 7 — Mocking rules (concise)
+
+- Mock **external** network/API calls declared in payload using `jest.mock()` or `global.fetch = jest.fn()`.
+- Mock browser APIs only when used (localStorage, geolocation). Restore after tests if applicable.
+- Prefer manual mock values returned via `mockResolvedValueOnce` for async flows.
+
+---
+
+## 8 — Accessibility & queries (short)
+
+- Always prefer `getByRole` with `name` option.
+- If using `getByLabelText`, ensure label exists.
+- For live regions use `getByRole('status')` or `getByText` with `aria-live` checks.
+
+---
+
+## 9 — Async rules
+
+- Use `await screen.findBy*` for awaited results.
+- Use `waitFor` only when side effects do not expose an awaited element directly. Keep timeouts default.
+
+---
+
+## 10 — Output constraints (what Cursor/LLM must return)
+
+- Single `.spec.tsx` file content only.
+- No explanation text.
+- No console logs.
+- Tests must run with stock Jest + RTL setup used by repository.
+- If generation would exceed the `max_tests` or `max_lines_per_test`, truncate with highest priority tests only and annotate the top of file with `// GENERATION TRUNCATED — only highest priority tests included`.
+
+---
+
+## 11 — Prompt templates
+
+**Short (preferred)** — for quick generation:
+
+```
+FILE: src/components/Search/index.tsx
+PROPS: interface Props { value?: string; onChange: (v:string)=>void; isLoading?: boolean }
+BEHAVIOUR: - Renders searchbox with accessible label "Search"
+           - Calls onChange once per non-empty input
+           - Shows "Loading..." text when isLoading=true
+MOCKS: none
+A11Y: label "Search", loading uses aria-live
+NOTES: do not assert internal debounce
+PRIORITY: render, interaction, loading
+CONSTRAINTS: max_tests:3
+```
+
+**Extended** — when more detail necessary (follows the minimal context order exactly).
+
+---
+
+## 12 — Acceptance criteria (quick checklist)
+
+- [ ] Tests use prioritized queries.
+- [ ] Only requested mocks are created.
+- [ ] No internal implementation assertions.
+- [ ] `beforeEach` clears mocks.
+- [ ] File contains ≤ requested tests.
+- [ ] Output is test file only.
+
+---
+
+## 13 — Example minimal generated test (final)
+
+```ts
+// src/components/Search/tests/index.spec.tsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { Search } from '../index'
+
+describe('Search', () => {
+  const defaultProps = { value: '', onChange: jest.fn(), isLoading: false }
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('renders an accessible searchbox', () => {
+    render(<Search {...defaultProps} />)
+    expect(
+      screen.getByRole('searchbox', { name: /search/i })
+    ).toBeInTheDocument()
+  })
+
+  it('calls onChange when user types', async () => {
+    render(<Search {...defaultProps} />)
+    await userEvent.type(
+      screen.getByRole('searchbox', { name: /search/i }),
+      'a'
+    )
+    expect(defaultProps.onChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows loading announcement when isLoading=true', () => {
+    render(<Search {...defaultProps} isLoading />)
+    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+  })
+})
+```
+
+---
+
+If you want, I can now convert **one** component payload (paste the 8-item minimal context from section 3) into a ready `.spec.tsx` file. Paste the minimal payload and I’ll generate the test file content only.

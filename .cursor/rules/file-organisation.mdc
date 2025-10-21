@@ -1,0 +1,66 @@
+---
+description: Guide on how to organise file architecture
+alwaysApply: true
+---
+
+## File Organization
+
+### Florence Project Structure
+
+```
+florence/
+├── apps/
+│   ├── web/                          # Next.js Frontend
+│   │   ├── src/
+│   │   │   ├── app/                  # App Router pages
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── users/
+│   │   │   │       └── page.tsx
+│   │   │   │   │   ├── helpers.ts
+│   │   │   │   │   ├── types.ts
+│   │   │   │   │   └── test
+│   │   │   │   │   │   ├── page.spec.tsx
+│   │   │   │   │   │   └── [helper-name].spec.tsx
+│   │   │   ├── components/
+│   │   │   │   ├── [component-name]/           # Component with full structure
+│   │   │   │   │   ├── index.tsx
+│   │   │   │   │   ├── helpers.ts
+│   │   │   │   │   ├── types.ts
+│   │   │   │   │   └── test
+                        ├── index.spec.tsx
+                        └── [helper-name].spec.tsx
+│   │   │   │   └── ui/               # ShadCN UI components
+│   │   │   │       ├── button.tsx
+                    └── ...
+
+│   │   │   └── lib/
+│   │   │       ├── [global-helper-name].ts
+│   │   │       └── ...
+│   │   ├── ...
+│   │   └── package.json
+│   └── api/                          # Hono API Backend
+│       ├── src/
+│       │   ├── auth.ts               # Better Auth configuration
+│       │   ├── index.ts              # Main Hono app
+│       │   ├── types.ts              # Shared types
+│       │   └── routes/
+│       │       └── [route-name]/
+│       │           └── index.ts      # API endpoints
+│       │           └── index.test.ts
+│       └── package.json
+├── packages/
+│   ├── database/                     # Shared Database Package
+│   │   ├── prisma/
+│   │   │   └── schema.prisma         # Database schema
+│   │   ├── src/
+│   │   │   └── index.ts              # Prisma client export
+│   │   └── package.json
+│   └── types/                        # Shared Types Package
+│       ├── src/
+│       │   └── index.ts              # Type definitions
+│       └── package.json
+├── pnpm-workspace.yaml              # Monorepo configuration
+├── turbo.json                       # Turborepo configuration
+└── tsconfig.base.json               # Shared TypeScript config
+```

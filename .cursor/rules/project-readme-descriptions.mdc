@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+
+- Create and update project descriptions in ./about_project directory
+- Leave the README.md file for very high level architecture
+- Update the about_project directory whenever an updates changes or adds feature or functionality
+- Write concise and technical descriptions of the architecture
+- The main purpose of these files is so a developer or AI agent can get an overview of the project and its building blocks
+- Each subdomain has its own section, updates should be place in the respective directories. General updates should live in about_project directory
