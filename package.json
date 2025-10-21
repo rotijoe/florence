@@ -12,6 +12,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
     "start": "turbo run start --filter=apps/web...",
     "db:push": "pnpm --filter @packages/database db:push",
     "db:seed": "pnpm --filter @packages/database db:seed",

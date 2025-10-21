@@ -1,5 +1,5 @@
 import type { ApiResponse } from '@packages/types'
-import type { AppVariables } from '../types.js'
+import type { AppVariables } from '../../types.js'
 import { Hono } from 'hono'
 import { prisma } from '@packages/database'
 

@@ -11,7 +11,9 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "studio": "studio:stop && prisma studio --port 5555",
-    "studio:stop": "pkill -f 'prisma studio' || true"
+    "studio:stop": "pkill -f 'prisma studio' || true",
+    "typecheck": "tsc --noEmit --pretty",
+    "typecheck:watch": "tsc --noEmit --watch --pretty"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
