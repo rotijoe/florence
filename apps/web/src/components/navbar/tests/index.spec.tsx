@@ -1,5 +1,6 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
-import { Navbar } from './index'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { Navbar } from '../index'
 
 // Mock the auth client
 const mockUseSession = jest.fn()
@@ -52,7 +53,6 @@ describe('Navbar', () => {
     render(<Navbar />)
 
     expect(screen.getByRole('navigation')).toBeInTheDocument()
-    // Loading state should show a skeleton or loading indicator
   })
 
   it('opens auth dialog when sign in button is clicked', async () => {
@@ -65,15 +65,12 @@ describe('Navbar', () => {
 
     const signInButton = screen.getByText('Sign In / Sign Up')
 
-    await act(async () => {
-      fireEvent.click(signInButton)
-    })
+    await userEvent.click(signInButton)
 
     await waitFor(() => {
       expect(screen.getByText('Welcome to Florence')).toBeInTheDocument()
     })
 
-    // Check for the tab button specifically to avoid ambiguity
     expect(screen.getByRole('tab', { name: /sign in/i })).toBeInTheDocument()
   })
 
@@ -98,11 +95,6 @@ describe('Navbar', () => {
 
     const signOutButton = screen.getByText('Sign Out')
 
-    await act(async () => {
-      fireEvent.click(signOutButton)
-    })
-
-    // Note: In a real test, you'd need to properly mock the signOut function
-    // and verify it was called
+    await userEvent.click(signOutButton)
   })
 })
