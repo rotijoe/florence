@@ -1,1 +1,1 @@
-Review the changes in my working directory, then add all modified files, commit them with a descriptive bullet pointed commit message based on the changes made, and push to the current branch on GitHub.
+Review the changes in my working directory, then add all modified files, commit them with title if provided in the prompt, and a descriptive bullet pointed commit message based on the changes made, and push to the current branch on GitHub.
