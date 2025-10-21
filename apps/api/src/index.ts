@@ -4,16 +4,17 @@ import { cors } from 'hono/cors'
 import type { AppVariables } from './types.js'
 import { auth } from './auth.js'
 import usersRoute from './routes/users/index.js'
+import userRoute from './routes/user/index.js'
 
 const app = new Hono<{ Variables: AppVariables }>()
 
-// CORS middleware for Better Auth
+// CORS middleware for all API routes
 app.use(
-  '/api/auth/*',
+  '/api/*',
   cors({
     origin: 'http://localhost:3000', // Next.js frontend URL
     allowHeaders: ['Content-Type', 'Authorization'],
-    allowMethods: ['POST', 'GET', 'OPTIONS'],
+    allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE'],
     exposeHeaders: ['Content-Length'],
     maxAge: 600,
     credentials: true
@@ -50,6 +51,7 @@ app.get('/hello/:name', (c) => {
 })
 
 app.route('/api', usersRoute)
+app.route('/api', userRoute)
 
 const server = serve(
   {

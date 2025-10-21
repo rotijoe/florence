@@ -84,7 +84,15 @@ curl http://localhost:8787/api/auth/session \
 # Expected: Current session details
 ```
 
-### 7. Create a Health Track (Future Endpoint)
+### 7. Get Current User Info with Health Tracks
+
+```bash
+curl http://localhost:8787/api/user/me \
+  -b cookies.txt
+# Expected: {"success":true,"data":{"id":"...","name":"Test User","email":"test@florence.com","tracks":[...]}}
+```
+
+### 8. Create a Health Track (Future Endpoint)
 
 Once you implement the tracks endpoint:
 
@@ -98,7 +106,7 @@ curl -X POST http://localhost:8787/api/tracks \
   }'
 ```
 
-### 8. Sign Out
+### 9. Sign Out
 
 ```bash
 curl -X POST http://localhost:8787/api/auth/sign-out \
@@ -106,7 +114,7 @@ curl -X POST http://localhost:8787/api/auth/sign-out \
 # Expected: Sign out confirmation
 ```
 
-### 9. Verify Sign Out
+### 10. Verify Sign Out
 
 ```bash
 curl http://localhost:8787/api/users \

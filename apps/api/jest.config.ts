@@ -6,7 +6,14 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest'
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@packages/(.*)$': '<rootDir>/../../packages/$1/src'
+  },
+  extensionsToTreatAsEsm: ['.ts'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+      isolatedModules: true
+    }
   }
 }
