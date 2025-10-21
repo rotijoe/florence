@@ -212,6 +212,81 @@ describe('Search', () => {
 })
 ```
 
+## Always Use userEvent Over fireEvent
+
+When testing user interactions, always use `userEvent` from `@testing-library/user-event` instead of `fireEvent` from `@testing-library/react`.
+
+### Why userEvent?
+
+- `userEvent` simulates real user interactions more accurately
+- It triggers the same sequence of events that a real user would trigger
+- Better for testing accessibility and user experience
+- More reliable for testing complex interactions
+
+### Examples:
+
+```typescript
+// ❌ Don't use fireEvent
+import { fireEvent } from '@testing-library/react'
+
+fireEvent.click(button)
+fireEvent.change(input, { target: { value: 'text' } })
+fireEvent.submit(form)
+
+// ✅ Use userEvent instead
+import userEvent from '@testing-library/user-event'
+
+await userEvent.click(button)
+await userEvent.type(input, 'text')
+await userEvent.click(submitButton)
+```
+
+### File Structure:
+
+```
+components/
+├── auth_dialog/
+│   ├── index.tsx           # Main component
+│   ├── helpers.ts          # Helper functions
+│   ├── types.ts
+│   ├── constants.ts
+│   └── test/
+│   │   ├── helper-function-name-1.spec.ts     # Helper function 1 tests
+│   │   ├── helper-function-name-2.spec.ts     # Helper function 2 tests
+│   │   └── index.spec.tsx      # Component tests
+
+```
+
+### Helper Test Examples:
+
+```typescript
+// helpers.spec.ts
+import { handleSignIn, handleSignUp } from './helpers'
+import { signIn, signUp } from '@/lib/auth_client'
+
+// Mock dependencies
+jest.mock('@/lib/auth_client', () => ({
+  signIn: { email: jest.fn() },
+  signUp: { email: jest.fn() }
+}))
+
+describe('Auth Helpers', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  describe('handleSignIn', () => {
+    it('should return success when sign in is successful', async () => {
+      // Test implementation
+    })
+
+    it('should return error when sign in fails', async () => {
+      // Test implementation
+    })
+  })
+})
+```
+
 ---
 
 If you want, I can now convert **one** component payload (paste the 8-item minimal context from section 3) into a ready `.spec.tsx` file. Paste the minimal payload and I’ll generate the test file content only.

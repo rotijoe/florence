@@ -15,5 +15,13 @@ src/components/component-name/
 ├── types.ts
 └── tests/
     ├── index.spec.tsx
-    └── [helper-function-name].spec.ts
+    ├── [helper_name_1].spec.ts
+    └── [helper_name_2].spec.ts
 ```
+
+### Naming Conventions
+
+- **Component directories**: Use snake_case (e.g., `auth_dialog/`, `user_profile/`)
+- **Test files**: Use snake_case for helper test files (e.g., `handle_sign_in.spec.ts`, `validate_form.spec.ts`)
+- **Each helper function should have its own separate test file**
+- **Test directory**: Always use `tests/` (plural)

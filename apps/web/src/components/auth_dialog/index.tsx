@@ -29,6 +29,7 @@ import {
   type AuthDialogProps
 } from './types'
 import { handleSignIn, handleSignUp } from './helpers'
+import { AUTH_DIALOG_CONSTANTS } from './constants'
 
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
@@ -36,21 +37,13 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
 
   const signInForm = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
-    defaultValues: {
-      email: '',
-      password: ''
-    },
+    defaultValues: AUTH_DIALOG_CONSTANTS.FORM_DEFAULTS.SIGN_IN,
     mode: 'onChange'
   })
 
   const signUpForm = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    }
+    defaultValues: AUTH_DIALOG_CONSTANTS.FORM_DEFAULTS.SIGN_UP
   })
 
   const onSignInSubmit = async (data: SignInFormData) => {
@@ -94,9 +87,141 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     onOpenChange(open)
   }
 
+  const renderError = () => {
+    if (!error) return null
+
+    return (
+      <div className='text-sm text-red-600 bg-red-50 p-3 rounded-md'>
+        {error}
+      </div>
+    )
+  }
+
+  const renderSignInForm = () => (
+    <Form {...signInForm}>
+      <form
+        onSubmit={signInForm.handleSubmit(onSignInSubmit)}
+        className='space-y-4'
+      >
+        <FormField
+          control={signInForm.control}
+          name='email'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type='email' placeholder='Enter your email' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={signInForm.control}
+          name='password'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input
+                  type='password'
+                  placeholder='Enter your password'
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {renderError()}
+        <Button type='submit' className='w-full' disabled={isLoading}>
+          {isLoading
+            ? AUTH_DIALOG_CONSTANTS.UI.LOADING_STATES.SIGN_IN
+            : AUTH_DIALOG_CONSTANTS.UI.BUTTON_TEXT.SIGN_IN}
+        </Button>
+      </form>
+    </Form>
+  )
+
+  const renderSignUpForm = () => (
+    <Form {...signUpForm}>
+      <form
+        onSubmit={signUpForm.handleSubmit(onSignUpSubmit)}
+        className='space-y-4'
+      >
+        <FormField
+          control={signUpForm.control}
+          name='name'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input type='text' placeholder='Enter your name' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={signUpForm.control}
+          name='email'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type='email' placeholder='Enter your email' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={signUpForm.control}
+          name='password'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input
+                  type='password'
+                  placeholder='Create a password'
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={signUpForm.control}
+          name='confirmPassword'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm Password</FormLabel>
+              <FormControl>
+                <Input
+                  type='password'
+                  placeholder='Confirm your password'
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {renderError()}
+        <Button type='submit' className='w-full' disabled={isLoading}>
+          {isLoading
+            ? AUTH_DIALOG_CONSTANTS.UI.LOADING_STATES.SIGN_UP
+            : AUTH_DIALOG_CONSTANTS.UI.BUTTON_TEXT.SIGN_UP}
+        </Button>
+      </form>
+    </Form>
+  )
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent className={AUTH_DIALOG_CONSTANTS.UI.DIALOG_MAX_WIDTH}>
         <DialogHeader>
           <DialogTitle>Welcome to Florence</DialogTitle>
           <DialogDescription>
@@ -111,141 +236,11 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           </TabsList>
 
           <TabsContent value='signin' className='space-y-4'>
-            <Form {...signInForm}>
-              <form
-                onSubmit={signInForm.handleSubmit(onSignInSubmit)}
-                className='space-y-4'
-              >
-                <FormField
-                  control={signInForm.control}
-                  name='email'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type='email'
-                          placeholder='Enter your email'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signInForm.control}
-                  name='password'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type='password'
-                          placeholder='Enter your password'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {error && (
-                  <div className='text-sm text-red-600 bg-red-50 p-3 rounded-md'>
-                    {error}
-                  </div>
-                )}
-                <Button type='submit' className='w-full' disabled={isLoading}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
-                </Button>
-              </form>
-            </Form>
+            {renderSignInForm()}
           </TabsContent>
 
           <TabsContent value='signup' className='space-y-4'>
-            <Form {...signUpForm}>
-              <form
-                onSubmit={signUpForm.handleSubmit(onSignUpSubmit)}
-                className='space-y-4'
-              >
-                <FormField
-                  control={signUpForm.control}
-                  name='name'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          type='text'
-                          placeholder='Enter your name'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signUpForm.control}
-                  name='email'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type='email'
-                          placeholder='Enter your email'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signUpForm.control}
-                  name='password'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type='password'
-                          placeholder='Create a password'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signUpForm.control}
-                  name='confirmPassword'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type='password'
-                          placeholder='Confirm your password'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {error && (
-                  <div className='text-sm text-red-600 bg-red-50 p-3 rounded-md'>
-                    {error}
-                  </div>
-                )}
-                <Button type='submit' className='w-full' disabled={isLoading}>
-                  {isLoading ? 'Creating account...' : 'Sign Up'}
-                </Button>
-              </form>
-            </Form>
+            {renderSignUpForm()}
           </TabsContent>
         </Tabs>
       </DialogContent>
