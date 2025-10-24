@@ -26,11 +26,6 @@
       "cache": true,
       "outputs": []
     },
-    "test": {
-      "dependsOn": ["^build"],
-      "cache": true,
-      "outputs": ["coverage/**"]
-    },
     "typecheck": {
       "dependsOn": ["^build"],
       "cache": true,

@@ -1,15 +1,18 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "target": "ES2022",
     "outDir": "dist",
     "rootDir": "src",
     "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@types": ["../../packages/types/src/index"]
+      "@types": ["../../packages/types/src/index"],
+      "@routes/*": ["./src/routes/*"]
     }
   },
   "include": ["src"]

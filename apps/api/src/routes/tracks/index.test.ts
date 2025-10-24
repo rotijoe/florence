@@ -1,132 +1,196 @@
-import { prisma, EventType } from '@packages/database'
+import { createTestApp } from '@/test-setup'
+import { mockPrisma } from '@/test-helpers'
 
 describe('Tracks API', () => {
-  let testTrack: { id: string; slug: string; userId: string }
+  let app: ReturnType<typeof createTestApp>
 
   beforeAll(async () => {
-    const user = await prisma.user.create({
-      data: {
-        email: 'test-tracks@example.com',
-        name: 'Test User'
-      }
-    })
-
-    const track = await prisma.healthTrack.create({
-      data: {
-        userId: user.id,
-        title: 'Test Track',
-        slug: 'test-track',
-        description: 'A test track for testing'
-      }
-    })
-
-    testTrack = { id: track.id, slug: track.slug, userId: user.id }
-
-    await prisma.event.createMany({
-      data: [
-        {
-          trackId: track.id,
-          date: new Date(),
-          title: 'Event 1',
-          type: EventType.NOTE,
-          description: 'Most recent'
-        },
-        {
-          trackId: track.id,
-          date: new Date(Date.now() - 86400000),
-          title: 'Event 2',
-          type: EventType.RESULT,
-          description: 'One day ago'
-        },
-        {
-          trackId: track.id,
-          date: new Date(Date.now() - 2 * 86400000),
-          title: 'Event 3',
-          type: EventType.FEELING,
-          description: 'Two days ago'
-        }
-      ]
-    })
+    app = createTestApp()
   })
 
-  afterAll(async () => {
-    await prisma.event.deleteMany({
-      where: { trackId: testTrack.id }
-    })
-    await prisma.healthTrack.deleteMany({
-      where: { slug: 'test-track' }
-    })
-    await prisma.user.deleteMany({
-      where: { id: testTrack.userId }
-    })
+  beforeEach(() => {
+    // Reset all mocks before each test
+    jest.clearAllMocks()
+
+    // Set up default mock behavior
+    mockPrisma.healthTrack.findFirst.mockResolvedValue(null)
+    mockPrisma.user.findUnique.mockResolvedValue(null)
+    mockPrisma.event.findMany.mockResolvedValue([])
   })
 
   describe('GET /api/tracks/:slug', () => {
-    it('returns 200 and track for valid slug', async () => {
-      const res = await fetch(
-        `http://localhost:8787/api/tracks/${testTrack.slug}`
-      )
-      expect(res.status).toBe(200)
-
-      const json = await res.json()
-      expect(json.success).toBe(true)
-      expect(json.data).toHaveProperty('id', testTrack.id)
-      expect(json.data).toHaveProperty('slug', testTrack.slug)
-      expect(json.data).toHaveProperty('name', 'Test Track')
-      expect(json.data).toHaveProperty('createdAt')
-    })
-
     it('returns 404 for missing slug', async () => {
-      const res = await fetch(
-        'http://localhost:8787/api/tracks/nonexistent-slug'
-      )
+      const res = await app.request('/api/tracks/nonexistent-slug')
       expect(res.status).toBe(404)
 
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Track not found')
+    })
+
+    it('returns track data for valid slug', async () => {
+      const mockTrack = {
+        id: 'track-1',
+        title: 'Test Track',
+        slug: 'test-track',
+        createdAt: new Date('2024-01-01T00:00:00Z')
+      }
+
+      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
+
+      const res = await app.request('/api/tracks/test-track')
+      expect(res.status).toBe(200)
+
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(json.data).toEqual({
+        id: 'track-1',
+        name: 'Test Track',
+        slug: 'test-track',
+        createdAt: '2024-01-01T00:00:00.000Z'
+      })
+    })
+
+    it('handles database errors gracefully', async () => {
+      mockPrisma.healthTrack.findFirst.mockRejectedValue(
+        new Error('Database connection failed')
+      )
+
+      const res = await app.request('/api/tracks/test-track')
+      expect(res.status).toBe(500)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Database connection failed')
     })
   })
 
   describe('GET /api/tracks/:slug/events', () => {
-    it('returns events in desc order', async () => {
-      const res = await fetch(
-        `http://localhost:8787/api/tracks/${testTrack.slug}/events`
-      )
-      expect(res.status).toBe(200)
-
-      const json = await res.json()
-      expect(json.success).toBe(true)
-      expect(Array.isArray(json.data)).toBe(true)
-      expect(json.data.length).toBe(3)
-
-      expect(json.data[0].title).toBe('Event 1')
-      expect(json.data[1].title).toBe('Event 2')
-      expect(json.data[2].title).toBe('Event 3')
-    })
-
-    it('respects limit parameter', async () => {
-      const res = await fetch(
-        `http://localhost:8787/api/tracks/${testTrack.slug}/events?limit=2`
-      )
-      expect(res.status).toBe(200)
-
-      const json = await res.json()
-      expect(json.success).toBe(true)
-      expect(json.data.length).toBe(2)
-      expect(json.data[0].title).toBe('Event 1')
-      expect(json.data[1].title).toBe('Event 2')
-    })
-
     it('returns 404 for missing slug', async () => {
-      const res = await fetch(
-        'http://localhost:8787/api/tracks/nonexistent-slug/events'
-      )
+      const res = await app.request('/api/tracks/nonexistent-slug/events')
       expect(res.status).toBe(404)
 
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Track not found')
+    })
+
+    it('returns events for valid slug with default limit', async () => {
+      const mockTrack = { id: 'track-1' }
+      const mockEvents = [
+        {
+          id: 'event-1',
+          trackId: 'track-1',
+          date: new Date('2024-01-01T00:00:00Z'),
+          type: 'NOTE',
+          title: 'Test Event',
+          description: 'Test Description',
+          fileUrl: null,
+          createdAt: new Date('2024-01-01T00:00:00Z'),
+          updatedAt: new Date('2024-01-01T00:00:00Z')
+        }
+      ]
+
+      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
+      mockPrisma.event.findMany.mockResolvedValue(mockEvents)
+
+      const res = await app.request('/api/tracks/test-track/events')
+      expect(res.status).toBe(200)
+
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(json.data).toHaveLength(1)
+      expect(json.data[0]).toEqual({
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: 'NOTE',
+        title: 'Test Event',
+        description: 'Test Description',
+        fileUrl: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
+      })
+    })
+
+    it('respects limit query parameter', async () => {
+      const mockTrack = { id: 'track-1' }
+      const mockEvents = Array.from({ length: 5 }, (_, i) => ({
+        id: `event-${i + 1}`,
+        trackId: 'track-1',
+        date: new Date('2024-01-01T00:00:00Z'),
+        type: 'NOTE',
+        title: `Test Event ${i + 1}`,
+        description: 'Test Description',
+        fileUrl: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
+      }))
+
+      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
+      mockPrisma.event.findMany.mockResolvedValue(mockEvents)
+
+      const res = await app.request('/api/tracks/test-track/events?limit=3')
+      expect(res.status).toBe(200)
+
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(json.data).toHaveLength(5)
+
+      // Verify that findMany was called with the correct limit
+      expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
+        where: { trackId: 'track-1' },
+        orderBy: { date: 'desc' },
+        take: 3,
+        select: expect.any(Object)
+      })
+    })
+
+    it('enforces maximum limit of 1000', async () => {
+      const mockTrack = { id: 'track-1' }
+      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
+      mockPrisma.event.findMany.mockResolvedValue([])
+
+      const res = await app.request('/api/tracks/test-track/events?limit=2000')
+      expect(res.status).toBe(200)
+
+      // Verify that findMany was called with limit 1000 (capped)
+      expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
+        where: { trackId: 'track-1' },
+        orderBy: { date: 'desc' },
+        take: 1000,
+        select: expect.any(Object)
+      })
+    })
+
+    it('enforces minimum limit of 1', async () => {
+      const mockTrack = { id: 'track-1' }
+      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
+      mockPrisma.event.findMany.mockResolvedValue([])
+
+      const res = await app.request('/api/tracks/test-track/events?limit=0')
+      expect(res.status).toBe(200)
+
+      // Verify that findMany was called with limit 1 (minimum)
+      expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
+        where: { trackId: 'track-1' },
+        orderBy: { date: 'desc' },
+        take: 1,
+        select: expect.any(Object)
+      })
+    })
+
+    it('handles database errors gracefully', async () => {
+      mockPrisma.healthTrack.findFirst.mockRejectedValue(
+        new Error('Database connection failed')
+      )
+
+      const res = await app.request('/api/tracks/test-track/events')
+      expect(res.status).toBe(500)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Database connection failed')
     })
   })
 })

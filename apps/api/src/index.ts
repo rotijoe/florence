@@ -3,7 +3,6 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { AppVariables } from './types.js'
 import { auth } from './auth.js'
-import usersRoute from './routes/users/index.js'
 import userRoute from './routes/user/index.js'
 import tracksRoute from './routes/tracks/index.js'
 
@@ -51,7 +50,6 @@ app.get('/hello/:name', (c) => {
   return c.text(`Hello ${name}`)
 })
 
-app.route('/api', usersRoute)
 app.route('/api', userRoute)
 app.route('/api', tracksRoute)
 

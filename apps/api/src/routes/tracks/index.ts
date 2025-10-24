@@ -1,4 +1,9 @@
-import type { ApiResponse, TrackResponse, EventResponse } from '@packages/types'
+import type {
+  ApiResponse,
+  TrackResponse,
+  EventResponse,
+  EventType
+} from '@packages/types'
 import type { AppVariables } from '../../types.js'
 import { Hono } from 'hono'
 import { prisma } from '@packages/database'
@@ -97,7 +102,7 @@ app.get('/tracks/:slug/events', async (c) => {
       id: e.id,
       trackId: e.trackId,
       date: e.date.toISOString(),
-      type: e.type,
+      type: e.type as EventType,
       title: e.title,
       description: e.description,
       fileUrl: e.fileUrl,
