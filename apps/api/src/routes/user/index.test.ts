@@ -14,10 +14,12 @@ describe('GET /api/user/me', () => {
           create: [
             {
               title: 'Diabetes Management',
+              slug: 'diabetes-management',
               description: 'Tracking blood sugar levels'
             },
             {
               title: 'Physical Therapy',
+              slug: 'physical-therapy',
               description: 'Post-surgery rehabilitation'
             }
           ]

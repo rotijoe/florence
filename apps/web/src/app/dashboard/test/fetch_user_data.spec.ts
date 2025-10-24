@@ -18,6 +18,7 @@ describe('fetchUserData', () => {
         {
           id: 'track-1',
           title: 'Diabetes Management',
+          slug: 'diabetes-management',
           description: 'Tracking blood sugar',
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-01T00:00:00Z',

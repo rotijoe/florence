@@ -13,6 +13,7 @@ const users = [
 const tracksForUser = [
   {
     title: 'Vitals',
+    slug: 'vitals',
     description: 'Blood pressure, heart rate, temperature',
     events: [
       {
@@ -37,6 +38,7 @@ const tracksForUser = [
   },
   {
     title: 'Medication',
+    slug: 'medication',
     description: 'Prescriptions and adherence logs',
     events: [
       {
@@ -56,6 +58,65 @@ const tracksForUser = [
         title: 'Doctor letter',
         date: new Date(Date.now() - 3 * 86400000),
         description: 'Updated dosage'
+      }
+    ]
+  }
+]
+
+const additionalTracksForUser = [
+  {
+    title: 'Sleep',
+    slug: 'sleep',
+    description: 'Sleep tracking and quality monitoring',
+    events: [
+      {
+        type: EventType.NOTE,
+        title: '7h 45m sleep',
+        date: new Date(),
+        description: 'Woke up refreshed, good quality sleep'
+      },
+      {
+        type: EventType.FEELING,
+        title: '6h 30m sleep',
+        date: new Date(Date.now() - 86400000),
+        description: 'Restless night, woke up multiple times'
+      },
+      {
+        type: EventType.NOTE,
+        title: '8h 15m sleep',
+        date: new Date(Date.now() - 2 * 86400000),
+        description: 'Deep sleep, felt great in the morning'
+      },
+      {
+        type: EventType.NOTE,
+        title: '7h 0m sleep',
+        date: new Date(Date.now() - 3 * 86400000),
+        description: 'Average sleep quality'
+      }
+    ]
+  },
+  {
+    title: 'Hydration',
+    slug: 'hydration',
+    description: 'Daily water intake tracking',
+    events: [
+      {
+        type: EventType.RESULT,
+        title: '2.5L water intake',
+        date: new Date(),
+        description: 'Met daily hydration goal'
+      },
+      {
+        type: EventType.RESULT,
+        title: '2.0L water intake',
+        date: new Date(Date.now() - 86400000),
+        description: 'Below target, need to drink more'
+      },
+      {
+        type: EventType.RESULT,
+        title: '3.0L water intake',
+        date: new Date(Date.now() - 2 * 86400000),
+        description: 'Excellent hydration, exceeded goal'
       }
     ]
   }
@@ -92,7 +153,7 @@ async function main() {
 
     for (const t of tracksForUser) {
       const existing = await prisma.healthTrack.findFirst({
-        where: { userId: user.id, title: t.title }
+        where: { userId: user.id, slug: t.slug }
       })
       if (existing) continue
 
@@ -100,8 +161,26 @@ async function main() {
         data: {
           userId: user.id,
           title: t.title,
+          slug: t.slug,
           description: t.description,
           events: { create: t.events.map((e) => ({ ...e })) }
+        }
+      })
+    }
+
+    for (const additionalTrack of additionalTracksForUser) {
+      const existing = await prisma.healthTrack.findFirst({
+        where: { userId: user.id, slug: additionalTrack.slug }
+      })
+      if (existing) continue
+
+      await prisma.healthTrack.create({
+        data: {
+          userId: user.id,
+          title: additionalTrack.title,
+          slug: additionalTrack.slug,
+          description: additionalTrack.description,
+          events: { create: additionalTrack.events.map((e) => ({ ...e })) }
         }
       })
     }

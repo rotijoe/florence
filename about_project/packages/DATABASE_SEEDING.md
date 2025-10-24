@@ -18,17 +18,33 @@ Creates 3 test users with email/password authentication:
 
 ### Health Data
 
-Each user gets 2 health tracks:
+Each user gets 4 health tracks:
 
 **1. Vitals Track**
 
+- Slug: `vitals`
 - Description: Blood pressure, heart rate, temperature
 - Events: NOTE (Morning notes), RESULT (BP reading), FEELING (Mood check-in)
 
 **2. Medication Track**
 
+- Slug: `medication`
 - Description: Prescriptions and adherence logs
 - Events: NOTE (Refill reminder), APPOINTMENT (Pharmacy visit), LETTER (Doctor letter)
+
+**3. Sleep Track**
+
+- Slug: `sleep`
+- Description: Sleep tracking and quality monitoring
+- Health Events: 4 sleep entries with duration, quality ratings, and notes
+- Metrics: `{ durationMin: number, quality: string }`
+
+**4. Hydration Track**
+
+- Slug: `hydration`
+- Description: Daily water intake tracking
+- Health Events: 3 hydration entries with daily goals
+- Metrics: `{ liters: number, goal: number }`
 
 ## Usage
 
@@ -67,3 +83,10 @@ Prisma can automatically run seeds after migrations if configured with the `pris
 - `FEELING` - Mood and wellness check-ins
 - `APPOINTMENT` - Scheduled visits
 - `LETTER` - Correspondence from providers
+
+**Health Event Types (new system):**
+
+- Health events use a flexible string-based type system
+- Common types: `sleep`, `hydration`, `exercise`, `medication`, etc.
+- Events include optional `notes` and `metrics` (JSON) fields
+- Events are sorted by `occurredAt` timestamp (newest first)

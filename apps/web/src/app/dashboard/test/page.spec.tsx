@@ -93,6 +93,7 @@ describe('DashboardPage', () => {
         {
           id: 'track-1',
           title: 'Diabetes Management',
+          slug: 'diabetes-management',
           description: 'Tracking blood sugar levels',
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-01T00:00:00Z',
@@ -101,6 +102,7 @@ describe('DashboardPage', () => {
         {
           id: 'track-2',
           title: 'Physical Therapy',
+          slug: 'physical-therapy',
           description: 'Post-surgery rehabilitation',
           createdAt: '2024-01-02T00:00:00Z',
           updatedAt: '2024-01-02T00:00:00Z',
@@ -186,6 +188,7 @@ describe('DashboardPage', () => {
         {
           id: 'track-1',
           title: 'Diabetes Management',
+          slug: 'diabetes-management',
           description: 'Tracking blood sugar',
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-01T00:00:00Z',
@@ -207,7 +210,7 @@ describe('DashboardPage', () => {
 
     await waitFor(() => {
       const link = screen.getByRole('link', { name: /diabetes management/i })
-      expect(link).toHaveAttribute('href', '/dashboard/tracks/track-1')
+      expect(link).toHaveAttribute('href', '/tracks/diabetes-management')
     })
   })
 })

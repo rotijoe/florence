@@ -5,6 +5,7 @@ export interface HealthTrack {
   createdAt: string
   updatedAt: string
   userId: string
+  slug: string
 }
 
 export interface UserWithTracks {

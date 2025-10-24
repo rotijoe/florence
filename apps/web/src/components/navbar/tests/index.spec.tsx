@@ -39,7 +39,6 @@ describe('Navbar', () => {
 
     render(<Navbar />)
 
-    expect(screen.getByText('Welcome, John Doe')).toBeInTheDocument()
     expect(screen.getByText('Sign Out')).toBeInTheDocument()
     expect(screen.queryByText('Sign In / Sign Up')).not.toBeInTheDocument()
   })

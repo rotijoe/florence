@@ -37,7 +37,8 @@ app.get('/user/me', async (c) => {
             description: true,
             createdAt: true,
             updatedAt: true,
-            userId: true
+            userId: true,
+            slug: true
           },
           orderBy: {
             createdAt: 'desc'

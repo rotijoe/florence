@@ -152,6 +152,35 @@ The dashboard page follows component-structure rules:
 - Accessible focus states and keyboard navigation
 - Smooth transitions and hover effects
 
+## Related Pages
+
+### Health Track Detail Page
+
+- **Route:** `/tracks/[trackSlug]`
+- **Purpose:** Display a specific health track and its events
+- **Page Component:** `apps/web/src/app/tracks/[trackSlug]/page.tsx`
+- **Features:**
+  - Displays track name and description
+  - Lists all health events for the track (newest to oldest)
+  - Each event shows: title, date/time, type, notes, and metrics
+  - Uses ShadCN Card components for event display
+  - Server-side rendered (RSC) for optimal performance
+- **API Endpoints Used:**
+  - `GET /api/tracks/:slug` - Fetch track metadata
+  - `GET /api/tracks/:slug/events` - Fetch events sorted by date
+
+### Track Event List Component
+
+- **Location:** `apps/web/src/components/track_event_list/`
+- **Purpose:** Reusable component for rendering health events
+- **Features:**
+  - Displays events in card format
+  - Shows formatted dates using Intl.DateTimeFormat
+  - Renders optional notes and metrics (JSON)
+  - Empty state when no events exist
+  - Type badge for each event
+  - Fully tested with Jest + RTL
+
 ## Future Enhancements
 
 1. Add ability to create new health tracks from dashboard
@@ -160,3 +189,4 @@ The dashboard page follows component-structure rules:
 4. Add sorting options (by date, alphabetically)
 5. Add bulk actions (delete, archive)
 6. Display recent events across all tracks
+7. Link dashboard health track cards to `/tracks/[slug]` pages

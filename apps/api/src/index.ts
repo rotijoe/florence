@@ -5,6 +5,7 @@ import type { AppVariables } from './types.js'
 import { auth } from './auth.js'
 import usersRoute from './routes/users/index.js'
 import userRoute from './routes/user/index.js'
+import tracksRoute from './routes/tracks/index.js'
 
 const app = new Hono<{ Variables: AppVariables }>()
 
@@ -52,6 +53,7 @@ app.get('/hello/:name', (c) => {
 
 app.route('/api', usersRoute)
 app.route('/api', userRoute)
+app.route('/api', tracksRoute)
 
 const server = serve(
   {

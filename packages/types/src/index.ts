@@ -11,6 +11,7 @@ export type HealthTrack = {
   user: User
   userId: string
   title: string
+  slug: string
   description?: string
   createdAt: Date
   events: Event[]
@@ -41,4 +42,23 @@ export type ApiResponse<T> = {
   success: boolean
   data: T
   error?: string
+}
+
+export type TrackResponse = {
+  id: string
+  name: string
+  slug: string
+  createdAt: string
+}
+
+export type EventResponse = {
+  id: string
+  trackId: string
+  date: string
+  type: EventType
+  title: string
+  description?: string | null
+  fileUrl?: string | null
+  createdAt: string
+  updatedAt: string
 }

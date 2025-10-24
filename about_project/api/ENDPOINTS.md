@@ -248,19 +248,98 @@ All routes use session middleware that:
 3. Sets to `null` if no valid session found
 4. Allows request to continue (individual routes handle auth)
 
-## Future Endpoints
-
 ### Health Tracks
 
+#### GET /api/tracks/:slug
+
+Get a health track by its unique slug.
+
+**Authentication:** Not required (public endpoint)
+
+**Path Parameters:**
+
+- `slug` - Unique slug identifier for the track (e.g., `sleep`, `hydration`)
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "track-id",
+    "name": "Sleep",
+    "slug": "sleep",
+    "createdAt": "2025-10-21T00:00:00.000Z"
+  }
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "success": false,
+  "error": "Track not found"
+}
+```
+
+#### GET /api/tracks/:slug/events
+
+Get all health events for a specific track, sorted by occurrence date (newest first).
+
+**Authentication:** Not required (public endpoint)
+
+**Path Parameters:**
+
+- `slug` - Unique slug identifier for the track
+
+**Query Parameters:**
+
+- `limit` (optional) - Maximum number of events to return (default: 100)
+- `sort` (optional) - Sort order: `desc` or `asc` (default: `desc`)
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "event-id",
+      "trackId": "track-id",
+      "occurredAt": "2025-10-21T14:30:00.000Z",
+      "title": "7h 45m",
+      "notes": "Woke up refreshed",
+      "type": "sleep",
+      "metrics": {
+        "durationMin": 465,
+        "quality": "good"
+      }
+    }
+  ]
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "success": false,
+  "error": "Track not found"
+}
+```
+
+## Future Endpoints
+
+### Health Tracks (Authenticated)
+
 - POST /api/tracks - Create health track
-- GET /api/tracks/:id - Get track by ID
 - PUT /api/tracks/:id - Update track
 - DELETE /api/tracks/:id - Delete track
 
-### Events
+### Events (Authenticated)
 
 - POST /api/tracks/:trackId/events - Create event
-- GET /api/tracks/:trackId/events - Get events for track
 - GET /api/events/:id - Get event by ID
 - PUT /api/events/:id - Update event
 - DELETE /api/events/:id - Delete event
