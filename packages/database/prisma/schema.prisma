@@ -86,6 +86,8 @@ model HealthTrack {
   events Event[]
   
   @@unique([userId, slug])
+  @@index([slug])
+  @@index([userId])
   @@map("health_tracks")
 }
 
@@ -103,6 +105,7 @@ model Event {
   track HealthTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
   
   @@index([trackId, date(sort: Desc)])
+  @@index([trackId])
   @@map("events")
 }
 
