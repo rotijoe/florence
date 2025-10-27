@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { mockPrisma } from '@/test-helpers'
+import { prisma } from '@packages/database'
 
 describe('Tracks API', () => {
   let app: ReturnType<typeof createTestApp>
@@ -11,11 +11,6 @@ describe('Tracks API', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks()
-
-    // Set up default mock behavior
-    mockPrisma.healthTrack.findFirst.mockResolvedValue(null)
-    mockPrisma.user.findUnique.mockResolvedValue(null)
-    mockPrisma.event.findMany.mockResolvedValue([])
   })
 
   describe('GET /api/tracks/:slug', () => {
@@ -36,7 +31,9 @@ describe('Tracks API', () => {
         createdAt: new Date('2024-01-01T00:00:00Z')
       }
 
-      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
+      // Use jest.spyOn to mock the database call
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      findFirstSpy.mockResolvedValue(mockTrack)
 
       const res = await app.request('/api/tracks/test-track')
       expect(res.status).toBe(200)
@@ -49,12 +46,15 @@ describe('Tracks API', () => {
         slug: 'test-track',
         createdAt: '2024-01-01T00:00:00.000Z'
       })
+
+      // Clean up the spy
+      findFirstSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
-      mockPrisma.healthTrack.findFirst.mockRejectedValue(
-        new Error('Database connection failed')
-      )
+      // Use jest.spyOn to mock the database call to throw an error
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/tracks/test-track')
       expect(res.status).toBe(500)
@@ -62,6 +62,9 @@ describe('Tracks API', () => {
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Database connection failed')
+
+      // Clean up the spy
+      findFirstSpy.mockRestore()
     })
   })
 })

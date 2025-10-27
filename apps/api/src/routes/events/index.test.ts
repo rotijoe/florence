@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { mockPrisma } from '@/test-helpers'
+import { prisma } from '@packages/database'
 
 describe('Events API', () => {
   let app: ReturnType<typeof createTestApp>
@@ -11,10 +11,6 @@ describe('Events API', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks()
-
-    // Set up default mock behavior
-    mockPrisma.healthTrack.findFirst.mockResolvedValue(null)
-    mockPrisma.event.findMany.mockResolvedValue([])
   })
 
   describe('GET /api/tracks/:slug/events', () => {
@@ -43,8 +39,12 @@ describe('Events API', () => {
         }
       ]
 
-      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
-      mockPrisma.event.findMany.mockResolvedValue(mockEvents)
+      // Use jest.spyOn to mock the database calls
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+
+      findFirstSpy.mockResolvedValue(mockTrack)
+      findManySpy.mockResolvedValue(mockEvents)
 
       const res = await app.request('/api/tracks/test-track/events')
       expect(res.status).toBe(200)
@@ -63,6 +63,10 @@ describe('Events API', () => {
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z'
       })
+
+      // Clean up the spies
+      findFirstSpy.mockRestore()
+      findManySpy.mockRestore()
     })
 
     it('respects limit query parameter', async () => {
@@ -79,8 +83,12 @@ describe('Events API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }))
 
-      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
-      mockPrisma.event.findMany.mockResolvedValue(mockEvents)
+      // Use jest.spyOn to mock the database calls
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+
+      findFirstSpy.mockResolvedValue(mockTrack)
+      findManySpy.mockResolvedValue(mockEvents)
 
       const res = await app.request('/api/tracks/test-track/events?limit=3')
       expect(res.status).toBe(200)
@@ -90,52 +98,72 @@ describe('Events API', () => {
       expect(json.data).toHaveLength(5)
 
       // Verify that findMany was called with the correct limit
-      expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
-        where: { trackId: 'track-1' },
+      expect(findManySpy).toHaveBeenCalledWith({
+        where: { track: { slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 3,
         select: expect.any(Object)
       })
+
+      // Clean up the spies
+      findFirstSpy.mockRestore()
+      findManySpy.mockRestore()
     })
 
     it('enforces maximum limit of 1000', async () => {
       const mockTrack = { id: 'track-1' }
-      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
-      mockPrisma.event.findMany.mockResolvedValue([])
+      // Use jest.spyOn to mock the database calls
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+
+      findFirstSpy.mockResolvedValue(mockTrack)
+      findManySpy.mockResolvedValue([])
 
       const res = await app.request('/api/tracks/test-track/events?limit=2000')
       expect(res.status).toBe(200)
 
       // Verify that findMany was called with limit 1000 (capped)
-      expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
-        where: { trackId: 'track-1' },
+      expect(findManySpy).toHaveBeenCalledWith({
+        where: { track: { slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 1000,
         select: expect.any(Object)
       })
+
+      // Clean up the spies
+      findFirstSpy.mockRestore()
+      findManySpy.mockRestore()
     })
 
     it('enforces minimum limit of 1', async () => {
       const mockTrack = { id: 'track-1' }
-      mockPrisma.healthTrack.findFirst.mockResolvedValue(mockTrack)
-      mockPrisma.event.findMany.mockResolvedValue([])
+      // Use jest.spyOn to mock the database calls
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+
+      findFirstSpy.mockResolvedValue(mockTrack)
+      findManySpy.mockResolvedValue([])
 
       const res = await app.request('/api/tracks/test-track/events?limit=0')
       expect(res.status).toBe(200)
 
       // Verify that findMany was called with limit 1 (minimum)
-      expect(mockPrisma.event.findMany).toHaveBeenCalledWith({
-        where: { trackId: 'track-1' },
+      expect(findManySpy).toHaveBeenCalledWith({
+        where: { track: { slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 1,
         select: expect.any(Object)
       })
+
+      // Clean up the spies
+      findFirstSpy.mockRestore()
+      findManySpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
-      mockPrisma.healthTrack.findFirst.mockRejectedValue(
-        new Error('Database connection failed')
-      )
+      // Use jest.spyOn to mock the database call to throw an error
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/tracks/test-track/events')
       expect(res.status).toBe(500)
@@ -143,6 +171,9 @@ describe('Events API', () => {
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Database connection failed')
+
+      // Clean up the spy
+      findFirstSpy.mockRestore()
     })
   })
 })
