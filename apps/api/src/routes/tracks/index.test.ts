@@ -28,7 +28,10 @@ describe('Tracks API', () => {
         id: 'track-1',
         title: 'Test Track',
         slug: 'test-track',
-        createdAt: new Date('2024-01-01T00:00:00Z')
+        userId: 'user-1',
+        description: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
       // Use jest.spyOn to mock the database call

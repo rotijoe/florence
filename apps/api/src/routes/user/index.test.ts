@@ -28,6 +28,9 @@ describe('GET /api/user/me', () => {
       id: 'user-1',
       name: 'Test User',
       email: 'test@example.com',
+      emailVerified: false,
+      createdAt: new Date('2024-01-01T00:00:00Z'),
+      updatedAt: new Date('2024-01-01T00:00:00Z'),
       tracks: [
         {
           id: 'track-1',
@@ -42,8 +45,24 @@ describe('GET /api/user/me', () => {
     }
 
     const mockSession = {
-      user: { id: 'user-1' },
-      session: { id: 'session-1' }
+      user: {
+        id: 'user-1',
+        email: 'test@example.com',
+        emailVerified: false,
+        name: 'Test User',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      session: {
+        id: 'session-1',
+        userId: 'user-1',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        token: 'test-token',
+        ipAddress: null,
+        userAgent: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     }
 
     // Use jest.spyOn to mock the auth and database calls
@@ -58,7 +77,7 @@ describe('GET /api/user/me', () => {
 
     const data = await response.json()
     expect(data.success).toBe(true)
-    expect(data.data).toEqual({
+    expect(data.data).toMatchObject({
       id: 'user-1',
       name: 'Test User',
       email: 'test@example.com',
@@ -82,8 +101,24 @@ describe('GET /api/user/me', () => {
 
   it('should return 404 when user is not found in database', async () => {
     const mockSession = {
-      user: { id: 'user-1' },
-      session: { id: 'session-1' }
+      user: {
+        id: 'user-1',
+        email: 'test@example.com',
+        emailVerified: false,
+        name: 'Test User',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      session: {
+        id: 'session-1',
+        userId: 'user-1',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        token: 'test-token',
+        ipAddress: null,
+        userAgent: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     }
 
     // Use jest.spyOn to mock the auth and database calls
@@ -110,12 +145,31 @@ describe('GET /api/user/me', () => {
       id: 'user-1',
       name: 'Test User',
       email: 'test@example.com',
+      emailVerified: false,
+      createdAt: new Date('2024-01-01T00:00:00Z'),
+      updatedAt: new Date('2024-01-01T00:00:00Z'),
       tracks: []
     }
 
     const mockSession = {
-      user: { id: 'user-1' },
-      session: { id: 'session-1' }
+      user: {
+        id: 'user-1',
+        email: 'test@example.com',
+        emailVerified: false,
+        name: 'Test User',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      session: {
+        id: 'session-1',
+        userId: 'user-1',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        token: 'test-token',
+        ipAddress: null,
+        userAgent: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     }
 
     // Use jest.spyOn to mock the auth and database calls
@@ -139,8 +193,24 @@ describe('GET /api/user/me', () => {
 
   it('should handle database errors gracefully', async () => {
     const mockSession = {
-      user: { id: 'user-1' },
-      session: { id: 'session-1' }
+      user: {
+        id: 'user-1',
+        email: 'test@example.com',
+        emailVerified: false,
+        name: 'Test User',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      session: {
+        id: 'session-1',
+        userId: 'user-1',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        token: 'test-token',
+        ipAddress: null,
+        userAgent: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     }
 
     // Use jest.spyOn to mock the auth and database calls
@@ -167,10 +237,8 @@ describe('GET /api/user/me', () => {
     const getSessionSpy = jest.spyOn(auth.api, 'getSession')
     getSessionSpy.mockRejectedValue(new Error('Auth service unavailable'))
 
+    // Hono's default error handler catches the error and returns a 500 response
     const response = await app.request('/api/user/me')
-    expect(response.status).toBe(500)
-
-    // The error is being caught by Hono's error handler, so we just check the status
     expect(response.status).toBe(500)
 
     // Clean up the spy

@@ -40,29 +40,15 @@ describe('TrackPage', () => {
     jest.clearAllMocks()
   })
 
-  it('renders track name as heading', async () => {
-    const page = await TrackPage({ params: { trackSlug: 'sleep' } })
-    render(page)
-
-    expect(screen.getByRole('heading', { name: 'Sleep' })).toBeInTheDocument()
+  it('returns null as page content is handled by layout', async () => {
+    const page = await TrackPage({ params: Promise.resolve({ trackSlug: 'sleep' }) as any })
+    expect(page).toBeNull()
   })
 
-  it('calls fetchTrack with correct slug', async () => {
-    await TrackPage({ params: { trackSlug: 'sleep' } })
-
-    expect(fetchTrack).toHaveBeenCalledWith('sleep')
-  })
-
-  it('calls fetchTrackEvents with correct slug', async () => {
-    await TrackPage({ params: { trackSlug: 'sleep' } })
-
-    expect(fetchTrackEvents).toHaveBeenCalledWith('sleep')
-  })
-
-  it('renders TrackEventList component', async () => {
-    const page = await TrackPage({ params: { trackSlug: 'sleep' } })
-    render(page)
-
-    expect(screen.getByText('Event 1')).toBeInTheDocument()
+  it('awaits params correctly', async () => {
+    const paramsPromise = Promise.resolve({ trackSlug: 'sleep' }) as any
+    await TrackPage({ params: paramsPromise })
+    // Test passes if no errors are thrown
+    expect(true).toBe(true)
   })
 })

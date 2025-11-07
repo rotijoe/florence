@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { TrackEventList } from '../index';
-import type { EventResponse, EventType } from '@packages/types';
+import { EventType, type EventResponse } from '@packages/types';
 
 describe('TrackEventList', () => {
   const mockEvents: EventResponse[] = [
@@ -28,35 +28,37 @@ describe('TrackEventList', () => {
     },
   ];
 
+  const trackSlug = 'test-track';
+
   it('renders all events', () => {
-    render(<TrackEventList events={mockEvents} />);
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
 
     expect(screen.getByText('Event 1')).toBeInTheDocument();
     expect(screen.getByText('Event 2')).toBeInTheDocument();
   });
 
   it('displays event description when present', () => {
-    render(<TrackEventList events={mockEvents} />);
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
 
     expect(screen.getByText('First event')).toBeInTheDocument();
   });
 
   it('displays formatted dates', () => {
-    render(<TrackEventList events={mockEvents} />);
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
 
-    expect(screen.getByText(/October 21, 2025/i)).toBeInTheDocument();
-    expect(screen.getByText(/October 20, 2025/i)).toBeInTheDocument();
+    expect(screen.getByText(/21 October 2025/i)).toBeInTheDocument();
+    expect(screen.getByText(/20 October 2025/i)).toBeInTheDocument();
   });
 
   it('displays event type', () => {
-    render(<TrackEventList events={mockEvents} />);
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
 
     expect(screen.getByText('NOTE')).toBeInTheDocument();
     expect(screen.getByText('RESULT')).toBeInTheDocument();
   });
 
   it('renders empty state when no events', () => {
-    render(<TrackEventList events={[]} />);
+    render(<TrackEventList events={[]} trackSlug={trackSlug} />);
 
     expect(screen.getByText(/no events/i)).toBeInTheDocument();
   });
@@ -69,10 +71,37 @@ describe('TrackEventList', () => {
       },
     ];
 
-    render(<TrackEventList events={eventsWithFile} />);
+    render(<TrackEventList events={eventsWithFile} trackSlug={trackSlug} />);
 
     const link = screen.getByText(/view attached file/i);
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', 'https://example.com/file.pdf');
+  });
+
+  it('makes events clickable with correct links', () => {
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
+
+    const event1Link = screen.getByText('Event 1').closest('a');
+    expect(event1Link).toHaveAttribute('href', '/tracks/test-track/1');
+
+    const event2Link = screen.getByText('Event 2').closest('a');
+    expect(event2Link).toHaveAttribute('href', '/tracks/test-track/2');
+  });
+
+  it('highlights active event', () => {
+    const { container } = render(
+      <TrackEventList events={mockEvents} trackSlug={trackSlug} activeEventId="1" />
+    );
+
+    const activeCard = container.querySelector('.border-primary');
+    expect(activeCard).toBeInTheDocument();
+    expect(activeCard).toHaveTextContent('Event 1');
+  });
+
+  it('does not highlight when no active event', () => {
+    const { container } = render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
+
+    const activeCards = container.querySelectorAll('.border-primary');
+    expect(activeCards).toHaveLength(0);
   });
 });
