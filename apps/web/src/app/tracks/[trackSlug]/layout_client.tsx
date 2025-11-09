@@ -10,7 +10,7 @@ import type { TrackLayoutClientProps } from './layout_types';
 
 export function TrackLayoutClient({
   children,
-  trackName,
+  trackName: _trackName,
   events,
   trackSlug,
 }: TrackLayoutClientProps) {
@@ -51,19 +51,9 @@ export function TrackLayoutClient({
     }
   }
 
-  function renderHeader() {
-    return (
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight">{trackName}</h1>
-        <p className="mt-2 text-muted-foreground">View all events for this health track</p>
-      </div>
-    );
-  }
-
   function renderEventsList() {
     return (
       <div>
-        {renderHeader()}
         <div className="mt-6">
           <DateScroller referenceDate={events[0]?.date} />
         </div>
