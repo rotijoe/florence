@@ -87,37 +87,67 @@ Added two new health tracks with events for each user:
 
 **Files:**
 
-- `index.tsx` - Main component
-- `helpers.ts` - Date formatting and metrics formatting
-- `types.ts` - Component prop types
-- `tests/index.spec.tsx` - Component tests
-- `tests/format_event_date.spec.ts` - Helper tests
-- `tests/format_metrics.spec.ts` - Helper tests
+- `index.tsx` - Timeline layout for track events
+- `helpers.ts` - Date grouping and formatting helpers
+- `types.ts` - Component prop and helper types
+- `tests/index.spec.tsx` - Component behaviour tests
+- `tests/format_event_date.spec.ts` - Legacy date formatting regression tests
+- `tests/group_events_by_date.spec.ts` - Helper tests for grouping and formatting
 
 **Features:**
 
-- Renders events in card layout using ShadCN Card components
-- Displays formatted date/time using Intl.DateTimeFormat
-- Shows event type as a badge
-- Displays optional notes
-- Renders metrics as formatted JSON in a code block
+- Timeline layout with vertical rail, nodes, and connectors
+- Groups events by calendar date and renders a single date label per group
+- ShadCN Card-based event summaries with time and type badge
+- Optional description and attachment link support
 - Empty state when no events exist
 
 **Helper Functions:**
 
-- `formatEventDate(isoString)` - Formats ISO date to readable format
-- `formatMetrics(metrics)` - Converts metrics object to formatted JSON
+- `groupEventsByDate(events)` - Buckets events by `YYYY-MM-DD`
+- `formatDateLabel(isoString)` - Produces readable date label for the rail
+- `formatEventTime(isoString)` - Outputs 12-hour time for cards
+- `formatEventDate(isoString)` - Legacy formatter kept for backwards compatibility
 
 **Test Coverage:**
 
-- ✅ Renders all events
-- ✅ Displays event notes when present
-- ✅ Displays formatted dates
-- ✅ Displays event type
-- ✅ Renders empty state
-- ✅ Displays metrics when available
+- ✅ Renders all events and empty state fallback
+- ✅ Displays descriptions, attachment links, and type badges
+- ✅ Shows one date label per group and renders timeline nodes/connectors
+- ✅ Highlights active event (card + timeline node)
+- ✅ Formats helper output for grouping, date labels, and event time
 
-### 6. Health Track Page
+### 6. Date Scroller Component
+
+**Location:** `apps/web/src/components/date_scroller/`
+
+**Files:**
+
+- `index.tsx` - Stateless UI-only week scroller
+- `helpers.ts` - Week generation and label formatting helpers
+- `types.ts` - Component props
+- `tests/index.spec.tsx` - Component rendering tests
+- `tests/format_date.spec.ts` - Helper tests (week generation + label formatting)
+
+**Features:**
+
+- Generates a Monday-starting week based on optional reference date
+- Highlights the selected day with ShadCN ghost buttons and dot indicator
+- Horizontal scroll container ready for future interactions
+
+**Helper Functions:**
+
+- `getWeekDates(referenceDate?)` - Returns seven UTC-normalised dates
+- `formatScrollerLabel(date)` - Produces accessible label (`Fri 9`)
+- `getScrollerLabelParts(date)` - Splits weekday/day for UI layout
+
+**Test Coverage:**
+
+- ✅ Renders seven buttons for the current week
+- ✅ Highlights selected day via `aria-current` and `data-selected`
+- ✅ Validates helper output for week generation and labels
+
+### 7. Health Track Page
 
 **Location:** `apps/web/src/app/tracks/[trackSlug]/`
 
@@ -135,8 +165,9 @@ Added two new health tracks with events for each user:
 
 - Server-side rendered (React Server Component)
 - Parallel fetches for track and events
-- Clean header with track name
-- Uses TrackEventList component for event display
+- Clean header with track name and contextual copy
+- Integrates `DateScroller` above the timeline (UI-only for now)
+- Uses `TrackEventList` timeline layout for grouped event display
 - Error handling for failed fetches
 
 **Helper Functions:**
@@ -156,13 +187,11 @@ Added two new health tracks with events for each user:
 **Files Updated:**
 
 1. **`about_project/api/ENDPOINTS.md`**
-
    - Added documentation for two new endpoints
    - Included request/response examples
    - Noted endpoints are public (no auth required)
 
 2. **`about_project/packages/DATABASE_SEEDING.md`**
-
    - Added Sleep and Hydration track details
    - Documented health event types and structure
    - Explained metrics field usage
@@ -230,7 +259,7 @@ Following project rules, components use render functions:
 ```tsx
 export function Component() {
   // Early returns for edge cases
-  if (someCondition) return renderEmptyState()
+  if (someCondition) return renderEmptyState();
 
   // Main render with clean JSX
   return (
@@ -238,7 +267,7 @@ export function Component() {
       {renderHeader()}
       {renderContent()}
     </div>
-  )
+  );
 }
 
 function renderHeader() {

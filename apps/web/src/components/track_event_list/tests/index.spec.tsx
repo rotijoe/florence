@@ -46,8 +46,15 @@ describe('TrackEventList', () => {
   it('displays formatted dates', () => {
     render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
 
-    expect(screen.getByText(/21 October 2025/i)).toBeInTheDocument();
-    expect(screen.getByText(/20 October 2025/i)).toBeInTheDocument();
+    expect(screen.getByText('21 October 2025')).toBeInTheDocument();
+    expect(screen.getByText('20 October 2025')).toBeInTheDocument();
+  });
+
+  it('displays the event time in the card header', () => {
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
+
+    expect(screen.getByText('2:30 PM')).toBeInTheDocument();
+    expect(screen.getByText('10:00 AM')).toBeInTheDocument();
   });
 
   it('displays event type', () => {
@@ -63,21 +70,6 @@ describe('TrackEventList', () => {
     expect(screen.getByText(/no events/i)).toBeInTheDocument();
   });
 
-  it('displays file link when fileUrl is available', () => {
-    const eventsWithFile: EventResponse[] = [
-      {
-        ...mockEvents[0],
-        fileUrl: 'https://example.com/file.pdf',
-      },
-    ];
-
-    render(<TrackEventList events={eventsWithFile} trackSlug={trackSlug} />);
-
-    const link = screen.getByText(/view attached file/i);
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', 'https://example.com/file.pdf');
-  });
-
   it('makes events clickable with correct links', () => {
     render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
 
@@ -88,20 +80,55 @@ describe('TrackEventList', () => {
     expect(event2Link).toHaveAttribute('href', '/tracks/test-track/2');
   });
 
-  it('highlights active event', () => {
-    const { container } = render(
-      <TrackEventList events={mockEvents} trackSlug={trackSlug} activeEventId="1" />
-    );
+  it('groups events by date and only shows the date once per group', () => {
+    const groupedEvents: EventResponse[] = [
+      mockEvents[0],
+      {
+        ...mockEvents[0],
+        id: '3',
+        title: 'Second Event Same Day',
+      },
+      mockEvents[1],
+    ];
 
-    const activeCard = container.querySelector('.border-primary');
-    expect(activeCard).toBeInTheDocument();
+    render(<TrackEventList events={groupedEvents} trackSlug={trackSlug} />);
+
+    const dateLabels = screen.getAllByText('21 October 2025');
+    expect(dateLabels).toHaveLength(1);
+  });
+
+  it('renders a timeline node for each event and a single connector line', () => {
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
+
+    const timelineNodes = screen.getAllByTestId('timeline-node');
+    expect(timelineNodes).toHaveLength(mockEvents.length);
+
+    // Single continuous connector line spanning the entire timeline
+    const connectors = screen.queryAllByTestId('timeline-connector');
+    expect(connectors).toHaveLength(1);
+  });
+
+  it('highlights active event', () => {
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} activeEventId="1" />);
+
+    const activeCard = screen
+      .getAllByTestId('track-event-card')
+      .find((card) => card.getAttribute('data-active') === 'true');
+    expect(activeCard).toBeDefined();
     expect(activeCard).toHaveTextContent('Event 1');
+
+    const activeTimelineNode = screen
+      .getAllByTestId('timeline-node')
+      .find((node) => node.getAttribute('data-active') === 'true');
+    expect(activeTimelineNode).toBeDefined();
   });
 
   it('does not highlight when no active event', () => {
-    const { container } = render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
+    render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
 
-    const activeCards = container.querySelectorAll('.border-primary');
+    const activeCards = screen
+      .getAllByTestId('track-event-card')
+      .filter((card) => card.getAttribute('data-active') === 'true');
     expect(activeCards).toHaveLength(0);
   });
 });

@@ -1,16 +1,34 @@
 import Link from 'next/link';
-import type { TrackEventListProps } from './types';
-import { formatEventDate } from './helpers';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { TrackEventCard } from '@/components/track_event_card';
+import { formatDateLabel, groupEventsByDate } from './helpers';
+import type {
+  DateGroupProps,
+  EventsGroupProps,
+  TimelineRowProps,
+  TrackEventListProps,
+} from './types';
 
 export function TrackEventList({ events, trackSlug, activeEventId }: TrackEventListProps) {
   if (events.length === 0) {
     return renderEmptyState();
   }
 
+  const dateGroups = groupEventsByDate(events);
+
   return (
-    <div className="space-y-4">
-      {events.map((event) => renderEventCard(event, trackSlug, activeEventId === event.id))}
+    <div className="relative grid grid-cols-[auto_1fr] gap-10">
+      {renderTimelineConnector()}
+      {dateGroups.map((group, groupIndex) =>
+        renderDateGroup({
+          group,
+          groupIndex,
+          totalGroups: dateGroups.length,
+          trackSlug,
+          activeEventId,
+        })
+      )}
     </div>
   );
 }
@@ -25,76 +43,79 @@ function renderEmptyState() {
   );
 }
 
-function renderEventCard(
-  event: TrackEventListProps['events'][0],
-  trackSlug: string,
-  isActive: boolean
-) {
-  const hasFileUrl = !!event.fileUrl;
-  
-  const cardContent = (
-    <Card
-      key={event.id}
-      className={`cursor-pointer transition-colors hover:bg-accent/50 ${
-        isActive ? 'border-primary bg-accent' : ''
-      }`}
-    >
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-xl">{event.title}</CardTitle>
-            <CardDescription>{formatEventDate(event.date)}</CardDescription>
-          </div>
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            {event.type}
-          </span>
-        </div>
-      </CardHeader>
-      {(event.description || hasFileUrl) && (
-        <CardContent className="space-y-3">
-          {event.description && <p className="text-sm text-foreground">{event.description}</p>}
-          {hasFileUrl && (
-            <div className="mt-2">
-              <a
-                href={event.fileUrl!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.open(event.fileUrl!, '_blank', 'noopener,noreferrer');
-                }}
-              >
-                View attached file →
-              </a>
-            </div>
-          )}
-        </CardContent>
-      )}
-    </Card>
-  );
-
-  if (hasFileUrl) {
-    // If there's a file URL, wrap in a div instead of Link to avoid nested anchors
-    return (
-      <div key={event.id} className="block">
-        <div
-          className="cursor-pointer"
-          onClick={() => {
-            window.location.href = `/tracks/${trackSlug}/${event.id}`;
-          }}
-        >
-          {cardContent}
-        </div>
-      </div>
-    );
-  }
-
+function renderDateGroup({ group, trackSlug, activeEventId }: DateGroupProps) {
   return (
-    <Link key={event.id} href={`/tracks/${trackSlug}/${event.id}`} className="block">
-      {cardContent}
-    </Link>
+    <>
+      {renderDateLabel(group.date)}
+      {renderEventsGroup({
+        events: group.events,
+        trackSlug,
+        activeEventId,
+      })}
+    </>
   );
 }
 
+function renderDateLabel(date: string) {
+  const dateLabel = formatDateLabel(date);
+
+  return (
+    <div className="mb-2 col-start-2 sticky top-0 bg-background h-8 pl-1">
+      <span className="text-sm font-semibold text-muted-foreground">{dateLabel}</span>
+    </div>
+  );
+}
+
+function renderEventsGroup({ events, trackSlug, activeEventId }: EventsGroupProps) {
+  return (
+    <>
+      {events.map((event) => {
+        const isActive = activeEventId === event.id;
+
+        return renderTimelineRow({
+          event,
+          trackSlug,
+          isActive,
+        });
+      })}
+    </>
+  );
+}
+
+function renderTimelineRow({ event, trackSlug, isActive }: TimelineRowProps) {
+  return (
+    <>
+      {renderTimelineNode(isActive)}
+      <Link
+        href={`/tracks/${trackSlug}/${event.id}`}
+        className="block col-start-2 justify-self-stretch pl-1"
+      >
+        <TrackEventCard event={event} isActive={isActive} className="w-full" />
+      </Link>
+    </>
+  );
+}
+
+function renderTimelineConnector() {
+  return (
+    <span
+      aria-hidden
+      className="absolute top-20 bottom-0 left-[10px] w-px bg-border"
+      data-testid="timeline-connector"
+    />
+  );
+}
+
+function renderTimelineNode(isActive: boolean) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'relative z-10 rounded-full border-2 border-primary transition-all col-start-1',
+        isActive ? 'h-5 w-5 bg-primary' : 'h-5 w-5 bg-background'
+      )}
+      data-testid="timeline-node"
+      data-active={isActive ? 'true' : 'false'}
+    />
+  );
+}

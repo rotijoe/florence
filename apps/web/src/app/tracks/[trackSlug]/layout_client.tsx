@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { TrackEventList } from '@/components/track_event_list';
+import { DateScroller } from '@/components/date_scroller';
 import type { TrackLayoutClientProps } from './layout_types';
 
 export function TrackLayoutClient({
@@ -63,6 +64,9 @@ export function TrackLayoutClient({
     return (
       <div>
         {renderHeader()}
+        <div className="mt-6">
+          <DateScroller referenceDate={events[0]?.date} />
+        </div>
         <div className="mt-8">
           <TrackEventList events={events} trackSlug={trackSlug} activeEventId={eventId} />
         </div>
