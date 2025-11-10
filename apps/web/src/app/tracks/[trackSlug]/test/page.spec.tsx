@@ -4,7 +4,23 @@ import { EventType } from '@packages/types'
 
 jest.mock('../helpers', () => ({
   fetchTrack: jest.fn(),
-  fetchTrackEvents: jest.fn()
+  fetchTrackEvents: jest.fn(),
+}))
+
+jest.mock('@/components/track_event_list', () => ({
+  TrackEventList: ({ events, trackSlug }: { events: any[]; trackSlug: string }) => (
+    <div data-testid="track-event-list">
+      {events.map((event) => (
+        <div key={event.id}>{event.title}</div>
+      ))}
+    </div>
+  ),
+}))
+
+jest.mock('@/components/date_scroller', () => ({
+  DateScroller: ({ referenceDate }: { referenceDate?: string }) => (
+    <div data-testid="date-scroller">Date Scroller</div>
+  ),
 }))
 
 const { fetchTrack, fetchTrackEvents } = require('../helpers')
@@ -14,7 +30,7 @@ describe('TrackPage', () => {
     id: 'track-1',
     name: 'Sleep',
     slug: 'sleep',
-    createdAt: '2025-10-21T00:00:00.000Z'
+    createdAt: '2025-10-21T00:00:00.000Z',
   }
 
   const mockEvents = [
@@ -27,8 +43,8 @@ describe('TrackPage', () => {
       type: EventType.NOTE,
       fileUrl: null,
       createdAt: '2025-10-21T00:00:00.000Z',
-      updatedAt: '2025-10-21T00:00:00.000Z'
-    }
+      updatedAt: '2025-10-21T00:00:00.000Z',
+    },
   ]
 
   beforeEach(() => {
@@ -40,15 +56,31 @@ describe('TrackPage', () => {
     jest.clearAllMocks()
   })
 
-  it('returns null as page content is handled by layout', async () => {
+  it('renders track name as heading', async () => {
     const page = await TrackPage({ params: Promise.resolve({ trackSlug: 'sleep' }) as any })
-    expect(page).toBeNull()
+    const { container } = render(page)
+    expect(screen.getByText('Sleep')).toBeInTheDocument()
   })
 
-  it('awaits params correctly', async () => {
-    const paramsPromise = Promise.resolve({ trackSlug: 'sleep' }) as any
-    await TrackPage({ params: paramsPromise })
-    // Test passes if no errors are thrown
-    expect(true).toBe(true)
+  it('calls fetchTrack with correct slug', async () => {
+    await TrackPage({ params: Promise.resolve({ trackSlug: 'sleep' }) as any })
+    expect(fetchTrack).toHaveBeenCalledWith('sleep')
+  })
+
+  it('calls fetchTrackEvents with correct slug', async () => {
+    await TrackPage({ params: Promise.resolve({ trackSlug: 'sleep' }) as any })
+    expect(fetchTrackEvents).toHaveBeenCalledWith('sleep')
+  })
+
+  it('renders TrackEventList component', async () => {
+    const page = await TrackPage({ params: Promise.resolve({ trackSlug: 'sleep' }) as any })
+    const { container } = render(page)
+    expect(screen.getByTestId('track-event-list')).toBeInTheDocument()
+  })
+
+  it('renders DateScroller component', async () => {
+    const page = await TrackPage({ params: Promise.resolve({ trackSlug: 'sleep' }) as any })
+    const { container } = render(page)
+    expect(screen.getByTestId('date-scroller')).toBeInTheDocument()
   })
 })

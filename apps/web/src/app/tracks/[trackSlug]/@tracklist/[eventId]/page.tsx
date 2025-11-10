@@ -1,9 +1,15 @@
-import { fetchTrack, fetchTrackEvents } from './helpers'
+import { fetchTrack, fetchTrackEvents } from '../../helpers'
 import { TrackEventList } from '@/components/track_event_list'
 import { DateScroller } from '@/components/date_scroller'
-import type { TrackPageProps } from './types'
 
-export default async function TrackPage({ params }: TrackPageProps) {
+type TrackListSlotProps = {
+  params: Promise<{
+    trackSlug: string
+    eventId: string
+  }>
+}
+
+export default async function TrackListSlot({ params }: TrackListSlotProps) {
   const { trackSlug } = await params
 
   const [track, events] = await Promise.all([fetchTrack(trackSlug), fetchTrackEvents(trackSlug)])

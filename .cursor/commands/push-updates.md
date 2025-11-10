@@ -1,2 +1,3 @@
+If --skipChecks is present in prompt, skip the tests, lint and typechecks.
 Run tests, lint, typecheck first to check all passes. Do not fix the issues, just report them. If all pass continue...
 Review the changes in my working directory, then add all modified files, commit them with title if provided in the prompt, and a descriptive bullet pointed commit message based on the changes made, and push to the current branch on GitHub.

@@ -6,7 +6,16 @@ export type TrackPageData = {
 }
 
 export type TrackPageProps = {
-  params: {
+  params: Promise<{
     trackSlug: string
-  }
+  }>
+}
+
+export type TrackLayoutProps = {
+  children: React.ReactNode
+  tracklist: React.ReactNode // @tracklist slot
+  event: React.ReactNode // @event slot
+  params: Promise<{
+    trackSlug: string
+  }>
 }

@@ -1,15 +1,24 @@
-import { fetchTrack, fetchTrackEvents } from './helpers';
-import { TrackLayoutClient } from './layout_client';
-import type { TrackLayoutProps } from './layout_types';
+import type { TrackLayoutProps } from './types'
 
-export default async function TrackLayout({ children, params }: TrackLayoutProps) {
-  const { trackSlug } = await params;
-
-  const [track, events] = await Promise.all([fetchTrack(trackSlug), fetchTrackEvents(trackSlug)]);
+export default async function TrackLayout({
+  children,
+  tracklist,
+  event,
+  params,
+}: TrackLayoutProps) {
+  await params // Ensure params are awaited
 
   return (
-    <TrackLayoutClient trackName={track.name} events={events} trackSlug={trackSlug}>
-      {children}
-    </TrackLayoutClient>
-  );
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="md:overflow-y-auto md:max-h-[calc(100vh-8rem)]">
+          <div className="hidden md:block">{tracklist}</div>
+          <div className="block md:hidden">{children}</div>
+        </div>
+        <div className="hidden md:block md:overflow-y-auto md:max-h-[calc(100vh-8rem)]">
+          {event}
+        </div>
+      </div>
+    </div>
+  )
 }

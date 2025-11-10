@@ -1,6 +1,6 @@
 export type EventPageProps = {
-  params: {
-    trackSlug: string;
-    eventId: string;
-  };
-};
+  params: Promise<{
+    trackSlug: string
+    eventId: string
+  }>
+}
