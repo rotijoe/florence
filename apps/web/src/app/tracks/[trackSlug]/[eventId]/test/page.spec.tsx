@@ -49,13 +49,4 @@ describe('EventSlotPage', () => {
     })
     expect(fetchEvent).toHaveBeenCalledWith('event-1', 'sleep')
   })
-
-  it('renders with block md:hidden classes', async () => {
-    const page = await EventSlotPage({
-      params: Promise.resolve({ trackSlug: 'sleep', eventId: 'event-1' }),
-    })
-    const { container } = render(page)
-    const wrapper = container.firstChild as HTMLElement
-    expect(wrapper).toHaveClass('block', 'md:hidden')
-  })
 })

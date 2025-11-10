@@ -1,21 +1,21 @@
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { TrackEventCard } from '@/components/track_event_card';
-import { formatDateLabel, groupEventsByDate } from './helpers';
+import Link from 'next/link'
+import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+import { TrackEventCard } from '@/components/track_event_card'
+import { formatDateLabel, groupEventsByDate } from './helpers'
 import type {
   DateGroupProps,
   EventsGroupProps,
   TimelineRowProps,
   TrackEventListProps,
-} from './types';
+} from './types'
 
 export function TrackEventList({ events, trackSlug, activeEventId }: TrackEventListProps) {
   if (events.length === 0) {
-    return renderEmptyState();
+    return renderEmptyState()
   }
 
-  const dateGroups = groupEventsByDate(events);
+  const dateGroups = groupEventsByDate(events)
 
   return (
     <div className="relative grid grid-cols-[auto_1fr] gap-10">
@@ -30,7 +30,7 @@ export function TrackEventList({ events, trackSlug, activeEventId }: TrackEventL
         })
       )}
     </div>
-  );
+  )
 }
 
 function renderEmptyState() {
@@ -40,7 +40,7 @@ function renderEmptyState() {
         No events recorded yet for this track.
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function renderDateGroup({ group, trackSlug, activeEventId }: DateGroupProps) {
@@ -53,33 +53,33 @@ function renderDateGroup({ group, trackSlug, activeEventId }: DateGroupProps) {
         activeEventId,
       })}
     </>
-  );
+  )
 }
 
 function renderDateLabel(date: string) {
-  const dateLabel = formatDateLabel(date);
+  const dateLabel = formatDateLabel(date)
 
   return (
     <div className="mb-2 col-start-2 sticky top-0 bg-background h-8 pl-1">
       <span className="text-sm font-semibold text-muted-foreground">{dateLabel}</span>
     </div>
-  );
+  )
 }
 
 function renderEventsGroup({ events, trackSlug, activeEventId }: EventsGroupProps) {
   return (
     <>
       {events.map((event) => {
-        const isActive = activeEventId === event.id;
+        const isActive = activeEventId === event.id
 
         return renderTimelineRow({
           event,
           trackSlug,
           isActive,
-        });
+        })
       })}
     </>
-  );
+  )
 }
 
 function renderTimelineRow({ event, trackSlug, isActive }: TimelineRowProps) {
@@ -93,7 +93,7 @@ function renderTimelineRow({ event, trackSlug, isActive }: TimelineRowProps) {
         <TrackEventCard event={event} isActive={isActive} className="w-full" />
       </Link>
     </>
-  );
+  )
 }
 
 function renderTimelineConnector() {
@@ -103,7 +103,7 @@ function renderTimelineConnector() {
       className="absolute top-20 bottom-0 left-[10px] w-px bg-border"
       data-testid="timeline-connector"
     />
-  );
+  )
 }
 
 function renderTimelineNode(isActive: boolean) {
@@ -117,5 +117,5 @@ function renderTimelineNode(isActive: boolean) {
       data-testid="timeline-node"
       data-active={isActive ? 'true' : 'false'}
     />
-  );
+  )
 }

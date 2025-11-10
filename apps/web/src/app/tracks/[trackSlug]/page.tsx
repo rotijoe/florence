@@ -1,6 +1,5 @@
 import { fetchTrack, fetchTrackEvents } from './helpers'
 import { TrackEventList } from '@/components/track_event_list'
-import { DateScroller } from '@/components/date_scroller'
 import type { TrackPageProps } from './types'
 
 export default async function TrackPage({ params }: TrackPageProps) {
@@ -11,9 +10,6 @@ export default async function TrackPage({ params }: TrackPageProps) {
   return (
     <>
       <h1 className="text-3xl font-bold">{track.name}</h1>
-      <div className="mt-6">
-        <DateScroller referenceDate={events[0]?.date} />
-      </div>
       <div className="mt-8">
         <TrackEventList events={events} trackSlug={trackSlug} />
       </div>

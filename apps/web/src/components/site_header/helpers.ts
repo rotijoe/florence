@@ -8,22 +8,22 @@ export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
   const breadcrumbs: BreadcrumbItem[] = []
 
   // Always start with Home
-  breadcrumbs.push({ label: 'Home', href: '/' })
+  breadcrumbs.push({ label: 'home', href: '/' })
 
   if (segments.length === 0) {
     return breadcrumbs
   }
 
   // Handle dashboard
-  if (segments[0] === 'dashboard') {
-    breadcrumbs.push({ label: 'Dashboard', href: '/dashboard' })
+  if (segments[0] === 'tracks' && segments.length === 1) {
+    breadcrumbs.push({ label: 'tracks', href: '/tracks' })
     return breadcrumbs
   }
 
   // Handle tracks routes
   if (segments[0] === 'tracks' && segments.length >= 2) {
     const trackSlug = segments[1]
-    breadcrumbs.push({ label: 'Dashboard', href: '/dashboard' })
+    breadcrumbs.push({ label: 'tracks', href: '/tracks' })
 
     // Use track slug as label (will be updated by layout if needed)
     breadcrumbs.push({ label: trackSlug, href: `/tracks/${trackSlug}` })
@@ -32,7 +32,7 @@ export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
     if (segments.length >= 3) {
       const eventId = segments[2]
       breadcrumbs.push({
-        label: eventId,
+        label: 'event',
         href: `/tracks/${trackSlug}/${eventId}`,
       })
     }
