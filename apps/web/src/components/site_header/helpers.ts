@@ -24,7 +24,7 @@ export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
   if (segments[0] === 'tracks' && segments.length >= 2) {
     const trackSlug = segments[1]
     breadcrumbs.push({ label: 'Dashboard', href: '/dashboard' })
-    
+
     // Use track slug as label (will be updated by layout if needed)
     breadcrumbs.push({ label: trackSlug, href: `/tracks/${trackSlug}` })
 
@@ -33,7 +33,7 @@ export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
       const eventId = segments[2]
       breadcrumbs.push({
         label: eventId,
-        href: `/tracks/${trackSlug}/${eventId}`
+        href: `/tracks/${trackSlug}/${eventId}`,
       })
     }
 
@@ -43,4 +43,3 @@ export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
   // Fallback for unknown routes
   return breadcrumbs
 }
-

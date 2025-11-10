@@ -1,6 +1,6 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import prettier from 'eslint-config-prettier';
+import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import prettier from 'eslint-config-prettier'
 
 export default tseslint.config(
   // Base configs
@@ -33,6 +33,8 @@ export default tseslint.config(
       eqeqeq: ['error', 'always'],
       camelcase: ['error', { properties: 'always' }],
 
+      'comma-dangle': ['error', 'never'],
+
       // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -49,4 +51,4 @@ export default tseslint.config(
 
   // Prettier must be last to override formatting rules
   prettier
-);
+)

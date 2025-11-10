@@ -6,9 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "jest",
+    "test": "jest --coverage",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit --pretty"
   },

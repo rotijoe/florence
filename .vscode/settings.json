@@ -1,0 +1,43 @@
+{
+  // Disable TypeScript's built-in formatter - Prettier handles all formatting
+  "typescript.format.enable": false,
+  "javascript.format.enable": false,
+
+  // Ensure Prettier is the default formatter for all relevant files
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+
+  // Configure save actions: ESLint fixes first, then Prettier formats LAST
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // Ensure Prettier runs AFTER all other formatters
+  "editor.formatOnSave": true,
+
+  // Use Prettier config from workspace (not user settings)
+  "prettier.requireConfig": true,
+
+  // ESLint settings
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.run": "onType"
+}
