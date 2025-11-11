@@ -1,7 +1,8 @@
-import { CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+'use client'
+
+import { useState } from 'react'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { formatTimestamp } from './helpers'
-import type { EventDetailProps } from './types'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,91 +10,150 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Field, FieldLabel, FieldContent } from '@/components/ui/field'
+import { Textarea } from '@/components/ui/textarea'
 import { MoreVertical } from 'lucide-react'
+import { formatTimestamp } from './helpers'
+import type { EventDetailProps } from './types'
 
 export function EventDetail({ event }: EventDetailProps) {
-  return (
-    <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 lg:min-h-[calc(100vh-8rem)]">
-      {renderLayout(event)}
-    </section>
-  )
-}
+  const [isEditing, setIsEditing] = useState(false)
+  const [displayNotes, setDisplayNotes] = useState(event.description || '')
+  const [editedNotes, setEditedNotes] = useState(event.description || '')
 
-function renderMobileMenu() {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full lg:hidden">
-          <MoreVertical className="size-4" />
-          <span className="sr-only">Event actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem>Edit event</DropdownMenuItem>
-        <DropdownMenuItem>Upload document</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive">Delete event</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
+  const handleEdit = () => {
+    setEditedNotes(displayNotes)
+    setIsEditing(true)
+  }
 
-function renderDesktopMenu() {
-  return (
-    <aside className="hidden flex-col gap-2 border-l bg-card px-4 py-10 lg:sticky lg:top-[30px] lg:flex lg:h-full lg:max-h-[calc(100vh-46px)]">
-      <Button type="button" size="sm">
-        Edit event
-      </Button>
-      <Button type="button" variant="outline" size="sm">
-        Upload document
-      </Button>
-      <Button type="button" variant="destructive" size="sm" className="mt-auto bg-pink-500">
-        Delete event
-      </Button>
-    </aside>
-  )
-}
+  const handleSave = () => {
+    setDisplayNotes(editedNotes)
+    setIsEditing(false)
+    // In the future, this will call a backend API
+  }
 
-function renderLayout(event: EventDetailProps['event']) {
+  const handleCancel = () => {
+    setEditedNotes(displayNotes)
+    setIsEditing(false)
+  }
+
   return (
-    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:h-full lg:gap-8">
-      <div className="lg:hidden">{renderMobileMenu()}</div>
-      <div className="h-[2000px]">
-        {renderHeader(event)}
-        {renderContent(event)}
+    <>
+      <Card>
+        {renderHeader(event, isEditing, handleSave, handleCancel, handleEdit)}
+        {renderContent(event, isEditing, editedNotes, setEditedNotes, displayNotes)}
         {renderFooter(event)}
-      </div>
-      <div className="hidden lg:block lg:h-full">{renderDesktopMenu()}</div>
+      </Card>
+    </>
+  )
+}
+
+function renderActionsMenu(onEditEvent: () => void) {
+  return (
+    <div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="w-full">
+            <MoreVertical className="size-4" />
+            <span className="sr-only">Event actions</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onSelect={onEditEvent}>Edit event</DropdownMenuItem>
+          <DropdownMenuItem>Upload document</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive">Delete event</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }
 
-function renderHeader(event: EventDetailProps['event']) {
+function renderEditingButtons(onSave: () => void, onCancel: () => void, isEditing: boolean) {
+  if (!isEditing) return null
+
+  return (
+    <>
+      <Button onClick={onSave} size="sm">
+        Save
+      </Button>
+
+      <Button onClick={onCancel} variant="outline" size="sm">
+        Cancel
+      </Button>
+    </>
+  )
+}
+
+function renderHeader(
+  event: EventDetailProps['event'],
+  isEditing: boolean,
+  onSave: () => void,
+  onCancel: () => void,
+  handleEdit: () => void
+) {
   return (
     <CardHeader className="gap-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
           <CardTitle className="text-3xl">{event.title}</CardTitle>
+          <span className="w-fit rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.65rem] font-medium uppercase tracking-wide text-primary">
+            {event.type}
+          </span>
         </div>
-        <span className="w-fit rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.65rem] font-medium uppercase tracking-wide text-primary">
-          {event.type}
-        </span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {renderEditingButtons(onSave, onCancel, isEditing)}
+          </div>
+          {renderActionsMenu(handleEdit)}
+        </div>
       </div>
     </CardHeader>
   )
 }
 
-function renderContent(event: EventDetailProps['event']) {
+function renderContent(
+  event: EventDetailProps['event'],
+  isEditing: boolean,
+  editedNotes: string,
+  setEditedNotes: (value: string) => void,
+  displayNotes: string
+) {
   return (
     <CardContent className="space-y-6">
-      {Boolean(event.description) && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-muted-foreground">Notes</h3>
-          <p className="text-sm leading-6 text-foreground">{event.description}</p>
-        </div>
-      )}
+      {renderNotes(displayNotes, isEditing, editedNotes, setEditedNotes)}
       {renderDocumentButton(event.fileUrl)}
     </CardContent>
+  )
+}
+
+const renderNotes = (
+  displayNotes: string,
+  isEditing: boolean,
+  editedNotes: string,
+  setEditedNotes: (value: string) => void
+) => {
+  if (isEditing) {
+    return (
+      <Field>
+        <FieldLabel htmlFor="notes">Notes</FieldLabel>
+        <FieldContent>
+          <Textarea
+            id="notes"
+            value={editedNotes}
+            onChange={(e) => setEditedNotes(e.target.value)}
+            rows={6}
+            className="resize-none"
+          />
+        </FieldContent>
+      </Field>
+    )
+  }
+  return (
+    <div className="border border-border px-3 py-2 rounded-md text-foreground bg-cardspace-y-2">
+      <h3 className="text-sm font-semibold text-muted-foreground">Notes</h3>
+      <p className="text-sm leading-6">{displayNotes}</p>
+    </div>
   )
 }
 

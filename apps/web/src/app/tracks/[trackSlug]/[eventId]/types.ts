@@ -4,3 +4,7 @@ export type EventPageProps = {
     eventId: string
   }>
 }
+
+export type EventLayoutProps = {
+  children: React.ReactNode
+}
