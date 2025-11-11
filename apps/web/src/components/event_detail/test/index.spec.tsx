@@ -1,7 +1,6 @@
-import { render, screen } from '@testing-library/react';
-import { EventDetail } from '../index';
-import type { EventResponse } from '@packages/types';
-import { EventType } from '@packages/types';
+import { render, screen } from '@testing-library/react'
+import { EventDetail } from '../index'
+import { EventType, type EventResponse } from '@packages/types'
 
 describe('EventDetail', () => {
   const mockEvent: EventResponse = {
@@ -14,88 +13,97 @@ describe('EventDetail', () => {
     fileUrl: 'https://example.com/file.pdf',
     createdAt: '2025-10-21T14:30:00.000Z',
     updatedAt: '2025-10-21T14:30:00.000Z',
-  };
+  }
 
   it('renders event title', () => {
-    render(<EventDetail event={mockEvent} />);
+    render(<EventDetail event={mockEvent} />)
 
-    expect(screen.getByText('Test Event')).toBeInTheDocument();
-  });
+    expect(screen.getByText('Test Event')).toBeInTheDocument()
+  })
 
   it('displays formatted event date', () => {
-    render(<EventDetail event={mockEvent} />);
+    render(<EventDetail event={mockEvent} />)
 
     // There are multiple date instances, so use getAllByText
-    const dates = screen.getAllByText(/21 October 2025/i);
-    expect(dates.length).toBeGreaterThan(0);
-  });
+    const dates = screen.getAllByText(/21 October 2025/i)
+    expect(dates.length).toBeGreaterThan(0)
+  })
 
   it('displays event type', () => {
-    render(<EventDetail event={mockEvent} />);
+    render(<EventDetail event={mockEvent} />)
 
-    expect(screen.getByText('NOTE')).toBeInTheDocument();
-  });
+    expect(screen.getByText('NOTE')).toBeInTheDocument()
+  })
 
-  it('displays event description when present', () => {
-    render(<EventDetail event={mockEvent} />);
+  it('displays event notes when present', () => {
+    render(<EventDetail event={mockEvent} />)
 
-    expect(screen.getByText('Test Description')).toBeInTheDocument();
-  });
+    expect(screen.getByText('Notes')).toBeInTheDocument()
+    expect(screen.getByText('Test Description')).toBeInTheDocument()
+  })
 
-  it('displays file link when fileUrl is available', () => {
-    render(<EventDetail event={mockEvent} />);
+  it('renders action buttons', () => {
+    render(<EventDetail event={mockEvent} />)
 
-    const link = screen.getByText(/view attached file/i);
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', 'https://example.com/file.pdf');
-    expect(link).toHaveAttribute('target', '_blank');
-  });
+    expect(screen.getByRole('button', { name: /edit event/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /delete event/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /upload document/i })).toBeInTheDocument()
+  })
+
+  it('displays document button when fileUrl is available', () => {
+    render(<EventDetail event={mockEvent} />)
+
+    const link = screen.getByRole('link', { name: /view attached document/i })
+    expect(link).toBeInTheDocument()
+    expect(link).toHaveAttribute('href', 'https://example.com/file.pdf')
+    expect(link).toHaveAttribute('target', '_blank')
+  })
 
   it('displays created timestamp', () => {
-    render(<EventDetail event={mockEvent} />);
+    render(<EventDetail event={mockEvent} />)
 
-    expect(screen.getByText(/Created:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Created:/i)).toBeInTheDocument()
     // There are multiple date instances, so use getAllByText
-    const dates = screen.getAllByText(/21 October 2025/i);
-    expect(dates.length).toBeGreaterThan(0);
-  });
+    const dates = screen.getAllByText(/21 October 2025/i)
+    expect(dates.length).toBeGreaterThan(0)
+  })
 
   it('displays updated timestamp when different from created', () => {
     const eventWithUpdate: EventResponse = {
       ...mockEvent,
       updatedAt: '2025-10-22T10:00:00.000Z',
-    };
+    }
 
-    render(<EventDetail event={eventWithUpdate} />);
+    render(<EventDetail event={eventWithUpdate} />)
 
-    expect(screen.getByText(/Updated:/i)).toBeInTheDocument();
-  });
+    expect(screen.getByText(/Updated:/i)).toBeInTheDocument()
+  })
 
   it('does not display updated timestamp when same as created', () => {
-    render(<EventDetail event={mockEvent} />);
+    render(<EventDetail event={mockEvent} />)
 
-    expect(screen.queryByText(/Updated:/i)).not.toBeInTheDocument();
-  });
+    expect(screen.queryByText(/Updated:/i)).not.toBeInTheDocument()
+  })
 
-  it('handles event without description', () => {
+  it('handles event without notes', () => {
     const eventWithoutDescription: EventResponse = {
       ...mockEvent,
       description: null,
-    };
+    }
 
-    render(<EventDetail event={eventWithoutDescription} />);
+    render(<EventDetail event={eventWithoutDescription} />)
 
-    expect(screen.queryByText('Description')).not.toBeInTheDocument();
-  });
+    expect(screen.queryByText('Notes')).not.toBeInTheDocument()
+  })
 
   it('handles event without fileUrl', () => {
     const eventWithoutFile: EventResponse = {
       ...mockEvent,
       fileUrl: null,
-    };
+    }
 
-    render(<EventDetail event={eventWithoutFile} />);
+    render(<EventDetail event={eventWithoutFile} />)
 
-    expect(screen.queryByText(/view attached file/i)).not.toBeInTheDocument();
-  });
-});
+    expect(screen.queryByRole('link', { name: /view attached document/i })).not.toBeInTheDocument()
+  })
+})

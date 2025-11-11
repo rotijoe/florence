@@ -15,8 +15,9 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { generateBreadcrumbs } from './helpers'
+import { cn } from '@/lib/utils'
 
-export function SiteHeader() {
+export function SiteHeader({ className }: { className?: string }) {
   const pathname = usePathname()
 
   const breadcrumbs = useMemo(() => {
@@ -58,7 +59,12 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="flex h-[--header-height] shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-[--header-height]">
+    <header
+      className={cn(
+        'flex h-[--header-height] bg-background shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-[--header-height]',
+        className
+      )}
+    >
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
