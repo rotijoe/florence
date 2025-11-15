@@ -329,6 +329,109 @@ Get all health events for a specific track, sorted by occurrence date (newest fi
 }
 ```
 
+#### GET /api/tracks/:slug/events/:eventId
+
+Get a specific health event by ID.
+
+**Authentication:** Not required (public endpoint)
+
+**Path Parameters:**
+
+- `slug` - Unique slug identifier for the track
+- `eventId` - Unique identifier for the event
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "event-id",
+    "trackId": "track-id",
+    "date": "2025-10-21T14:30:00.000Z",
+    "type": "NOTE",
+    "title": "Event Title",
+    "description": "Event Description",
+    "fileUrl": null,
+    "createdAt": "2025-10-21T14:30:00.000Z",
+    "updatedAt": "2025-10-21T14:30:00.000Z"
+  }
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "success": false,
+  "error": "Event not found"
+}
+```
+
+#### PATCH /api/tracks/:slug/events/:eventId
+
+Update a health event's title and/or description.
+
+**Authentication:** Not required (public endpoint)
+
+**Path Parameters:**
+
+- `slug` - Unique slug identifier for the track
+- `eventId` - Unique identifier for the event
+
+**Request Body:**
+
+```json
+{
+  "title": "Updated Event Title",
+  "description": "Updated description or null"
+}
+```
+
+Both fields are optional. Only provided fields will be updated.
+
+**Validation:**
+
+- `title` - If provided, must be a non-empty string after trimming
+- `description` - If provided, must be a string or null
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "event-id",
+    "trackId": "track-id",
+    "date": "2025-10-21T14:30:00.000Z",
+    "type": "NOTE",
+    "title": "Updated Event Title",
+    "description": "Updated description",
+    "fileUrl": null,
+    "createdAt": "2025-10-21T14:30:00.000Z",
+    "updatedAt": "2025-10-22T10:00:00.000Z"
+  }
+}
+```
+
+**Error Response (400):**
+
+```json
+{
+  "success": false,
+  "error": "Title is required and must be a non-empty string"
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "success": false,
+  "error": "Event not found"
+}
+```
+
 ## Future Endpoints
 
 ### Health Tracks (Authenticated)
@@ -340,7 +443,5 @@ Get all health events for a specific track, sorted by occurrence date (newest fi
 ### Events (Authenticated)
 
 - POST /api/tracks/:trackId/events - Create event
-- GET /api/events/:id - Get event by ID
-- PUT /api/events/:id - Update event
-- DELETE /api/events/:id - Delete event
-- POST /api/events/:id/upload - Upload file for event
+- DELETE /api/tracks/:slug/events/:eventId - Delete event
+- POST /api/tracks/:slug/events/:eventId/upload - Upload file for event

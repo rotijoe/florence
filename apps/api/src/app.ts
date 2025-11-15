@@ -14,7 +14,7 @@ app.use(
   cors({
     origin: 'http://localhost:3000', // Next.js frontend URL
     allowHeaders: ['Content-Type', 'Authorization'],
-    allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE'],
+    allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE', 'PATCH'],
     exposeHeaders: ['Content-Length'],
     maxAge: 600,
     credentials: true

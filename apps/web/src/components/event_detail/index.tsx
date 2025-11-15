@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useOptimistic } from 'react'
+import { useFormStatus } from 'react-dom'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,41 +9,81 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Field, FieldLabel, FieldContent } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { MoreVertical } from 'lucide-react'
-import { formatTimestamp } from './helpers'
+import { formatTimestamp, optimisticReducer } from './helpers'
 import type { EventDetailProps } from './types'
+import { updateEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
+import type { EventResponse } from '@packages/types'
 
-export function EventDetail({ event }: EventDetailProps) {
+export function EventDetail({ event, trackSlug }: EventDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [displayNotes, setDisplayNotes] = useState(event.description || '')
-  const [editedNotes, setEditedNotes] = useState(event.description || '')
+  const [error, setError] = useState<string | null>(null)
+  const [optimisticEvent, updateOptimisticEvent] = useOptimistic(event, optimisticReducer)
 
-  const handleEdit = () => {
-    setEditedNotes(displayNotes)
-    setIsEditing(true)
+  async function formAction(formData: FormData) {
+    setError(null)
+
+    const title = (formData.get('title') as string) ?? ''
+    const description = (formData.get('description') as string | null) ?? null
+
+    // Optimistic update - this is inside an action, so React is happy
+    updateOptimisticEvent({
+      title: title.trim(),
+      description: description === '' ? null : description,
+      updatedAt: new Date().toISOString()
+    })
+
+    // Call the server action
+    const result = await updateEventAction(null, formData)
+
+    if (result.error) {
+      // Rollback on error
+      updateOptimisticEvent({
+        title: event.title,
+        description: event.description ?? null,
+        updatedAt: event.updatedAt
+      })
+      setError(result.error)
+      return
+    }
+
+    if (result.event) {
+      // Server-confirmed data - update optimistic state with server response
+      updateOptimisticEvent({
+        title: result.event.title,
+        description: result.event.description ?? null,
+        updatedAt: result.event.updatedAt
+      })
+      setIsEditing(false)
+    }
   }
 
-  const handleSave = () => {
-    setDisplayNotes(editedNotes)
-    setIsEditing(false)
-    // In the future, this will call a backend API
+  const handleEdit = () => {
+    setIsEditing(true)
+    setError(null)
   }
 
   const handleCancel = () => {
-    setEditedNotes(displayNotes)
     setIsEditing(false)
+    setError(null)
   }
 
   return (
     <>
       <Card>
-        {renderHeader(event, isEditing, handleSave, handleCancel, handleEdit)}
-        {renderContent(event, isEditing, editedNotes, setEditedNotes, displayNotes)}
-        {renderFooter(event)}
+        <form action={formAction}>
+          <input type="hidden" name="eventId" value={optimisticEvent.id} />
+          <input type="hidden" name="trackSlug" value={trackSlug} />
+          {renderHeader(optimisticEvent, isEditing, handleCancel, handleEdit)}
+          {renderContent(optimisticEvent, isEditing)}
+          {renderFooter(optimisticEvent)}
+        </form>
+        {error && <div className="px-6 pb-4 text-sm text-destructive">{error}</div>}
       </Card>
     </>
   )
@@ -69,70 +110,82 @@ function renderActionsMenu(onEditEvent: () => void) {
   )
 }
 
-function renderEditingButtons(onSave: () => void, onCancel: () => void, isEditing: boolean) {
-  if (!isEditing) return null
+function EditingButtons({ onCancel }: { onCancel: () => void }) {
+  const { pending } = useFormStatus()
 
   return (
     <>
-      <Button onClick={onSave} size="sm">
-        Save
+      <Button type="submit" size="sm" disabled={pending}>
+        {pending ? 'Saving...' : 'Save'}
       </Button>
-
-      <Button onClick={onCancel} variant="outline" size="sm">
+      <Button type="button" onClick={onCancel} variant="outline" size="sm" disabled={pending}>
         Cancel
       </Button>
     </>
   )
 }
 
+function renderEditingButtons(onCancel: () => void, isEditing: boolean) {
+  if (!isEditing) return null
+
+  return <EditingButtons onCancel={onCancel} />
+}
+
 function renderHeader(
-  event: EventDetailProps['event'],
+  event: EventResponse,
   isEditing: boolean,
-  onSave: () => void,
   onCancel: () => void,
   handleEdit: () => void
 ) {
   return (
     <CardHeader className="gap-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex justify-end gap-2">
+          <div className="flex gap-2">{renderEditingButtons(onCancel, isEditing)}</div>
+          {!isEditing && renderActionsMenu(handleEdit)}
+        </div>
         <div className="space-y-2">
-          <CardTitle className="text-3xl">{event.title}</CardTitle>
+          {renderTitle(isEditing, event)}
           <span className="w-fit rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.65rem] font-medium uppercase tracking-wide text-primary">
             {event.type}
           </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            {renderEditingButtons(onSave, onCancel, isEditing)}
-          </div>
-          {renderActionsMenu(handleEdit)}
         </div>
       </div>
     </CardHeader>
   )
 }
 
-function renderContent(
-  event: EventDetailProps['event'],
-  isEditing: boolean,
-  editedNotes: string,
-  setEditedNotes: (value: string) => void,
-  displayNotes: string
-) {
+function renderTitle(isEditing: boolean, event: EventResponse) {
+  if (isEditing) {
+    return (
+      <Field>
+        <FieldLabel htmlFor="title" className="sr-only">
+          Title
+        </FieldLabel>
+        <FieldContent>
+          <Input
+            id="title"
+            name="title"
+            defaultValue={event.title}
+            className="h-auto border-0 border-b border-border rounded-none bg-transparent p-0 shadow-none !text-3xl md:!text-3xl font-semibold leading-none focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring"
+          />
+        </FieldContent>
+      </Field>
+    )
+  }
+  return <CardTitle className="text-3xl">{event.title}</CardTitle>
+}
+
+function renderContent(event: EventResponse, isEditing: boolean) {
   return (
     <CardContent className="space-y-6">
-      {renderNotes(displayNotes, isEditing, editedNotes, setEditedNotes)}
+      {renderNotes(event, isEditing)}
       {renderDocumentButton(event.fileUrl)}
     </CardContent>
   )
 }
 
-const renderNotes = (
-  displayNotes: string,
-  isEditing: boolean,
-  editedNotes: string,
-  setEditedNotes: (value: string) => void
-) => {
+const renderNotes = (event: EventResponse, isEditing: boolean) => {
   if (isEditing) {
     return (
       <Field>
@@ -140,8 +193,8 @@ const renderNotes = (
         <FieldContent>
           <Textarea
             id="notes"
-            value={editedNotes}
-            onChange={(e) => setEditedNotes(e.target.value)}
+            name="description"
+            defaultValue={event.description || ''}
             rows={6}
             className="resize-none"
           />
@@ -149,10 +202,15 @@ const renderNotes = (
       </Field>
     )
   }
+
+  if (!event.description) {
+    return null
+  }
+
   return (
     <div className="border border-border px-3 py-2 rounded-md text-foreground bg-cardspace-y-2">
       <h3 className="text-sm font-semibold text-muted-foreground">Notes</h3>
-      <p className="text-sm leading-6">{displayNotes}</p>
+      <p className="text-sm leading-6">{event.description}</p>
     </div>
   )
 }
@@ -174,7 +232,7 @@ function renderDocumentButton(fileUrl: string | null | undefined) {
   )
 }
 
-function renderFooter(event: EventDetailProps['event']) {
+function renderFooter(event: EventResponse) {
   return (
     <CardFooter className="flex flex-col gap-2 border-t pt-4 text-xs text-muted-foreground">
       <div>

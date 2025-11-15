@@ -7,7 +7,7 @@ import type {
   DateGroupProps,
   EventsGroupProps,
   TimelineRowProps,
-  TrackEventListProps,
+  TrackEventListProps
 } from './types'
 
 export function TrackEventList({ events, trackSlug, activeEventId }: TrackEventListProps) {
@@ -26,7 +26,7 @@ export function TrackEventList({ events, trackSlug, activeEventId }: TrackEventL
           groupIndex,
           totalGroups: dateGroups.length,
           trackSlug,
-          activeEventId,
+          activeEventId
         })
       )}
     </div>
@@ -43,16 +43,16 @@ function renderEmptyState() {
   )
 }
 
-function renderDateGroup({ group, trackSlug, activeEventId }: DateGroupProps) {
+function renderDateGroup({ group, groupIndex, trackSlug, activeEventId }: DateGroupProps) {
   return (
-    <>
+    <div key={groupIndex}>
       {renderDateLabel(group.date)}
       {renderEventsGroup({
         events: group.events,
         trackSlug,
-        activeEventId,
+        activeEventId
       })}
-    </>
+    </div>
   )
 }
 
@@ -75,7 +75,7 @@ function renderEventsGroup({ events, trackSlug, activeEventId }: EventsGroupProp
         return renderTimelineRow({
           event,
           trackSlug,
-          isActive,
+          isActive
         })
       })}
     </>

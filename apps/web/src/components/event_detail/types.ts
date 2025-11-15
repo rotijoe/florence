@@ -1,5 +1,6 @@
-import type { EventResponse } from '@packages/types';
+import type { EventResponse } from '@packages/types'
 
 export type EventDetailProps = {
-  event: EventResponse;
-};
+  event: EventResponse
+  trackSlug: string
+}

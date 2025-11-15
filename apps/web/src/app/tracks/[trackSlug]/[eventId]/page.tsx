@@ -7,5 +7,5 @@ export default async function EventPage({ params }: EventPageProps) {
 
   const event = await fetchEvent(eventId, trackSlug)
 
-  return <EventDetail event={event} />
+  return <EventDetail event={event} trackSlug={trackSlug} />
 }

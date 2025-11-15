@@ -55,7 +55,6 @@ function DropdownMenuItem({
   inset?: boolean
   variant?: 'default' | 'destructive'
 }) {
-  console.log('className', className)
   return (
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
