@@ -1,10 +1,11 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import type { AppVariables } from './types.js'
-import { auth } from './auth'
-import userRoute from './routes/user/index'
-import tracksRoute from './routes/tracks/index'
-import eventsRoute from './routes/events/index'
+import type { AppVariables } from '@/types'
+import { auth } from '@/auth'
+import userRoute from '@/routes/user/index'
+import tracksRoute from '@/routes/tracks/index'
+import eventsRoute from '@/routes/events/index'
+import uploadsRoute from '@/routes/uploads/index'
 
 export const app = new Hono<{ Variables: AppVariables }>()
 
@@ -41,15 +42,7 @@ app.on(['POST', 'GET'], '/api/auth/*', (c) => {
   return auth.handler(c.req.raw)
 })
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
-
-app.get('/hello/:name', (c) => {
-  const name = c.req.param('name')
-  return c.text(`Hello ${name}`)
-})
-
 app.route('/api', userRoute)
 app.route('/api', tracksRoute)
 app.route('/api', eventsRoute)
+app.route('/api', uploadsRoute)

@@ -84,7 +84,7 @@ function renderEventsGroup({ events, trackSlug, activeEventId }: EventsGroupProp
 
 function renderTimelineRow({ event, trackSlug, isActive }: TimelineRowProps) {
   return (
-    <>
+    <div key={event.id}>
       {renderTimelineNode(isActive)}
       <Link
         href={`/tracks/${trackSlug}/${event.id}`}
@@ -92,7 +92,7 @@ function renderTimelineRow({ event, trackSlug, isActive }: TimelineRowProps) {
       >
         <TrackEventCard event={event} isActive={isActive} className="w-full" />
       </Link>
-    </>
+    </div>
   )
 }
 

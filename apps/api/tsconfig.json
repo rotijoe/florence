@@ -5,14 +5,13 @@
     "moduleResolution": "bundler",
     "target": "ES2022",
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@types": ["../../packages/types/src/index"],
-      "@routes/*": ["./src/routes/*"]
+      "@types": ["../../packages/types/src/index"]
     }
   },
   "include": ["src"]

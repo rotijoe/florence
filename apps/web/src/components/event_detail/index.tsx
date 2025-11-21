@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useOptimistic } from 'react'
+import { useState, useOptimistic, startTransition } from 'react'
 import { useFormStatus } from 'react-dom'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,10 +19,12 @@ import { formatTimestamp, optimisticReducer } from './helpers'
 import type { EventDetailProps } from './types'
 import { updateEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
 import type { EventResponse } from '@packages/types'
+import { UploadDocument } from '@/components/upload_document'
 
 export function EventDetail({ event, trackSlug }: EventDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [optimisticEvent, updateOptimisticEvent] = useOptimistic(event, optimisticReducer)
 
   async function formAction(formData: FormData) {
@@ -73,23 +75,50 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
     setError(null)
   }
 
+  const handleUploadClick = () => {
+    setShowUploadDialog(true)
+    setError(null)
+  }
+
+  const handleUploadComplete = (updatedEvent: EventResponse) => {
+    startTransition(() => {
+      updateOptimisticEvent({
+        fileUrl: updatedEvent.fileUrl,
+        updatedAt: updatedEvent.updatedAt
+      })
+    })
+    setShowUploadDialog(false)
+  }
+
+  const handleUploadCancel = () => {
+    setShowUploadDialog(false)
+  }
+
   return (
     <>
       <Card>
         <form action={formAction}>
           <input type="hidden" name="eventId" value={optimisticEvent.id} />
           <input type="hidden" name="trackSlug" value={trackSlug} />
-          {renderHeader(optimisticEvent, isEditing, handleCancel, handleEdit)}
+          {renderHeader(optimisticEvent, isEditing, handleCancel, handleEdit, handleUploadClick)}
           {renderContent(optimisticEvent, isEditing)}
           {renderFooter(optimisticEvent)}
         </form>
         {error && <div className="px-6 pb-4 text-sm text-destructive">{error}</div>}
       </Card>
+      {showUploadDialog && (
+        <UploadDocument
+          event={optimisticEvent}
+          trackSlug={trackSlug}
+          onUploadComplete={handleUploadComplete}
+          onCancel={handleUploadCancel}
+        />
+      )}
     </>
   )
 }
 
-function renderActionsMenu(onEditEvent: () => void) {
+function renderActionsMenu(onEditEvent: () => void, onUploadDocument: () => void) {
   return (
     <div>
       <DropdownMenu>
@@ -101,7 +130,7 @@ function renderActionsMenu(onEditEvent: () => void) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onSelect={onEditEvent}>Edit event</DropdownMenuItem>
-          <DropdownMenuItem>Upload document</DropdownMenuItem>
+          <DropdownMenuItem onSelect={onUploadDocument}>Upload document</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive">Delete event</DropdownMenuItem>
         </DropdownMenuContent>
@@ -135,14 +164,15 @@ function renderHeader(
   event: EventResponse,
   isEditing: boolean,
   onCancel: () => void,
-  handleEdit: () => void
+  handleEdit: () => void,
+  handleUploadClick: () => void
 ) {
   return (
     <CardHeader className="gap-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex justify-end gap-2">
           <div className="flex gap-2">{renderEditingButtons(onCancel, isEditing)}</div>
-          {!isEditing && renderActionsMenu(handleEdit)}
+          {!isEditing && renderActionsMenu(handleEdit, handleUploadClick)}
         </div>
         <div className="space-y-2">
           {renderTitle(isEditing, event)}
