@@ -100,4 +100,67 @@ describe('useEventUpload', () => {
     expect(result.current.status).toBe('error')
     expect(result.current.error).toBe('Upload failed: Forbidden')
   })
+
+  it('should reset status and error', () => {
+    const { result } = renderHook(() =>
+      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+    )
+
+    // Set an error state first
+    act(() => {
+      result.current.upload(mockFile).catch(() => {})
+    })
+
+    // Reset the hook
+    act(() => {
+      result.current.reset()
+    })
+
+    expect(result.current.status).toBe('idle')
+    expect(result.current.error).toBeNull()
+  })
+
+  it('should handle confirm error', async () => {
+    mockCreateIntent.mockResolvedValue({
+      uploadUrl: 'https://s3.example.com/upload',
+      fileUrl: 'https://s3.example.com/file.txt',
+      key: 'uploads/file.txt'
+    })
+    mockConfirmUpload.mockResolvedValue({
+      error: 'Failed to confirm upload'
+    })
+
+    const { result } = renderHook(() =>
+      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+    )
+
+    await act(async () => {
+      await result.current.upload(mockFile)
+    })
+
+    expect(result.current.status).toBe('error')
+    expect(result.current.error).toBe('Failed to confirm upload')
+  })
+
+  it('should handle confirm error when event is missing', async () => {
+    mockCreateIntent.mockResolvedValue({
+      uploadUrl: 'https://s3.example.com/upload',
+      fileUrl: 'https://s3.example.com/file.txt',
+      key: 'uploads/file.txt'
+    })
+    mockConfirmUpload.mockResolvedValue({
+      event: undefined
+    })
+
+    const { result } = renderHook(() =>
+      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+    )
+
+    await act(async () => {
+      await result.current.upload(mockFile)
+    })
+
+    expect(result.current.status).toBe('error')
+    expect(result.current.error).toBe('Failed to confirm upload')
+  })
 })

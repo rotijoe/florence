@@ -1,11 +1,32 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import * as React from 'react'
 import { EventDetail } from '../index'
 import { EventType, type EventResponse } from '@packages/types'
 
 // Mock the server action
 jest.mock('@/app/tracks/[trackSlug]/[eventId]/actions', () => ({
   updateEventAction: jest.fn()
+}))
+
+// Mock UploadDocument component to allow testing callback
+let mockOnUploadComplete: ((event: EventResponse) => void) | null = null
+jest.mock('@/components/upload_document', () => ({
+  UploadDocument: ({
+    onUploadComplete,
+    onCancel
+  }: {
+    onUploadComplete: (event: EventResponse) => void
+    onCancel: () => void
+  }) => {
+    mockOnUploadComplete = onUploadComplete
+    return (
+      <div role="dialog" data-testid="upload-dialog">
+        <div>Upload Document</div>
+        <button onClick={onCancel}>Cancel</button>
+      </div>
+    )
+  }
 }))
 
 import { updateEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
@@ -275,6 +296,198 @@ describe('EventDetail', () => {
         expect(screen.getByText('Failed to update event')).toBeInTheDocument()
       })
     })
+
+    it('handles error rollback when event description is null', async () => {
+      const user = userEvent.setup()
+      const eventWithNullDescription: EventResponse = {
+        ...mockEvent,
+        description: null
+      }
+      mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
+
+      render(<EventDetail event={eventWithNullDescription} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to update event')).toBeInTheDocument()
+      })
+    })
+
+    it('converts empty string description to null on save', async () => {
+      const user = userEvent.setup()
+      const updatedEvent: EventResponse = {
+        ...mockEvent,
+        description: null,
+        updatedAt: '2025-10-22T10:00:00.000Z'
+      }
+      mockUpdateEventAction.mockResolvedValue({ event: updatedEvent })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const textarea = screen.getByLabelText(/notes/i)
+      fireEvent.change(textarea, { target: { value: '' } })
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(mockUpdateEventAction).toHaveBeenCalled()
+      })
+    })
+
+    it('handles save when result event description is null', async () => {
+      const user = userEvent.setup()
+      const updatedEvent: EventResponse = {
+        ...mockEvent,
+        description: null,
+        updatedAt: '2025-10-22T10:00:00.000Z'
+      }
+      mockUpdateEventAction.mockResolvedValue({ event: updatedEvent })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.queryByLabelText(/notes/i)).not.toBeInTheDocument()
+      })
+    })
+
+    it('displays empty textarea when editing event with null description', async () => {
+      const user = userEvent.setup()
+      const eventWithNullDescription: EventResponse = {
+        ...mockEvent,
+        description: null
+      }
+
+      render(<EventDetail event={eventWithNullDescription} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const textarea = screen.getByLabelText(/notes/i)
+      expect(textarea).toHaveValue('')
+    })
+
+    it('trims whitespace from title on save', async () => {
+      const user = userEvent.setup()
+      const updatedEvent: EventResponse = {
+        ...mockEvent,
+        title: '  Trimmed Title  ',
+        updatedAt: '2025-10-22T10:00:00.000Z'
+      }
+      mockUpdateEventAction.mockResolvedValue({ event: updatedEvent })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const titleInput = screen.getByLabelText(/title/i)
+      fireEvent.change(titleInput, { target: { value: '  Trimmed Title  ' } })
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(mockUpdateEventAction).toHaveBeenCalled()
+      })
+    })
+
+    it('handles form submission when result has no event and no error', async () => {
+      const user = userEvent.setup()
+      mockUpdateEventAction.mockResolvedValue({ event: undefined, error: undefined })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(mockUpdateEventAction).toHaveBeenCalled()
+      })
+    })
+
+    it('handles form submission when title field is missing from formData', async () => {
+      const user = userEvent.setup()
+      mockUpdateEventAction.mockResolvedValue({ event: mockEvent })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      // Remove name attribute from title input to simulate missing field
+      const titleInput = screen.getByLabelText(/title/i)
+      titleInput.removeAttribute('name')
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(mockUpdateEventAction).toHaveBeenCalled()
+      })
+    })
+
+    it('handles form submission when description field is missing from formData', async () => {
+      const user = userEvent.setup()
+      mockUpdateEventAction.mockResolvedValue({ event: mockEvent })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      // Remove name attribute from description textarea to simulate missing field
+      const textarea = screen.getByLabelText(/notes/i)
+      textarea.removeAttribute('name')
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(mockUpdateEventAction).toHaveBeenCalled()
+      })
+    })
   })
 
   describe('upload document', () => {
@@ -328,10 +541,28 @@ describe('EventDetail', () => {
 
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument()
+        expect(screen.getByText('Upload Document')).toBeInTheDocument()
       })
 
-      // Verify the upload dialog is rendered
-      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      // Simulate upload completion by calling the callback directly
+      const updatedEvent: EventResponse = {
+        ...mockEvent,
+        fileUrl: 'https://example.com/new-file.pdf',
+        updatedAt: '2025-10-22T10:00:00.000Z'
+      }
+
+      // Call the callback that was passed to UploadDocument
+      // This triggers handleUploadComplete which uses startTransition internally
+      if (mockOnUploadComplete) {
+        act(() => {
+          mockOnUploadComplete!(updatedEvent)
+        })
+      }
+
+      // Verify the dialog closes after upload completes
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      })
     })
 
     it('clears error when upload dialog is opened', async () => {

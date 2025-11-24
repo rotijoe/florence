@@ -65,45 +65,45 @@ describe('useIsMobile', () => {
       value: 1024
     })
 
+    let changeHandler: ((event: MediaQueryListEvent) => void) | null = null
+    window.matchMedia = jest.fn().mockImplementation((query) => {
+      const matches = query === '(max-width: 767px)'
+      return {
+        matches,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        addEventListener: jest.fn((event: string, handler: (event: MediaQueryListEvent) => void) => {
+          if (event === 'change') {
+            changeHandler = handler
+          }
+        }),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn()
+      }
+    })
+
     const { result } = renderHook(() => useIsMobile())
 
     expect(result.current).toBe(false)
 
-    // Simulate resize to mobile
+    // Simulate resize to mobile by updating innerWidth and triggering onChange
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
       value: 500
     })
 
-    // Trigger resize event
-    act(() => {
-      window.dispatchEvent(new Event('resize'))
-    })
-
-    // The hook uses matchMedia listener, so we need to trigger the change event
-    const mediaQueryList = window.matchMedia('(max-width: 767px)')
-    act(() => {
-      // Simulate media query change
-      ;(mediaQueryList.addEventListener as jest.Mock).mock.calls.forEach(([event, handler]) => {
-        if (event === 'change') {
-          handler({ matches: true })
-        }
-      })
-    })
-
-    // Note: The actual implementation uses matchMedia change event, not resize
-    // So we need to simulate the media query change
-    const mockMediaQuery = window.matchMedia('(max-width: 767px)')
-    const changeHandler = (mockMediaQuery.addEventListener as jest.Mock).mock.calls.find(
-      (call) => call[0] === 'change'
-    )?.[1]
-
+    // Trigger the onChange handler that was registered
     if (changeHandler) {
       act(() => {
-        changeHandler({ matches: true })
+        changeHandler!({ matches: true } as MediaQueryListEvent)
       })
     }
+
+    // The hook should now return true for mobile width
+    expect(result.current).toBe(true)
   })
 
   it('cleans up event listener on unmount', () => {

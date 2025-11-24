@@ -3,11 +3,7 @@
 import { useState } from 'react'
 import { useSession } from '@/lib/auth_client'
 import { MoreVertical, LogOut, User, LogIn } from 'lucide-react'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,8 +41,12 @@ export function NavUser() {
 
   const getUserInitials = (name: string | null | undefined): string => {
     if (!name) return 'U'
-    const parts = name.trim().split(' ')
-    if (parts.length === 1) return parts[0][0].toUpperCase()
+    const trimmed = name.trim()
+    if (!trimmed) return 'U'
+    const parts = trimmed.split(' ').filter((part) => part.length > 0)
+    if (parts.length === 1) {
+      return parts[0][0].toUpperCase()
+    }
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
 
@@ -117,9 +117,7 @@ export function NavUser() {
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name || 'User'}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email || ''}
-                </span>
+                <span className="text-muted-foreground truncate text-xs">{user.email || ''}</span>
               </div>
               <MoreVertical className="ml-auto h-4 w-4" />
             </SidebarMenuButton>
@@ -138,9 +136,7 @@ export function NavUser() {
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name || 'User'}</span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    {user.email || ''}
-                  </span>
+                  <span className="text-muted-foreground truncate text-xs">{user.email || ''}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -155,4 +151,3 @@ export function NavUser() {
     </SidebarMenu>
   )
 }
-

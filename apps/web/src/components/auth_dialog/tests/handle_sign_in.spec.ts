@@ -51,4 +51,16 @@ describe('handleSignIn', () => {
       error: 'Network error'
     })
   })
+
+  it('returns generic error when error is not an Error instance', async () => {
+    const data = { email: 'test@example.com', password: 'password123' }
+    mockSignIn.mockRejectedValueOnce('String error')
+
+    const result = await handleSignIn(data)
+
+    expect(result).toEqual({
+      success: false,
+      error: 'An error occurred during sign in'
+    })
+  })
 })

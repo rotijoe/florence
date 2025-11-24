@@ -21,6 +21,8 @@ jest.mock('@/components/auth_dialog', () => ({
     ) : null
 }))
 
+const mockUseSidebar = jest.fn(() => ({ isMobile: false }))
+
 jest.mock('@/components/ui/sidebar', () => ({
   SidebarMenu: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="sidebar-menu">{children}</div>
@@ -43,7 +45,7 @@ jest.mock('@/components/ui/sidebar', () => ({
       {children}
     </button>
   ),
-  useSidebar: () => ({ isMobile: false })
+  useSidebar: () => mockUseSidebar()
 }))
 
 jest.mock('@/components/ui/avatar', () => ({
@@ -139,6 +141,7 @@ const mockHandleSignOut = handleSignOut as jest.MockedFunction<typeof handleSign
 describe('NavUser', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseSidebar.mockReturnValue({ isMobile: false })
   })
 
   it('renders loading state when session is pending', () => {
@@ -323,6 +326,251 @@ describe('NavUser', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Signing out...')).toBeInTheDocument()
+    })
+  })
+
+  it('logs error when sign out fails', async () => {
+    const user = userEvent.setup()
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+    mockHandleSignOut.mockResolvedValue({ success: false, error: 'Sign out failed' })
+
+    render(<NavUser />)
+
+    const nameElements = screen.getAllByText('John Doe')
+    const trigger = nameElements[0].closest('button')
+    if (trigger) {
+      await user.click(trigger)
+    }
+
+    const signOutButton = screen.getByRole('button', { name: /sign out/i })
+    await user.click(signOutButton)
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Sign out error:', 'Sign out failed')
+    })
+
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('renders empty email when user email is missing', () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John Doe',
+          email: null
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    expect(screen.getAllByText('John Doe').length).toBeGreaterThan(0)
+    // Email should be empty string, so we check that email text is not present
+    expect(screen.queryByText('john@example.com')).not.toBeInTheDocument()
+  })
+
+  it('renders empty email when user email is undefined', () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John Doe',
+          email: undefined
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    expect(screen.getAllByText('John Doe').length).toBeGreaterThan(0)
+    expect(screen.queryByText('john@example.com')).not.toBeInTheDocument()
+  })
+
+  it('renders empty email when user email is empty string', () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John Doe',
+          email: ''
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    expect(screen.getAllByText('John Doe').length).toBeGreaterThan(0)
+    expect(screen.queryByText('john@example.com')).not.toBeInTheDocument()
+  })
+
+  it('uses mobile dropdown positioning when isMobile is true', async () => {
+    const user = userEvent.setup()
+    mockUseSidebar.mockReturnValue({ isMobile: true })
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    const nameElements = screen.getAllByText('John Doe')
+    const trigger = nameElements[0].closest('button')
+    if (trigger) {
+      await user.click(trigger)
+    }
+
+    const dropdownContent = screen.getByTestId('dropdown-content')
+    expect(dropdownContent).toHaveAttribute('data-side', 'bottom')
+  })
+
+  it('uses desktop dropdown positioning when isMobile is false', async () => {
+    const user = userEvent.setup()
+    mockUseSidebar.mockReturnValue({ isMobile: false })
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    const nameElements = screen.getAllByText('John Doe')
+    const trigger = nameElements[0].closest('button')
+    if (trigger) {
+      await user.click(trigger)
+    }
+
+    const dropdownContent = screen.getByTestId('dropdown-content')
+    expect(dropdownContent).toHaveAttribute('data-side', 'right')
+  })
+
+  it('handles empty string name', () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: '',
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    const initials = screen.getAllByText('U')
+    expect(initials.length).toBeGreaterThan(0)
+  })
+
+  it('handles whitespace-only name', () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: '   ',
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    const initials = screen.getAllByText('U')
+    expect(initials.length).toBeGreaterThan(0)
+  })
+
+  it('handles undefined name', () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: undefined,
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    const initials = screen.getAllByText('U')
+    expect(initials.length).toBeGreaterThan(0)
+  })
+
+  it('handles name with multiple spaces', () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John   Middle   Doe',
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    const initials = screen.getAllByText('JD')
+    expect(initials.length).toBeGreaterThan(0)
+  })
+
+  it('closes auth dialog when onOpenChange is called with false', async () => {
+    const user = userEvent.setup()
+    mockUseSession.mockReturnValue({
+      data: { user: null },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+
+    render(<NavUser />)
+
+    const signInButton = screen.getByRole('button', { name: /sign in/i })
+    await user.click(signInButton)
+
+    expect(screen.getByTestId('auth-dialog')).toBeInTheDocument()
+
+    const closeButton = screen.getByRole('button', { name: /close/i })
+    await user.click(closeButton)
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('auth-dialog')).not.toBeInTheDocument()
     })
   })
 })

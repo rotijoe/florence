@@ -213,4 +213,133 @@ describe('DashboardPage', () => {
       expect(link).toHaveAttribute('href', '/tracks/diabetes-management')
     })
   })
+
+  it('should display "User" when user name is null', async () => {
+    const mockUserData: UserWithTracks = {
+      id: 'user-123',
+      name: null,
+      email: 'john@example.com',
+      tracks: []
+    }
+
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: {
+        user: { id: 'user-123', name: null, email: 'john@example.com' }
+      },
+      isPending: false,
+      error: null
+    })
+    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+
+    render(<DashboardPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Welcome, User')).toBeInTheDocument()
+    })
+  })
+
+  it('should display "User" when user name is undefined', async () => {
+    const mockUserData: UserWithTracks = {
+      id: 'user-123',
+      name: undefined as unknown as null,
+      email: 'john@example.com',
+      tracks: []
+    }
+
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: {
+        user: { id: 'user-123', name: undefined, email: 'john@example.com' }
+      },
+      isPending: false,
+      error: null
+    })
+    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+
+    render(<DashboardPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Welcome, User')).toBeInTheDocument()
+    })
+  })
+
+  it('should handle error when error is not an Error instance', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: {
+        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
+      },
+      isPending: false,
+      error: null
+    })
+    ;(helpers.fetchUserData as jest.Mock).mockRejectedValue('String error')
+
+    render(<DashboardPage />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/failed to load your health tracks/i)
+      ).toBeInTheDocument()
+      expect(screen.getByText('An error occurred')).toBeInTheDocument()
+    })
+  })
+
+  it('should not render when session is pending', () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: null,
+      isPending: true,
+      error: null
+    })
+
+    const { container } = render(<DashboardPage />)
+
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('should not render when session is null and not pending', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: null,
+      isPending: false,
+      error: null
+    })
+
+    const { container } = render(<DashboardPage />)
+
+    await waitFor(() => {
+      expect(container.firstChild).toBeNull()
+    })
+  })
+
+  it('should render track without description', async () => {
+    const mockUserData: UserWithTracks = {
+      id: 'user-123',
+      name: 'John Doe',
+      email: 'john@example.com',
+      tracks: [
+        {
+          id: 'track-1',
+          title: 'Diabetes Management',
+          slug: 'diabetes-management',
+          description: null,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z',
+          userId: 'user-123'
+        }
+      ]
+    }
+
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: {
+        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
+      },
+      isPending: false,
+      error: null
+    })
+    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+
+    render(<DashboardPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Diabetes Management')).toBeInTheDocument()
+      expect(screen.queryByText(/tracking/i)).not.toBeInTheDocument()
+    })
+  })
 })

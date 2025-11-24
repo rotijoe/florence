@@ -229,6 +229,30 @@ describe('updateEventAction', () => {
 
     expect(result.error).toBe('Failed to update event')
   })
+
+  it('returns error when title is missing', async () => {
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    // title is not appended, so formData.get('title') returns null
+
+    const result = await updateEventAction(null, formData)
+
+    expect(result.error).toBe('Title is required and must be a non-empty string')
+  })
+
+  it('handles non-Error exception', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('title', 'Title')
+
+    const result = await updateEventAction(null, formData)
+
+    expect(result.error).toBe('Failed to update event: Unknown error occurred')
+  })
 })
 
 describe('createEventUploadIntentAction', () => {
@@ -318,7 +342,9 @@ describe('createEventUploadIntentAction', () => {
 
     const result = await createEventUploadIntentAction(formData)
 
-    expect(result.error).toBe('Missing required fields: fileName, contentType, and size are required')
+    expect(result.error).toBe(
+      'Missing required fields: fileName, contentType, and size are required'
+    )
   })
 
   it('handles API error response', async () => {
@@ -403,15 +429,144 @@ describe('createEventUploadIntentAction', () => {
     )
     expect(result.uploadUrl).toBeDefined()
   })
+
+  it('returns error when trackSlug is missing', async () => {
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('fileName', 'file.pdf')
+    formData.append('contentType', 'application/pdf')
+    formData.append('size', '1024')
+
+    const result = await createEventUploadIntentAction(formData)
+
+    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+  })
+
+  it('returns error when contentType is missing', async () => {
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileName', 'file.pdf')
+    formData.append('size', '1024')
+
+    const result = await createEventUploadIntentAction(formData)
+
+    expect(result.error).toBe(
+      'Missing required fields: fileName, contentType, and size are required'
+    )
+  })
+
+  it('returns error when size is missing', async () => {
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileName', 'file.pdf')
+    formData.append('contentType', 'application/pdf')
+
+    const result = await createEventUploadIntentAction(formData)
+
+    expect(result.error).toBe(
+      'Missing required fields: fileName, contentType, and size are required'
+    )
+  })
+
+  it('handles API error response without error message', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Bad Request',
+      json: async () => ({ success: false })
+    })
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileName', 'file.pdf')
+    formData.append('contentType', 'application/pdf')
+    formData.append('size', '1024')
+
+    const result = await createEventUploadIntentAction(formData)
+
+    expect(result.error).toBe('Failed to create upload intent: Bad Request')
+  })
+
+  it('handles JSON parse error in error response', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Bad Request',
+      json: async () => {
+        throw new Error('Invalid JSON')
+      }
+    })
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileName', 'file.pdf')
+    formData.append('contentType', 'application/pdf')
+    formData.append('size', '1024')
+
+    const result = await createEventUploadIntentAction(formData)
+
+    expect(result.error).toContain('Failed to create upload intent')
+  })
+
+  it('handles API response without data', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true })
+    })
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileName', 'file.pdf')
+    formData.append('contentType', 'application/pdf')
+    formData.append('size', '1024')
+
+    const result = await createEventUploadIntentAction(formData)
+
+    expect(result.error).toBe('Failed to create upload intent')
+  })
+
+  it('handles API response with success false but no error', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: false })
+    })
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileName', 'file.pdf')
+    formData.append('contentType', 'application/pdf')
+    formData.append('size', '1024')
+
+    const result = await createEventUploadIntentAction(formData)
+
+    expect(result.error).toBe('Failed to create upload intent')
+  })
+
+  it('handles non-Error exception', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileName', 'file.pdf')
+    formData.append('contentType', 'application/pdf')
+    formData.append('size', '1024')
+
+    const result = await createEventUploadIntentAction(formData)
+
+    expect(result.error).toBe('Failed to create upload intent: Unknown error occurred')
+  })
 })
 
 describe('confirmEventUploadAction', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     ;(cookies as jest.Mock).mockResolvedValue({
-      getAll: jest.fn().mockReturnValue([
-        { name: 'session', value: 'session-value' }
-      ])
+      getAll: jest.fn().mockReturnValue([{ name: 'session', value: 'session-value' }])
     })
   })
 
@@ -518,5 +673,112 @@ describe('confirmEventUploadAction', () => {
 
     expect(result.error).toBe('Failed to confirm upload: Network error')
   })
-})
 
+  it('returns error when eventId is missing', async () => {
+    const formData = new FormData()
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
+    formData.append('key', 'events/event-1/file.pdf')
+
+    const result = await confirmEventUploadAction(formData)
+
+    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+  })
+
+  it('returns error when trackSlug is missing', async () => {
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
+    formData.append('key', 'events/event-1/file.pdf')
+
+    const result = await confirmEventUploadAction(formData)
+
+    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+  })
+
+  it('handles API error response without error message', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Bad Request',
+      json: async () => ({ success: false })
+    })
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
+    formData.append('key', 'events/event-1/file.pdf')
+
+    const result = await confirmEventUploadAction(formData)
+
+    expect(result.error).toBe('Failed to confirm upload: Bad Request')
+  })
+
+  it('handles JSON parse error in error response', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Bad Request',
+      json: async () => {
+        throw new Error('Invalid JSON')
+      }
+    })
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
+    formData.append('key', 'events/event-1/file.pdf')
+
+    const result = await confirmEventUploadAction(formData)
+
+    expect(result.error).toContain('Failed to confirm upload')
+  })
+
+  it('handles API response without data', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true })
+    })
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
+    formData.append('key', 'events/event-1/file.pdf')
+
+    const result = await confirmEventUploadAction(formData)
+
+    expect(result.error).toBe('Failed to confirm upload')
+  })
+
+  it('handles API response with success false but no error', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: false })
+    })
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
+    formData.append('key', 'events/event-1/file.pdf')
+
+    const result = await confirmEventUploadAction(formData)
+
+    expect(result.error).toBe('Failed to confirm upload')
+  })
+
+  it('handles non-Error exception', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
+
+    const formData = new FormData()
+    formData.append('eventId', 'event-1')
+    formData.append('trackSlug', 'track-slug')
+    formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
+    formData.append('key', 'events/event-1/file.pdf')
+
+    const result = await confirmEventUploadAction(formData)
+
+    expect(result.error).toBe('Failed to confirm upload: Unknown error occurred')
+  })
+})

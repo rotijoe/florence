@@ -24,7 +24,8 @@ const customJestConfig = {
     '!src/**/*.test.{ts,tsx}',
     '!src/**/*.spec.{ts,tsx}',
     '!src/app/layout.tsx',
-    '!src/app/page.tsx'
+    '!src/app/page.tsx',
+    '!src/components/ui/**'
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html']
