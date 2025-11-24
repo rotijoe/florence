@@ -19,6 +19,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
     '^@packages/(.*)$': '<rootDir>/../../packages/$1/src',
+    '^@/(.*)\\.js$': '<rootDir>/src/$1.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@routes/(.*)$': '<rootDir>/src/routes/$1',
     '^@types$': '<rootDir>/../../packages/types/src/index'

@@ -29,6 +29,30 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Testing
+
+### Run all tests with coverage
+```bash
+pnpm test
+```
+
+### Run tests in watch mode
+```bash
+pnpm test:watch
+```
+
+### Run a single test file (without coverage)
+```bash
+pnpm test:file <path-to-test-file>
+```
+
+Example:
+```bash
+pnpm test:file src/components/upload_document/tests/index.spec.tsx
+```
+
+**Note:** When testing individual files, always use `test:file` instead of `test` to avoid generating coverage reports and speed up test execution.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

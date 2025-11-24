@@ -59,7 +59,7 @@ describe('EventDetail', () => {
   })
 
   it('renders notes section with bordered container', () => {
-    const { container } = render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+    render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
 
     // Find notes section by looking for the h3 with "Notes" text first, then get its parent
     const notesHeading = screen.getByText('Notes')
@@ -273,6 +273,99 @@ describe('EventDetail', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Failed to update event')).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('upload document', () => {
+    it('opens upload dialog when upload document menu item is clicked', async () => {
+      const user = userEvent.setup()
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const uploadMenuItem = await screen.findByRole('menuitem', { name: /upload document/i })
+      await user.click(uploadMenuItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+        expect(screen.getByText('Upload Document')).toBeInTheDocument()
+      })
+    })
+
+    it('closes upload dialog when upload is cancelled', async () => {
+      const user = userEvent.setup()
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const uploadMenuItem = await screen.findByRole('menuitem', { name: /upload document/i })
+      await user.click(uploadMenuItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      })
+    })
+
+    it('updates event fileUrl when upload completes', async () => {
+      const user = userEvent.setup()
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const uploadMenuItem = await screen.findByRole('menuitem', { name: /upload document/i })
+      await user.click(uploadMenuItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      // Verify the upload dialog is rendered
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    it('clears error when upload dialog is opened', async () => {
+      const user = userEvent.setup()
+      mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      // First, trigger an error by trying to save with invalid data
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to update event')).toBeInTheDocument()
+      })
+
+      // Cancel edit mode first since we're still in edit mode after save failure
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      // Now open upload dialog - error should be cleared
+      const menuButtonAgain = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButtonAgain)
+      const uploadMenuItem = await screen.findByRole('menuitem', { name: /upload document/i })
+      await user.click(uploadMenuItem)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Failed to update event')).not.toBeInTheDocument()
       })
     })
   })

@@ -10,6 +10,7 @@
     "lint:fix": "eslint . --fix",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
+    "test:file": "jest --no-coverage",
     "typecheck": "tsc --noEmit --pretty"
   },
   "dependencies": {

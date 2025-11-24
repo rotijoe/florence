@@ -40,7 +40,7 @@ export enum EventType {
 
 export type ApiResponse<T> = {
   success: boolean
-  data: T
+  data?: T
   error?: string
 }
 

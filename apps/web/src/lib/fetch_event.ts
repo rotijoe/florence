@@ -12,7 +12,7 @@ export async function fetchEvent(eventId: string, trackSlug: string): Promise<Ev
 
   const data: ApiResponse<EventResponse> = await response.json()
 
-  if (!data.success) {
+  if (!data.success || !data.data) {
     throw new Error(data.error || 'Failed to fetch event')
   }
 

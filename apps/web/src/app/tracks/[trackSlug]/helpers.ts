@@ -13,7 +13,7 @@ export async function fetchTrack(slug: string): Promise<TrackResponse> {
 
     const data: ApiResponse<TrackResponse> = await response.json()
 
-    if (!data.success) {
+    if (!data.success || !data.data) {
       throw new Error(data.error || 'Failed to fetch track')
     }
 
@@ -43,7 +43,7 @@ export async function fetchTrackEvents(slug: string): Promise<EventResponse[]> {
 
     const data: ApiResponse<EventResponse[]> = await response.json()
 
-    if (!data.success) {
+    if (!data.success || !data.data) {
       throw new Error(data.error || 'Failed to fetch events')
     }
 
