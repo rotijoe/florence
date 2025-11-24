@@ -1,4 +1,5 @@
-import { S3Client } from '@aws-sdk/client-s3'
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 export type StorageConfig = {
   awsRegion: string
@@ -46,4 +47,24 @@ export function getEventDocumentKey(eventId: string, fileName: string): string {
 
 export function getEventDocumentUrl(key: string): string {
   return `https://${config.s3BucketAppDocuments}.s3.${config.awsRegion}.amazonaws.com/${key}`
+}
+
+export async function getPresignedDownloadUrl(key: string, expiresIn = 3600): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: config.s3BucketAppDocuments,
+    Key: key
+  })
+  return getSignedUrl(s3Client, command, { expiresIn })
+}
+
+export function getObjectKeyFromUrl(url: string): string | null {
+  if (!url) return null
+  try {
+    const urlObj = new URL(url)
+    // pathname includes leading slash, so slice(1)
+    // Decodes URI component to handle spaces/special chars if encoded
+    return decodeURIComponent(urlObj.pathname.slice(1))
+  } catch {
+    return null
+  }
 }

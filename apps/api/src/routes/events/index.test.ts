@@ -1,3 +1,20 @@
+// Mock the S3 module before imports
+const mockGetPresignedDownloadUrl = jest.fn()
+const mockGetObjectKeyFromUrl = jest.fn((url: string) => {
+  if (!url) return null
+  try {
+    const urlObj = new URL(url)
+    return decodeURIComponent(urlObj.pathname.slice(1))
+  } catch {
+    return null
+  }
+})
+
+jest.mock('@/lib/s3.js', () => ({
+  getPresignedDownloadUrl: mockGetPresignedDownloadUrl,
+  getObjectKeyFromUrl: mockGetObjectKeyFromUrl
+}))
+
 import { createTestApp } from '@/test-setup'
 import { prisma } from '@packages/database'
 import { EventType } from '@packages/types'
@@ -12,6 +29,8 @@ describe('Events API', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks()
+    // Reset the presigned URL mock
+    mockGetPresignedDownloadUrl.mockReset()
   })
 
   describe('GET /api/tracks/:slug/events', () => {
@@ -289,12 +308,13 @@ describe('Events API', () => {
         type: EventType.NOTE,
         title: 'Test Event',
         description: 'Test Description',
-        fileUrl: 'https://example.com/file.pdf',
+        fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/file.pdf',
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      
       findFirstSpy.mockResolvedValue(mockEvent)
 
       const res = await app.request('/api/tracks/test-track/events/event-1')
@@ -302,19 +322,24 @@ describe('Events API', () => {
 
       const json = await res.json()
       expect(json.success).toBe(true)
-      expect(json.data).toEqual({
+      expect(json.data).toMatchObject({
         id: 'event-1',
         trackId: 'track-1',
         date: '2024-01-01T00:00:00.000Z',
         type: 'NOTE',
         title: 'Test Event',
         description: 'Test Description',
-        fileUrl: 'https://example.com/file.pdf',
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z'
       })
+      // Verify that fileUrl is a presigned S3 URL
+      expect(json.data.fileUrl).toBeDefined()
+      expect(json.data.fileUrl).toContain('https://test-bucket.s3.us-east-1.amazonaws.com/file.pdf')
+      expect(json.data.fileUrl).toContain('X-Amz-Signature')
+      expect(json.data.fileUrl).toContain('X-Amz-Algorithm=AWS4-HMAC-SHA256')
 
       findFirstSpy.mockRestore()
+      mockGetPresignedDownloadUrl.mockClear()
     })
 
     it('handles database errors gracefully', async () => {

@@ -90,13 +90,17 @@ describe('EventDetail', () => {
     expect(notesSection).toHaveTextContent('Test Description')
   })
 
-  it('displays document button when fileUrl is available', () => {
+  it('displays attachment list when fileUrl is available', () => {
     render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
 
-    const link = screen.getByRole('link', { name: /view attached document/i })
-    expect(link).toBeInTheDocument()
-    expect(link).toHaveAttribute('href', 'https://example.com/file.pdf')
-    expect(link).toHaveAttribute('target', '_blank')
+    expect(screen.getByText('Attachments')).toBeInTheDocument()
+    expect(screen.getByText('file.pdf')).toBeInTheDocument()
+
+    // PDF files are rendered in an iframe via DocumentViewer
+    const iframe = screen.getByTitle('file.pdf')
+    expect(iframe).toBeInTheDocument()
+    expect(iframe).toHaveAttribute('src', 'https://example.com/file.pdf')
+    expect(iframe.tagName).toBe('IFRAME')
   })
 
   it('displays created timestamp', () => {
@@ -144,7 +148,8 @@ describe('EventDetail', () => {
 
     render(<EventDetail event={eventWithoutFile} trackSlug={trackSlug} />)
 
-    expect(screen.queryByRole('link', { name: /view attached document/i })).not.toBeInTheDocument()
+    expect(screen.queryByText('Attachments')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('attachment-item')).not.toBeInTheDocument()
   })
 
   describe('edit mode', () => {

@@ -20,6 +20,7 @@ import type { EventDetailProps } from './types'
 import { updateEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
 import type { EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
+import { AttachmentList } from '@/components/attachment_list'
 
 export function EventDetail({ event, trackSlug }: EventDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
@@ -210,7 +211,7 @@ function renderContent(event: EventResponse, isEditing: boolean) {
   return (
     <CardContent className="space-y-6">
       {renderNotes(event, isEditing)}
-      {renderDocumentButton(event.fileUrl)}
+      {renderAttachments(event.fileUrl)}
     </CardContent>
   )
 }
@@ -245,21 +246,8 @@ const renderNotes = (event: EventResponse, isEditing: boolean) => {
   )
 }
 
-function renderDocumentButton(fileUrl: string | null | undefined) {
-  if (!fileUrl) {
-    return null
-  }
-
-  return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-semibold text-muted-foreground">Attachments</h3>
-      <Button asChild variant="secondary" size="sm">
-        <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-          View attached document
-        </a>
-      </Button>
-    </div>
-  )
+function renderAttachments(fileUrl: string | null | undefined) {
+  return <AttachmentList fileUrl={fileUrl} />
 }
 
 function renderFooter(event: EventResponse) {

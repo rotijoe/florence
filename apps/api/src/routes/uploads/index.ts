@@ -4,7 +4,14 @@ import { Hono } from 'hono'
 import { prisma } from '@packages/database'
 import { PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { s3Client, getEventDocumentKey, getEventDocumentUrl, getStorageConfig } from '@/lib/s3.js'
+import {
+  s3Client,
+  getEventDocumentKey,
+  getEventDocumentUrl,
+  getStorageConfig,
+  getPresignedDownloadUrl,
+  getObjectKeyFromUrl
+} from '@/lib/s3.js'
 
 const app = new Hono<{ Variables: AppVariables }>()
 
@@ -300,6 +307,18 @@ app.post('/tracks/:slug/events/:eventId/upload-confirm', async (c) => {
       }
     })
 
+    let responseFileUrl = updatedEvent.fileUrl
+    if (responseFileUrl) {
+      const key = getObjectKeyFromUrl(responseFileUrl)
+      if (key) {
+        try {
+          responseFileUrl = await getPresignedDownloadUrl(key)
+        } catch (error) {
+          console.error('Error generating presigned URL:', error)
+        }
+      }
+    }
+
     const formattedEvent: EventResponse = {
       id: updatedEvent.id,
       trackId: updatedEvent.trackId,
@@ -307,7 +326,7 @@ app.post('/tracks/:slug/events/:eventId/upload-confirm', async (c) => {
       type: updatedEvent.type as EventType,
       title: updatedEvent.title,
       description: updatedEvent.description,
-      fileUrl: updatedEvent.fileUrl,
+      fileUrl: responseFileUrl,
       createdAt: updatedEvent.createdAt.toISOString(),
       updatedAt: updatedEvent.updatedAt.toISOString()
     }

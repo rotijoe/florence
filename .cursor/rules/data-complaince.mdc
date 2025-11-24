@@ -1,0 +1,60 @@
+---
+alwaysApply: true
+description: Data security and compliance.
+---
+
+Users upload their own files (letters, lab results, appointment notes).
+No NHS integration.
+No clinical features.
+
+What you MUST do at this stage
+
+These are the minimum legal + technical responsibilities:
+
+1. GDPR basics (only the essentials)
+
+Explicit user consent for storing health data
+
+Privacy Policy (simple, honest, plain language)
+
+Terms of Use
+
+A way for users to:
+
+delete their account + all data
+
+download their data
+
+Define a retention policy (e.g., delete 30 days after account deletion)
+
+2. DPIA (light version)
+
+You do need a DPIA because you handle health data
+
+But a light DPIA is fine since data is user-uploaded and user-controlled
+
+No need for external legal review yet
+
+3. Security requirements you should build NOW (to avoid rework later)
+
+These are future-proof but simple:
+
+Encryption at rest (AES-256 via your cloud provider is fine)
+
+Encryption in transit (TLS 1.2+)
+
+Zero plaintext access (encrypt sensitive fields, limit admin dashboards)
+
+Basic access logging (who accessed what, when)
+
+No staff access to user files unless explicitly authorised
+
+4. Architecture
+
+Build backend with future NHS/FHIR integration in mind
+
+Use user-scoped encryption keys (or plan for them)
+
+Store metadata separately (e.g., title, date, tags)
+
+Store files in a bucket (S3, GCS) with access tokens + signed URLs only

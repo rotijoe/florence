@@ -432,6 +432,171 @@ Both fields are optional. Only provided fields will be updated.
 }
 ```
 
+> **Note:** If the event has an attached document, the `fileUrl` field in all event responses is a **time‑limited presigned S3 URL** that can be used directly in the web app to view or download the file. The database stores the canonical S3 object URL; presigned URLs are generated dynamically on each read.
+
+### Event Document Upload
+
+#### POST /api/tracks/:slug/events/:eventId/upload-url
+
+Create an upload intent and return a presigned S3 URL for uploading an event document directly from the browser.
+
+- **Authentication:** Required (Better Auth session)
+
+**Path Parameters:**
+
+- `slug` - Unique slug identifier for the track
+- `eventId` - Unique identifier for the event
+
+**Request Body:**
+
+```json
+{
+  "fileName": "report.pdf",
+  "contentType": "application/pdf",
+  "size": 123456
+}
+```
+
+**Validation:**
+
+- `fileName` - Required, non‑empty string
+- `contentType` - Required, must be one of the allowed types:
+  - `application/pdf`
+  - `image/jpeg`
+  - `image/png`
+  - `image/gif`
+  - `image/webp`
+  - `application/msword`
+  - `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+  - `text/plain`
+- `size` - Required, positive number, must not exceed **10 MB**
+- Event must exist and belong to the specified track
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "uploadUrl": "https://bucket.s3.amazonaws.com/....",
+    "fileUrl": "https://bucket.s3.region.amazonaws.com/events/event-id/12345-random-report.pdf",
+    "key": "events/event-id/12345-random-report.pdf",
+    "expiresAt": "2025-10-22T10:15:00.000Z",
+    "maxSize": 10485760,
+    "allowedContentTypes": [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain"
+    ]
+  }
+}
+```
+
+**Error Response (400):**
+
+```json
+{
+  "success": false,
+  "error": "contentType must be one of: application/pdf, image/jpeg, ..."
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "error": "Unauthorized"
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "success": false,
+  "error": "Event not found"
+}
+```
+
+#### POST /api/tracks/:slug/events/:eventId/upload-confirm
+
+Confirm that an event document has been successfully uploaded to S3 and attach it to the event.
+
+- **Authentication:** Required
+
+**Path Parameters:**
+
+- `slug` - Unique slug identifier for the track
+- `eventId` - Unique identifier for the event
+
+**Request Body:**
+
+```json
+{
+  "fileUrl": "https://bucket.s3.region.amazonaws.com/events/event-id/12345-random-report.pdf",
+  "key": "events/event-id/12345-random-report.pdf"
+}
+```
+
+**Behavior:**
+
+- Verifies the event exists and belongs to the track
+- Issues a `HeadObject` request to S3 to ensure the object exists at `key`
+- Updates the event’s `fileUrl` in the database to the canonical S3 URL
+- Generates a **presigned S3 GET URL** for the updated event before returning the response
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "event-id",
+    "trackId": "track-id",
+    "date": "2025-10-21T14:30:00.000Z",
+    "type": "NOTE",
+    "title": "Event Title",
+    "description": "Event Description",
+    "fileUrl": "https://bucket.s3.region.amazonaws.com/....SIGNED....",
+    "createdAt": "2025-10-21T14:30:00.000Z",
+    "updatedAt": "2025-10-22T10:00:00.000Z"
+  }
+}
+```
+
+**Error Response (400):**
+
+```json
+{
+  "success": false,
+  "error": "fileUrl is required and must be a string"
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "error": "Unauthorized"
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "success": false,
+  "error": "File not found in storage. Please upload the file first."
+}
+```
+
 ## Future Endpoints
 
 ### Health Tracks (Authenticated)
@@ -444,4 +609,3 @@ Both fields are optional. Only provided fields will be updated.
 
 - POST /api/tracks/:trackId/events - Create event
 - DELETE /api/tracks/:slug/events/:eventId - Delete event
-- POST /api/tracks/:slug/events/:eventId/upload - Upload file for event

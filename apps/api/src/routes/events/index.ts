@@ -2,6 +2,7 @@ import type { ApiResponse, EventResponse, EventType } from '@packages/types'
 import type { AppVariables } from '../../types.js'
 import { Hono } from 'hono'
 import { prisma } from '@packages/database'
+import { getPresignedDownloadUrl, getObjectKeyFromUrl } from '@/lib/s3.js'
 
 const app = new Hono<{ Variables: AppVariables }>()
 
@@ -52,17 +53,33 @@ app.get('/tracks/:slug/events', async (c) => {
       }
     }
 
-    const formattedEvents: EventResponse[] = events.map((e) => ({
-      id: e.id,
-      trackId: e.trackId,
-      date: e.date.toISOString(),
-      type: e.type as EventType,
-      title: e.title,
-      description: e.description,
-      fileUrl: e.fileUrl,
-      createdAt: e.createdAt.toISOString(),
-      updatedAt: e.updatedAt.toISOString()
-    }))
+    const formattedEvents: EventResponse[] = await Promise.all(
+      events.map(async (e) => {
+        let fileUrl = e.fileUrl
+        if (fileUrl) {
+          const key = getObjectKeyFromUrl(fileUrl)
+          if (key) {
+            try {
+              fileUrl = await getPresignedDownloadUrl(key)
+            } catch (error) {
+              console.error('Error generating presigned URL:', error)
+            }
+          }
+        }
+
+        return {
+          id: e.id,
+          trackId: e.trackId,
+          date: e.date.toISOString(),
+          type: e.type as EventType,
+          title: e.title,
+          description: e.description,
+          fileUrl,
+          createdAt: e.createdAt.toISOString(),
+          updatedAt: e.updatedAt.toISOString()
+        }
+      })
+    )
 
     const response: ApiResponse<EventResponse[]> = {
       success: true,
@@ -134,6 +151,18 @@ app.get('/tracks/:slug/events/:eventId', async (c) => {
       )
     }
 
+    let fileUrl = event.fileUrl
+    if (fileUrl) {
+      const key = getObjectKeyFromUrl(fileUrl)
+      if (key) {
+        try {
+          fileUrl = await getPresignedDownloadUrl(key)
+        } catch (error) {
+          console.error('Error generating presigned URL:', error)
+        }
+      }
+    }
+
     const formattedEvent: EventResponse = {
       id: event.id,
       trackId: event.trackId,
@@ -141,7 +170,7 @@ app.get('/tracks/:slug/events/:eventId', async (c) => {
       type: event.type as EventType,
       title: event.title,
       description: event.description,
-      fileUrl: event.fileUrl,
+      fileUrl,
       createdAt: event.createdAt.toISOString(),
       updatedAt: event.updatedAt.toISOString()
     }
@@ -270,6 +299,18 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
       }
     })
 
+    let fileUrl = updatedEvent.fileUrl
+    if (fileUrl) {
+      const key = getObjectKeyFromUrl(fileUrl)
+      if (key) {
+        try {
+          fileUrl = await getPresignedDownloadUrl(key)
+        } catch (error) {
+          console.error('Error generating presigned URL:', error)
+        }
+      }
+    }
+
     const formattedEvent: EventResponse = {
       id: updatedEvent.id,
       trackId: updatedEvent.trackId,
@@ -277,7 +318,7 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
       type: updatedEvent.type as EventType,
       title: updatedEvent.title,
       description: updatedEvent.description,
-      fileUrl: updatedEvent.fileUrl,
+      fileUrl,
       createdAt: updatedEvent.createdAt.toISOString(),
       updatedAt: updatedEvent.updatedAt.toISOString()
     }
