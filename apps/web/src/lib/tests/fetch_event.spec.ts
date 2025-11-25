@@ -18,7 +18,7 @@ describe('fetchEvent', () => {
       date: '2024-01-01T00:00:00.000Z',
       type: EventType.RESULT,
       title: 'Test Event',
-      description: 'Test Description',
+      notes: 'Test Description',
       fileUrl: null,
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z'

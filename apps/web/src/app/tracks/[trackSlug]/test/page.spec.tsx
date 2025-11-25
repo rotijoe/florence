@@ -42,7 +42,7 @@ describe('TrackPage', () => {
       date: '2024-01-01T00:00:00.000Z',
       type: EventType.RESULT,
       title: 'Event 1',
-      description: 'Description 1',
+      notes: 'Description 1',
       fileUrl: null,
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z'
@@ -53,7 +53,7 @@ describe('TrackPage', () => {
       date: '2024-01-02T00:00:00.000Z',
       type: EventType.RESULT,
       title: 'Event 2',
-      description: 'Description 2',
+      notes: 'Description 2',
       fileUrl: null,
       createdAt: '2024-01-02T00:00:00.000Z',
       updatedAt: '2024-01-02T00:00:00.000Z'

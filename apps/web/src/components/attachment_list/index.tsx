@@ -3,10 +3,10 @@
 import { FileText, Image, File, Download, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getFileDetails } from './helpers'
-import type { AttachmentListProps } from './types'
+import type { EventAttachmentProps } from './types'
 import { DocumentViewer } from '@/components/document_viewer'
 
-export function AttachmentList({ fileUrl }: AttachmentListProps) {
+export function EventAttachment({ fileUrl }: EventAttachmentProps) {
   if (!fileUrl) {
     return null
   }

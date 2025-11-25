@@ -20,19 +20,19 @@ const tracksForUser = [
         type: EventType.NOTE,
         title: 'Morning notes',
         date: new Date(),
-        description: 'Feeling good'
+        notes: 'Feeling good'
       },
       {
         type: EventType.RESULT,
         title: 'BP reading',
         date: new Date(Date.now() - 86400000),
-        description: '120/80 mmHg'
+        notes: '120/80 mmHg'
       },
       {
         type: EventType.FEELING,
         title: 'Mood check-in',
         date: new Date(Date.now() - 2 * 86400000),
-        description: 'Calm'
+        notes: 'Calm'
       }
     ]
   },
@@ -45,19 +45,19 @@ const tracksForUser = [
         type: EventType.NOTE,
         title: 'Refill reminder',
         date: new Date(),
-        description: 'Refill due in 5 days'
+        notes: 'Refill due in 5 days'
       },
       {
         type: EventType.APPOINTMENT,
         title: 'Pharmacy visit',
         date: new Date(Date.now() + 86400000),
-        description: 'Pickup statins'
+        notes: 'Pickup statins'
       },
       {
         type: EventType.LETTER,
         title: 'Doctor letter',
         date: new Date(Date.now() - 3 * 86400000),
-        description: 'Updated dosage'
+        notes: 'Updated dosage'
       }
     ]
   }
@@ -73,25 +73,25 @@ const additionalTracksForUser = [
         type: EventType.NOTE,
         title: '7h 45m sleep',
         date: new Date(),
-        description: 'Woke up refreshed, good quality sleep'
+        notes: 'Woke up refreshed, good quality sleep'
       },
       {
         type: EventType.FEELING,
         title: '6h 30m sleep',
         date: new Date(Date.now() - 86400000),
-        description: 'Restless night, woke up multiple times'
+        notes: 'Restless night, woke up multiple times'
       },
       {
         type: EventType.NOTE,
         title: '8h 15m sleep',
         date: new Date(Date.now() - 2 * 86400000),
-        description: 'Deep sleep, felt great in the morning'
+        notes: 'Deep sleep, felt great in the morning'
       },
       {
         type: EventType.NOTE,
         title: '7h 0m sleep',
         date: new Date(Date.now() - 3 * 86400000),
-        description: 'Average sleep quality'
+        notes: 'Average sleep quality'
       }
     ]
   },
@@ -104,19 +104,19 @@ const additionalTracksForUser = [
         type: EventType.RESULT,
         title: '2.5L water intake',
         date: new Date(),
-        description: 'Met daily hydration goal'
+        notes: 'Met daily hydration goal'
       },
       {
         type: EventType.RESULT,
         title: '2.0L water intake',
         date: new Date(Date.now() - 86400000),
-        description: 'Below target, need to drink more'
+        notes: 'Below target, need to drink more'
       },
       {
         type: EventType.RESULT,
         title: '3.0L water intake',
         date: new Date(Date.now() - 2 * 86400000),
-        description: 'Excellent hydration, exceeded goal'
+        notes: 'Excellent hydration, exceeded goal'
       }
     ]
   }

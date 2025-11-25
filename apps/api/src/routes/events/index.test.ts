@@ -60,7 +60,7 @@ describe('Events API', () => {
           date: new Date('2024-01-01T00:00:00Z'),
           type: EventType.NOTE,
           title: 'Test Event',
-          description: 'Test Description',
+          notes: 'Test Description',
           fileUrl: null,
           createdAt: new Date('2024-01-01T00:00:00Z'),
           updatedAt: new Date('2024-01-01T00:00:00Z')
@@ -86,7 +86,7 @@ describe('Events API', () => {
         date: '2024-01-01T00:00:00.000Z',
         type: 'NOTE',
         title: 'Test Event',
-        description: 'Test Description',
+        notes: 'Test Description',
         fileUrl: null,
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z'
@@ -113,7 +113,7 @@ describe('Events API', () => {
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
         title: `Test Event ${i + 1}`,
-        description: 'Test Description',
+        notes: 'Test Description',
         fileUrl: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
@@ -307,14 +307,14 @@ describe('Events API', () => {
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
         title: 'Test Event',
-        description: 'Test Description',
+        notes: 'Test Description',
         fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/file.pdf',
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      
+
       findFirstSpy.mockResolvedValue(mockEvent)
 
       const res = await app.request('/api/tracks/test-track/events/event-1')
@@ -328,7 +328,7 @@ describe('Events API', () => {
         date: '2024-01-01T00:00:00.000Z',
         type: 'NOTE',
         title: 'Test Event',
-        description: 'Test Description',
+        notes: 'Test Description',
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z'
       })
@@ -418,7 +418,7 @@ describe('Events API', () => {
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
         title: 'Test Event',
-        description: 'Test Description',
+        notes: 'Test Description',
         fileUrl: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
@@ -438,7 +438,7 @@ describe('Events API', () => {
       findFirstSpy.mockRestore()
     })
 
-    it('returns 400 for invalid description type', async () => {
+    it('returns 400 for invalid notes type', async () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       findFirstSpy.mockResolvedValue({
         id: 'event-1',
@@ -446,7 +446,7 @@ describe('Events API', () => {
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
         title: 'Test Event',
-        description: 'Test Description',
+        notes: 'Test Description',
         fileUrl: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
@@ -455,13 +455,13 @@ describe('Events API', () => {
       const res = await app.request('/api/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: 123 })
+        body: JSON.stringify({ notes: 123 })
       })
       expect(res.status).toBe(400)
 
       const json = await res.json()
       expect(json.success).toBe(false)
-      expect(json.error).toBe('Description must be a string or null')
+      expect(json.error).toBe('Notes must be a string or null')
 
       findFirstSpy.mockRestore()
     })
@@ -473,7 +473,7 @@ describe('Events API', () => {
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
         title: 'Original Title',
-        description: 'Original Description',
+        notes: 'Original Description',
         fileUrl: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
@@ -494,7 +494,7 @@ describe('Events API', () => {
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
         title: 'Test Event',
-        description: 'Test Description',
+        notes: 'Test Description',
         fileUrl: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
@@ -511,20 +511,20 @@ describe('Events API', () => {
       const json = await res.json()
       expect(json.success).toBe(true)
       expect(json.data.title).toBe('Updated Title')
-      expect(json.data.description).toBe('Original Description')
+      expect(json.data.notes).toBe('Original Description')
 
       findFirstSpy.mockRestore()
       updateSpy.mockRestore()
     })
 
-    it('successfully updates event description', async () => {
+    it('successfully updates event notes', async () => {
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
         title: 'Test Title',
-        description: 'Original Description',
+        notes: 'Original Description',
         fileUrl: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
@@ -532,7 +532,7 @@ describe('Events API', () => {
 
       const updatedEvent = {
         ...mockEvent,
-        description: 'Updated Description',
+        notes: 'Updated Description',
         updatedAt: new Date('2024-01-02T00:00:00Z')
       }
 
@@ -545,27 +545,27 @@ describe('Events API', () => {
       const res = await app.request('/api/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: 'Updated Description' })
+        body: JSON.stringify({ notes: 'Updated Description' })
       })
       expect(res.status).toBe(200)
 
       const json = await res.json()
       expect(json.success).toBe(true)
-      expect(json.data.description).toBe('Updated Description')
+      expect(json.data.notes).toBe('Updated Description')
       expect(json.data.title).toBe('Test Title')
 
       findFirstSpy.mockRestore()
       updateSpy.mockRestore()
     })
 
-    it('successfully updates both title and description', async () => {
+    it('successfully updates both title and notes', async () => {
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
         title: 'Original Title',
-        description: 'Original Description',
+        notes: 'Original Description',
         fileUrl: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
@@ -574,7 +574,7 @@ describe('Events API', () => {
       const updatedEvent = {
         ...mockEvent,
         title: 'Updated Title',
-        description: 'Updated Description',
+        notes: 'Updated Description',
         updatedAt: new Date('2024-01-02T00:00:00Z')
       }
 
@@ -587,14 +587,14 @@ describe('Events API', () => {
       const res = await app.request('/api/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'Updated Title', description: 'Updated Description' })
+        body: JSON.stringify({ title: 'Updated Title', notes: 'Updated Description' })
       })
       expect(res.status).toBe(200)
 
       const json = await res.json()
       expect(json.success).toBe(true)
       expect(json.data.title).toBe('Updated Title')
-      expect(json.data.description).toBe('Updated Description')
+      expect(json.data.notes).toBe('Updated Description')
 
       findFirstSpy.mockRestore()
       updateSpy.mockRestore()

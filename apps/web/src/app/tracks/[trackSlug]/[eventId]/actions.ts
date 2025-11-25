@@ -30,7 +30,7 @@ export async function updateEventAction(
   const eventId = formData.get('eventId') as string
   const trackSlug = formData.get('trackSlug') as string
   const title = formData.get('title') as string
-  const description = formData.get('description') as string | null
+  const notes = formData.get('notes') as string | null
 
   if (!eventId || !trackSlug) {
     return {
@@ -52,7 +52,7 @@ export async function updateEventAction(
       },
       body: JSON.stringify({
         title: title.trim(),
-        description: description === '' ? null : description
+        notes: notes === '' ? null : notes
       })
     })
 

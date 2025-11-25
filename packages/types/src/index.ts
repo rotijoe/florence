@@ -24,7 +24,7 @@ export type Event = {
   trackId: string
   type: EventType
   title: string
-  description?: string
+  notes?: string
   fileUrl?: string
   createdAt: Date
 }
@@ -57,7 +57,7 @@ export type EventResponse = {
   date: string
   type: EventType
   title: string
-  description?: string | null
+  notes?: string | null
   fileUrl?: string | null
   createdAt: string
   updatedAt: string

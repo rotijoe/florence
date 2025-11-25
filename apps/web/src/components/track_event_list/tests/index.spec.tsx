@@ -9,7 +9,7 @@ describe('TrackEventList', () => {
       trackId: 'track-1',
       date: '2025-10-21T14:30:00.000Z',
       title: 'Event 1',
-      description: 'First event',
+      notes: 'First event',
       type: EventType.NOTE,
       fileUrl: null,
       createdAt: '2025-10-21T14:30:00.000Z',
@@ -20,7 +20,7 @@ describe('TrackEventList', () => {
       trackId: 'track-1',
       date: '2025-10-20T10:00:00.000Z',
       title: 'Event 2',
-      description: null,
+      notes: null,
       type: EventType.RESULT,
       fileUrl: null,
       createdAt: '2025-10-20T10:00:00.000Z',
@@ -37,7 +37,7 @@ describe('TrackEventList', () => {
     expect(screen.getByText('Event 2')).toBeInTheDocument();
   });
 
-  it('displays event description when present', () => {
+  it('displays event notes when present', () => {
     render(<TrackEventList events={mockEvents} trackSlug={trackSlug} />);
 
     expect(screen.getByText('First event')).toBeInTheDocument();

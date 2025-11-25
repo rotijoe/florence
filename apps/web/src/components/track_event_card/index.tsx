@@ -29,9 +29,9 @@ export function TrackEventCard({ event, isActive, className }: TrackEventCardPro
           </div>
         </div>
       </CardHeader>
-      {event.description && (
+      {event.notes && (
         <CardContent className="space-y-3">
-          <p className="text-sm text-foreground">{event.description}</p>
+          <p className="text-sm text-foreground">{event.notes}</p>
         </CardContent>
       )}
     </Card>

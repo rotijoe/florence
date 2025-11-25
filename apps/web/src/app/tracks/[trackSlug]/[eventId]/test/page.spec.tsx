@@ -19,7 +19,7 @@ describe('EventSlotPage', () => {
     trackId: 'track-1',
     date: '2025-10-21T00:00:00.000Z',
     title: 'Test Event',
-    description: 'Test description',
+    notes: 'Test description',
     type: EventType.NOTE,
     fileUrl: null,
     createdAt: '2025-10-21T00:00:00.000Z',

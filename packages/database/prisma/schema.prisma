@@ -97,7 +97,7 @@ model Event {
   date        DateTime
   type        EventType
   title       String
-  description String?
+  notes       String?
   fileUrl     String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

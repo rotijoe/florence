@@ -20,7 +20,7 @@ import type { EventDetailProps } from './types'
 import { updateEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
 import type { EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
-import { AttachmentList } from '@/components/attachment_list'
+import { EventAttachment } from '@/components/attachment_list'
 
 export function EventDetail({ event, trackSlug }: EventDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
@@ -32,12 +32,12 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
     setError(null)
 
     const title = (formData.get('title') as string) ?? ''
-    const description = (formData.get('description') as string | null) ?? null
+    const notes = (formData.get('notes') as string | null) ?? null
 
     // Optimistic update - this is inside an action, so React is happy
     updateOptimisticEvent({
       title: title.trim(),
-      description: description === '' ? null : description,
+      notes: notes === '' ? null : notes,
       updatedAt: new Date().toISOString()
     })
 
@@ -48,7 +48,7 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
       // Rollback on error
       updateOptimisticEvent({
         title: event.title,
-        description: event.description ?? null,
+        notes: event.notes ?? null,
         updatedAt: event.updatedAt
       })
       setError(result.error)
@@ -59,7 +59,7 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
       // Server-confirmed data - update optimistic state with server response
       updateOptimisticEvent({
         title: result.event.title,
-        description: result.event.description ?? null,
+        notes: result.event.notes ?? null,
         updatedAt: result.event.updatedAt
       })
       setIsEditing(false)
@@ -105,7 +105,11 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
           {renderContent(optimisticEvent, isEditing)}
           {renderFooter(optimisticEvent)}
         </form>
-        {error && <div className="px-6 pb-4 text-sm text-destructive">{error}</div>}
+        {error && (
+          <div data-testid="error-message" className="px-6 pb-4 text-sm text-destructive">
+            {error}
+          </div>
+        )}
       </Card>
       {showUploadDialog && (
         <UploadDocument
@@ -169,7 +173,7 @@ function renderHeader(
   handleUploadClick: () => void
 ) {
   return (
-    <CardHeader className="gap-4">
+    <CardHeader data-testid="event-header" className="gap-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex justify-end gap-2">
           <div className="flex gap-2">{renderEditingButtons(onCancel, isEditing)}</div>
@@ -224,8 +228,8 @@ const renderNotes = (event: EventResponse, isEditing: boolean) => {
         <FieldContent>
           <Textarea
             id="notes"
-            name="description"
-            defaultValue={event.description || ''}
+            name="notes"
+            defaultValue={event.notes || ''}
             rows={6}
             className="resize-none"
           />
@@ -234,20 +238,23 @@ const renderNotes = (event: EventResponse, isEditing: boolean) => {
     )
   }
 
-  if (!event.description) {
+  if (!event.notes) {
     return null
   }
 
   return (
-    <div className="border border-border px-3 py-2 rounded-md text-foreground bg-cardspace-y-2">
+    <div
+      data-testid="notes-section"
+      className="border border-border px-3 py-2 rounded-md text-foreground bg-cardspace-y-2"
+    >
       <h3 className="text-sm font-semibold text-muted-foreground">Notes</h3>
-      <p className="text-sm leading-6">{event.description}</p>
+      <p className="text-sm leading-6">{event.notes}</p>
     </div>
   )
 }
 
 function renderAttachments(fileUrl: string | null | undefined) {
-  return <AttachmentList fileUrl={fileUrl} />
+  return <EventAttachment fileUrl={fileUrl} />
 }
 
 function renderFooter(event: EventResponse) {

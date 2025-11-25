@@ -351,7 +351,7 @@ Get a specific health event by ID.
     "date": "2025-10-21T14:30:00.000Z",
     "type": "NOTE",
     "title": "Event Title",
-    "description": "Event Description",
+    "notes": "Event Notes",
     "fileUrl": null,
     "createdAt": "2025-10-21T14:30:00.000Z",
     "updatedAt": "2025-10-21T14:30:00.000Z"
@@ -370,7 +370,7 @@ Get a specific health event by ID.
 
 #### PATCH /api/tracks/:slug/events/:eventId
 
-Update a health event's title and/or description.
+Update a health event's title and/or notes.
 
 **Authentication:** Not required (public endpoint)
 
@@ -384,7 +384,7 @@ Update a health event's title and/or description.
 ```json
 {
   "title": "Updated Event Title",
-  "description": "Updated description or null"
+  "notes": "Updated notes or null"
 }
 ```
 
@@ -393,7 +393,7 @@ Both fields are optional. Only provided fields will be updated.
 **Validation:**
 
 - `title` - If provided, must be a non-empty string after trimming
-- `description` - If provided, must be a string or null
+- `notes` - If provided, must be a string or null
 
 **Response (200):**
 
@@ -406,7 +406,7 @@ Both fields are optional. Only provided fields will be updated.
     "date": "2025-10-21T14:30:00.000Z",
     "type": "NOTE",
     "title": "Updated Event Title",
-    "description": "Updated description",
+    "notes": "Updated notes",
     "fileUrl": null,
     "createdAt": "2025-10-21T14:30:00.000Z",
     "updatedAt": "2025-10-22T10:00:00.000Z"
@@ -562,7 +562,7 @@ Confirm that an event document has been successfully uploaded to S3 and attach i
     "date": "2025-10-21T14:30:00.000Z",
     "type": "NOTE",
     "title": "Event Title",
-    "description": "Event Description",
+    "notes": "Event Notes",
     "fileUrl": "https://bucket.s3.region.amazonaws.com/....SIGNED....",
     "createdAt": "2025-10-21T14:30:00.000Z",
     "updatedAt": "2025-10-22T10:00:00.000Z"

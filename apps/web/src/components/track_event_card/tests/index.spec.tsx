@@ -8,7 +8,7 @@ describe('TrackEventCard', () => {
     trackId: 'track-1',
     date: '2025-10-21T14:30:00.000Z',
     title: 'Test Event',
-    description: 'Test description',
+    notes: 'Test description',
     type: EventType.NOTE,
     fileUrl: null,
     createdAt: '2025-10-21T14:30:00.000Z',
@@ -21,15 +21,15 @@ describe('TrackEventCard', () => {
     expect(screen.getByText('Test Event')).toBeInTheDocument();
   });
 
-  it('renders event description when present', () => {
+  it('renders event notes when present', () => {
     render(<TrackEventCard event={mockEvent} isActive={false} />);
 
     expect(screen.getByText('Test description')).toBeInTheDocument();
   });
 
-  it('does not render description when absent', () => {
-    const eventWithoutDescription = { ...mockEvent, description: null };
-    render(<TrackEventCard event={eventWithoutDescription} isActive={false} />);
+  it('does not render notes when absent', () => {
+    const eventWithoutNotes = { ...mockEvent, notes: null };
+    render(<TrackEventCard event={eventWithoutNotes} isActive={false} />);
 
     expect(screen.queryByText('Test description')).not.toBeInTheDocument();
   });

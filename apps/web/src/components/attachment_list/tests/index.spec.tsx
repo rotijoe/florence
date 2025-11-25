@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AttachmentList } from '../index'
+import { EventAttachment } from '../index'
 
 // Mock DocumentViewer to verify it's rendered with correct props
 const mockDocumentViewer = jest.fn(({ url, fileType }: { url: string; fileType: string }) => (
@@ -13,26 +13,26 @@ jest.mock('@/components/document_viewer', () => ({
   DocumentViewer: (props: { url: string; fileType: string }) => mockDocumentViewer(props)
 }))
 
-describe('AttachmentList', () => {
+describe('EventAttachment', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it('renders nothing when fileUrl is null', () => {
-    const { container } = render(<AttachmentList fileUrl={null} />)
+    const { container } = render(<EventAttachment fileUrl={null} />)
 
     expect(container.firstChild).toBeNull()
   })
 
   it('renders nothing when fileUrl is undefined', () => {
-    const { container } = render(<AttachmentList fileUrl={undefined} />)
+    const { container } = render(<EventAttachment fileUrl={undefined} />)
 
     expect(container.firstChild).toBeNull()
   })
 
   it('renders attachment header with filename when fileUrl is provided', () => {
     const url = 'https://example.com/document.pdf'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     expect(screen.getByText('Attachments')).toBeInTheDocument()
     expect(screen.getByText('document.pdf')).toBeInTheDocument()
@@ -40,7 +40,7 @@ describe('AttachmentList', () => {
 
   it('renders Download and Delete buttons', () => {
     const url = 'https://example.com/document.pdf'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     const downloadButton = screen.getByRole('button', { name: /download/i })
     const deleteButton = screen.getByRole('button', { name: /delete/i })
@@ -51,7 +51,7 @@ describe('AttachmentList', () => {
 
   it('renders DocumentViewer with correct props when fileUrl is provided', () => {
     const url = 'https://example.com/document.pdf'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     expect(mockDocumentViewer).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -65,7 +65,7 @@ describe('AttachmentList', () => {
 
   it('renders DocumentViewer for image files', () => {
     const url = 'https://example.com/image.jpg'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     expect(mockDocumentViewer).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -77,7 +77,7 @@ describe('AttachmentList', () => {
 
   it('renders DocumentViewer for text files', () => {
     const url = 'https://example.com/file.txt'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     expect(mockDocumentViewer).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -89,7 +89,7 @@ describe('AttachmentList', () => {
 
   it('renders DocumentViewer for word files', () => {
     const url = 'https://example.com/document.docx'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     expect(mockDocumentViewer).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -101,7 +101,7 @@ describe('AttachmentList', () => {
 
   it('renders DocumentViewer for other file types', () => {
     const url = 'https://example.com/file.xyz'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     expect(mockDocumentViewer).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -114,7 +114,7 @@ describe('AttachmentList', () => {
   it('does not trigger expansion when Download button is clicked', async () => {
     const user = userEvent.setup()
     const url = 'https://example.com/document.pdf'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     const downloadButton = screen.getByRole('button', { name: /download/i })
 
@@ -131,7 +131,7 @@ describe('AttachmentList', () => {
   it('does not trigger expansion when Delete button is clicked', async () => {
     const user = userEvent.setup()
     const url = 'https://example.com/document.pdf'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     const deleteButton = screen.getByRole('button', { name: /delete/i })
 
@@ -147,14 +147,14 @@ describe('AttachmentList', () => {
 
   it('handles URLs with query parameters', () => {
     const url = 'https://example.com/file.pdf?token=abc123'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     expect(screen.getByText('file.pdf')).toBeInTheDocument()
   })
 
   it('handles URLs with hash fragments', () => {
     const url = 'https://example.com/file.pdf#section'
-    render(<AttachmentList fileUrl={url} />)
+    render(<EventAttachment fileUrl={url} />)
 
     expect(screen.getByText('file.pdf')).toBeInTheDocument()
   })

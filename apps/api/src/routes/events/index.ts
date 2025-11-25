@@ -27,7 +27,7 @@ app.get('/tracks/:slug/events', async (c) => {
         date: true,
         type: true,
         title: true,
-        description: true,
+        notes: true,
         fileUrl: true,
         createdAt: true,
         updatedAt: true
@@ -73,7 +73,7 @@ app.get('/tracks/:slug/events', async (c) => {
           date: e.date.toISOString(),
           type: e.type as EventType,
           title: e.title,
-          description: e.description,
+          notes: e.notes,
           fileUrl,
           createdAt: e.createdAt.toISOString(),
           updatedAt: e.updatedAt.toISOString()
@@ -118,7 +118,7 @@ app.get('/tracks/:slug/events/:eventId', async (c) => {
         date: true,
         type: true,
         title: true,
-        description: true,
+        notes: true,
         fileUrl: true,
         createdAt: true,
         updatedAt: true
@@ -169,7 +169,7 @@ app.get('/tracks/:slug/events/:eventId', async (c) => {
       date: event.date.toISOString(),
       type: event.type as EventType,
       title: event.title,
-      description: event.description,
+      notes: event.notes,
       fileUrl,
       createdAt: event.createdAt.toISOString(),
       updatedAt: event.updatedAt.toISOString()
@@ -240,7 +240,7 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
 
     // Parse request body
     const body = await c.req.json()
-    const { title, description } = body
+    const { title, notes } = body
 
     // Validate required fields
     if (title !== undefined && (!title || typeof title !== 'string' || title.trim().length === 0)) {
@@ -253,11 +253,11 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
       )
     }
 
-    if (description !== undefined && description !== null && typeof description !== 'string') {
+    if (notes !== undefined && notes !== null && typeof notes !== 'string') {
       return c.json(
         {
           success: false,
-          error: 'Description must be a string or null'
+          error: 'Notes must be a string or null'
         },
         400
       )
@@ -266,7 +266,7 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
     // Build update payload with only provided fields
     const updateData: {
       title?: string
-      description?: string | null
+      notes?: string | null
       updatedAt: Date
     } = {
       updatedAt: new Date()
@@ -276,8 +276,8 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
       updateData.title = title.trim()
     }
 
-    if (description !== undefined) {
-      updateData.description = description === '' ? null : description
+    if (notes !== undefined) {
+      updateData.notes = notes === '' ? null : notes
     }
 
     // Update event
@@ -292,7 +292,7 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
         date: true,
         type: true,
         title: true,
-        description: true,
+        notes: true,
         fileUrl: true,
         createdAt: true,
         updatedAt: true
@@ -317,7 +317,7 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
       date: updatedEvent.date.toISOString(),
       type: updatedEvent.type as EventType,
       title: updatedEvent.title,
-      description: updatedEvent.description,
+      notes: updatedEvent.notes,
       fileUrl,
       createdAt: updatedEvent.createdAt.toISOString(),
       updatedAt: updatedEvent.updatedAt.toISOString()

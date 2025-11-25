@@ -300,7 +300,7 @@ app.post('/tracks/:slug/events/:eventId/upload-confirm', async (c) => {
         date: true,
         type: true,
         title: true,
-        description: true,
+        notes: true,
         fileUrl: true,
         createdAt: true,
         updatedAt: true
@@ -325,7 +325,7 @@ app.post('/tracks/:slug/events/:eventId/upload-confirm', async (c) => {
       date: updatedEvent.date.toISOString(),
       type: updatedEvent.type as EventType,
       title: updatedEvent.title,
-      description: updatedEvent.description,
+      notes: updatedEvent.notes,
       fileUrl: responseFileUrl,
       createdAt: updatedEvent.createdAt.toISOString(),
       updatedAt: updatedEvent.updatedAt.toISOString()

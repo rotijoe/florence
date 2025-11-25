@@ -4,6 +4,6 @@ export type AttachmentItem = {
   fileType: 'image' | 'pdf' | 'word' | 'text' | 'other'
 }
 
-export type AttachmentListProps = {
+export type EventAttachmentProps = {
   fileUrl: string | null | undefined
 }

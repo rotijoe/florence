@@ -37,7 +37,7 @@ describe('updateEventAction', () => {
       date: '2024-01-01T00:00:00.000Z',
       type: EventType.RESULT,
       title: 'Updated Title',
-      description: 'Updated Description',
+      notes: 'Updated Description',
       fileUrl: null,
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z'
@@ -57,7 +57,7 @@ describe('updateEventAction', () => {
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Updated Title')
-    formData.append('description', 'Updated Description')
+    formData.append('notes', 'Updated Description')
 
     const result = await updateEventAction(null, formData)
 
@@ -68,7 +68,7 @@ describe('updateEventAction', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: 'Updated Title',
-          description: 'Updated Description'
+          notes: 'Updated Description'
         })
       })
     )
@@ -110,14 +110,14 @@ describe('updateEventAction', () => {
     expect(result.error).toBe('Title is required and must be a non-empty string')
   })
 
-  it('handles null description', async () => {
+  it('handles null notes', async () => {
     const mockEvent: EventResponse = {
       id: 'event-1',
       trackId: 'track-1',
       date: '2024-01-01T00:00:00.000Z',
       type: EventType.RESULT,
       title: 'Title',
-      description: null,
+      notes: null,
       fileUrl: null,
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z'
@@ -132,7 +132,7 @@ describe('updateEventAction', () => {
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
-    formData.append('description', '')
+    formData.append('notes', '')
 
     const result = await updateEventAction(null, formData)
 
@@ -141,7 +141,7 @@ describe('updateEventAction', () => {
       expect.objectContaining({
         body: JSON.stringify({
           title: 'Title',
-          description: null
+          notes: null
         })
       })
     )
@@ -577,7 +577,7 @@ describe('confirmEventUploadAction', () => {
       date: '2024-01-01T00:00:00.000Z',
       type: EventType.RESULT,
       title: 'Event',
-      description: 'Description',
+      notes: 'Description',
       fileUrl: 'https://s3.amazonaws.com/file-url',
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z'
