@@ -2,7 +2,7 @@ import type { ApiResponse, EventResponse, EventType } from '@packages/types'
 import type { AppVariables } from '../../types.js'
 import { Hono } from 'hono'
 import { prisma } from '@packages/database'
-import { getPresignedDownloadUrl, getObjectKeyFromUrl } from '@/lib/s3.js'
+import { getPresignedDownloadUrl, getObjectKeyFromUrl, deleteFile } from '@/lib/s3.js'
 
 const app = new Hono<{ Variables: AppVariables }>()
 
@@ -319,6 +319,130 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
       title: updatedEvent.title,
       notes: updatedEvent.notes,
       fileUrl,
+      createdAt: updatedEvent.createdAt.toISOString(),
+      updatedAt: updatedEvent.updatedAt.toISOString()
+    }
+
+    const response: ApiResponse<EventResponse> = {
+      success: true,
+      data: formattedEvent
+    }
+
+    return c.json(response)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return c.json(
+      {
+        success: false,
+        error: errorMessage
+      },
+      500
+    )
+  }
+})
+
+app.delete('/tracks/:slug/events/:eventId/attachment', async (c) => {
+  try {
+    const slug = c.req.param('slug')
+    const eventId = c.req.param('eventId')
+
+    // Verify event exists and belongs to track
+    const existingEvent = await prisma.event.findFirst({
+      where: {
+        id: eventId,
+        track: {
+          slug: slug
+        }
+      },
+      select: {
+        id: true,
+        trackId: true,
+        fileUrl: true
+      }
+    })
+
+    if (!existingEvent) {
+      // Check if track exists
+      const trackExists = await prisma.healthTrack.findFirst({
+        where: { slug },
+        select: { id: true }
+      })
+
+      if (!trackExists) {
+        return c.json(
+          {
+            success: false,
+            error: 'Track not found'
+          },
+          404
+        )
+      }
+
+      return c.json(
+        {
+          success: false,
+          error: 'Event not found'
+        },
+        404
+      )
+    }
+
+    // Check if event has an attachment
+    if (!existingEvent.fileUrl) {
+      return c.json(
+        {
+          success: false,
+          error: 'Event has no attachment to delete'
+        },
+        400
+      )
+    }
+
+    // Extract S3 key from fileUrl
+    const key = getObjectKeyFromUrl(existingEvent.fileUrl)
+    if (!key) {
+      return c.json(
+        {
+          success: false,
+          error: 'Invalid file URL'
+        },
+        400
+      )
+    }
+
+    // Delete file from S3
+    await deleteFile(key)
+
+    // Update event to set fileUrl to null
+    const updatedEvent = await prisma.event.update({
+      where: {
+        id: eventId
+      },
+      data: {
+        fileUrl: null,
+        updatedAt: new Date()
+      },
+      select: {
+        id: true,
+        trackId: true,
+        date: true,
+        type: true,
+        title: true,
+        notes: true,
+        fileUrl: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    const formattedEvent: EventResponse = {
+      id: updatedEvent.id,
+      trackId: updatedEvent.trackId,
+      date: updatedEvent.date.toISOString(),
+      type: updatedEvent.type as EventType,
+      title: updatedEvent.title,
+      notes: updatedEvent.notes,
+      fileUrl: updatedEvent.fileUrl,
       createdAt: updatedEvent.createdAt.toISOString(),
       updatedAt: updatedEvent.updatedAt.toISOString()
     }

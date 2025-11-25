@@ -1,4 +1,4 @@
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 export type StorageConfig = {
@@ -67,4 +67,12 @@ export function getObjectKeyFromUrl(url: string): string | null {
   } catch {
     return null
   }
+}
+
+export async function deleteFile(key: string): Promise<void> {
+  const command = new DeleteObjectCommand({
+    Bucket: config.s3BucketAppDocuments,
+    Key: key
+  })
+  await s3Client.send(command)
 }

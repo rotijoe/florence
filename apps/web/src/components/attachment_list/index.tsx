@@ -6,7 +6,7 @@ import { getFileDetails } from './helpers'
 import type { EventAttachmentProps } from './types'
 import { DocumentViewer } from '@/components/document_viewer'
 
-export function EventAttachment({ fileUrl }: EventAttachmentProps) {
+export function EventAttachment({ fileUrl, onDelete }: EventAttachmentProps) {
   if (!fileUrl) {
     return null
   }
@@ -39,7 +39,7 @@ export function EventAttachment({ fileUrl }: EventAttachmentProps) {
               size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation()
-                // Placeholder - no functionality yet
+                onDelete?.()
               }}
               aria-label="Delete"
             >

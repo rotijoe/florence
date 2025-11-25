@@ -17,7 +17,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { MoreVertical } from 'lucide-react'
 import { formatTimestamp, optimisticReducer } from './helpers'
 import type { EventDetailProps } from './types'
-import { updateEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
+import {
+  updateEventAction,
+  deleteEventAttachmentAction
+} from '@/app/tracks/[trackSlug]/[eventId]/actions'
 import type { EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
 import { EventAttachment } from '@/components/attachment_list'
@@ -95,6 +98,37 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
     setShowUploadDialog(false)
   }
 
+  const handleDeleteAttachment = () => {
+    startTransition(async () => {
+      // Optimistic update - remove attachment from UI immediately
+      updateOptimisticEvent({
+        fileUrl: null,
+        updatedAt: new Date().toISOString()
+      })
+
+      // Call the server action
+      const result = await deleteEventAttachmentAction(trackSlug, optimisticEvent.id)
+
+      if (result.error) {
+        // Rollback on error - restore original fileUrl
+        updateOptimisticEvent({
+          fileUrl: event.fileUrl ?? null,
+          updatedAt: event.updatedAt
+        })
+        setError(result.error)
+        return
+      }
+
+      if (result.event) {
+        // Server-confirmed data - update optimistic state with server response
+        updateOptimisticEvent({
+          fileUrl: result.event.fileUrl ?? null,
+          updatedAt: result.event.updatedAt
+        })
+      }
+    })
+  }
+
   return (
     <>
       <Card>
@@ -102,7 +136,7 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
           <input type="hidden" name="eventId" value={optimisticEvent.id} />
           <input type="hidden" name="trackSlug" value={trackSlug} />
           {renderHeader(optimisticEvent, isEditing, handleCancel, handleEdit, handleUploadClick)}
-          {renderContent(optimisticEvent, isEditing)}
+          {renderContent(optimisticEvent, isEditing, handleDeleteAttachment)}
           {renderFooter(optimisticEvent)}
         </form>
         {error && (
@@ -211,11 +245,11 @@ function renderTitle(isEditing: boolean, event: EventResponse) {
   return <CardTitle className="text-3xl">{event.title}</CardTitle>
 }
 
-function renderContent(event: EventResponse, isEditing: boolean) {
+function renderContent(event: EventResponse, isEditing: boolean, onDeleteAttachment?: () => void) {
   return (
     <CardContent className="space-y-6">
       {renderNotes(event, isEditing)}
-      {renderAttachments(event.fileUrl)}
+      {renderAttachments(event.fileUrl, onDeleteAttachment)}
     </CardContent>
   )
 }
@@ -253,8 +287,8 @@ const renderNotes = (event: EventResponse, isEditing: boolean) => {
   )
 }
 
-function renderAttachments(fileUrl: string | null | undefined) {
-  return <EventAttachment fileUrl={fileUrl} />
+function renderAttachments(fileUrl: string | null | undefined, onDelete?: () => void) {
+  return <EventAttachment fileUrl={fileUrl} onDelete={onDelete} />
 }
 
 function renderFooter(event: EventResponse) {

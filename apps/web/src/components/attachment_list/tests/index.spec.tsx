@@ -158,4 +158,28 @@ describe('EventAttachment', () => {
 
     expect(screen.getByText('file.pdf')).toBeInTheDocument()
   })
+
+  it('calls onDelete when Delete button is clicked', async () => {
+    const user = userEvent.setup()
+    const mockOnDelete = jest.fn()
+    const url = 'https://example.com/document.pdf'
+    render(<EventAttachment fileUrl={url} onDelete={mockOnDelete} />)
+
+    const deleteButton = screen.getByRole('button', { name: /delete/i })
+    await user.click(deleteButton)
+
+    expect(mockOnDelete).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call onDelete when Delete button is clicked but onDelete is not provided', async () => {
+    const user = userEvent.setup()
+    const url = 'https://example.com/document.pdf'
+    render(<EventAttachment fileUrl={url} />)
+
+    const deleteButton = screen.getByRole('button', { name: /delete/i })
+    await user.click(deleteButton)
+
+    // Should not throw error, just do nothing
+    expect(deleteButton).toBeInTheDocument()
+  })
 })

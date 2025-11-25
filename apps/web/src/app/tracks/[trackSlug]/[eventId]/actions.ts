@@ -23,6 +23,11 @@ export type ConfirmUploadResult = {
   error?: string
 }
 
+export type DeleteAttachmentResult = {
+  event?: EventResponse
+  error?: string
+}
+
 export async function updateEventAction(
   prevState: UpdateEventState | null,
   formData: FormData
@@ -241,6 +246,66 @@ export async function confirmEventUploadAction(formData: FormData): Promise<Conf
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
     return {
       error: `Failed to confirm upload: ${errorMessage}`
+    }
+  }
+}
+
+export async function deleteEventAttachmentAction(
+  trackSlug: string,
+  eventId: string
+): Promise<DeleteAttachmentResult> {
+  if (!eventId || !trackSlug) {
+    return {
+      error: 'Missing required fields: eventId and trackSlug are required'
+    }
+  }
+
+  try {
+    const cookieStore = await cookies()
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((cookie) => `${cookie.name}=${cookie.value}`)
+      .join('; ')
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}/attachment`,
+      {
+        method: 'DELETE',
+        headers: {
+          ...(cookieHeader && { Cookie: cookieHeader })
+        }
+      }
+    )
+
+    if (!response.ok) {
+      const errorData: ApiResponse<never> = await response.json().catch(() => ({
+        success: false,
+        error: `Failed to delete attachment: ${response.statusText}`
+      }))
+      return {
+        error: errorData.error || `Failed to delete attachment: ${response.statusText}`
+      }
+    }
+
+    const data: ApiResponse<EventResponse> = await response.json()
+
+    if (!data.success || !data.data) {
+      return {
+        error: data.error || 'Failed to delete attachment'
+      }
+    }
+
+    // Revalidate the page to ensure fresh data on next render
+    revalidatePath(`/tracks/${trackSlug}/${eventId}`)
+    revalidatePath(`/tracks/${trackSlug}`)
+
+    return {
+      event: data.data
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    return {
+      error: `Failed to delete attachment: ${errorMessage}`
     }
   }
 }

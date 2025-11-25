@@ -233,6 +233,9 @@ describe('GET /api/user/me', () => {
   })
 
   it('should handle authentication errors gracefully', async () => {
+    // Suppress console.error for this test since we're intentionally testing error handling
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
     // Use jest.spyOn to mock the auth call to throw an error
     const getSessionSpy = jest.spyOn(auth.api, 'getSession')
     getSessionSpy.mockRejectedValue(new Error('Auth service unavailable'))
@@ -241,7 +244,8 @@ describe('GET /api/user/me', () => {
     const response = await app.request('/api/user/me')
     expect(response.status).toBe(500)
 
-    // Clean up the spy
+    // Clean up the spies
     getSessionSpy.mockRestore()
+    consoleErrorSpy.mockRestore()
   })
 })

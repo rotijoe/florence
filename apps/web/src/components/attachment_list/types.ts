@@ -6,4 +6,5 @@ export type AttachmentItem = {
 
 export type EventAttachmentProps = {
   fileUrl: string | null | undefined
+  onDelete?: () => void
 }
