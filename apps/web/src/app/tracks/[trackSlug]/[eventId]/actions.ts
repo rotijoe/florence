@@ -4,6 +4,7 @@ import { API_BASE_URL } from '@/constants/api'
 import type { EventResponse, ApiResponse } from '@packages/types'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export type UpdateEventState = {
   event?: EventResponse
@@ -25,6 +26,10 @@ export type ConfirmUploadResult = {
 
 export type DeleteAttachmentResult = {
   event?: EventResponse
+  error?: string
+}
+
+export type DeleteEventResult = {
   error?: string
 }
 
@@ -308,4 +313,59 @@ export async function deleteEventAttachmentAction(
       error: `Failed to delete attachment: ${errorMessage}`
     }
   }
+}
+
+export async function deleteEventAction(
+  trackSlug: string,
+  eventId: string
+): Promise<DeleteEventResult> {
+  if (!eventId || !trackSlug) {
+    return {
+      error: 'Missing required fields: eventId and trackSlug are required'
+    }
+  }
+
+  try {
+    const cookieStore = await cookies()
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((cookie) => `${cookie.name}=${cookie.value}`)
+      .join('; ')
+
+    const response = await fetch(`${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}`, {
+      method: 'DELETE',
+      headers: {
+        ...(cookieHeader && { Cookie: cookieHeader })
+      }
+    })
+
+    if (!response.ok) {
+      const errorData: ApiResponse<never> = await response.json().catch(() => ({
+        success: false,
+        error: `Failed to delete event: ${response.statusText}`
+      }))
+      return {
+        error: errorData.error || `Failed to delete event: ${response.statusText}`
+      }
+    }
+
+    const data: ApiResponse<never> = await response.json()
+
+    if (!data.success) {
+      return {
+        error: data.error || 'Failed to delete event'
+      }
+    }
+
+    // Revalidate the track page to ensure fresh data
+    revalidatePath(`/tracks/${trackSlug}`)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    return {
+      error: `Failed to delete event: ${errorMessage}`
+    }
+  }
+
+  // Redirect to track page outside of try-catch block
+  redirect(`/tracks/${trackSlug}`)
 }

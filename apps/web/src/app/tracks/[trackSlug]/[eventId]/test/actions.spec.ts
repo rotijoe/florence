@@ -1,11 +1,11 @@
 import {
   updateEventAction,
   createEventUploadIntentAction,
-  confirmEventUploadAction
+  confirmEventUploadAction,
+  deleteEventAction
 } from '../actions'
 import { API_BASE_URL } from '@/constants/api'
-import type { EventResponse, ApiResponse } from '@packages/types'
-import { EventType } from '@packages/types'
+import { EventType, type EventResponse, type ApiResponse } from '@packages/types'
 
 // Mock Next.js APIs
 jest.mock('next/cache', () => ({
@@ -16,8 +16,13 @@ jest.mock('next/headers', () => ({
   cookies: jest.fn()
 }))
 
-const { revalidatePath } = require('next/cache')
-const { cookies } = require('next/headers')
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn()
+}))
+
+import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 // Mock fetch globally
 global.fetch = jest.fn()
@@ -780,5 +785,167 @@ describe('confirmEventUploadAction', () => {
     const result = await confirmEventUploadAction(formData)
 
     expect(result.error).toBe('Failed to confirm upload: Unknown error occurred')
+  })
+})
+
+describe('deleteEventAction', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(cookies as jest.Mock).mockResolvedValue({
+      getAll: jest.fn().mockReturnValue([])
+    })
+    ;(redirect as unknown as jest.Mock).mockImplementation(() => {
+      throw new Error('NEXT_REDIRECT')
+    })
+  })
+
+  it('deletes event successfully and redirects', async () => {
+    const mockResponse: ApiResponse<never> = {
+      success: true
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    })
+
+    try {
+      await deleteEventAction('track-slug', 'event-1')
+    } catch (error: any) {
+      // redirect throws an error in Next.js
+      if (error.message !== 'NEXT_REDIRECT') {
+        throw error
+      }
+    }
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${API_BASE_URL}/api/tracks/track-slug/events/event-1`,
+      expect.objectContaining({
+        method: 'DELETE',
+        headers: {}
+      })
+    )
+    expect(revalidatePath).toHaveBeenCalledWith('/tracks/track-slug')
+    expect(redirect).toHaveBeenCalledWith('/tracks/track-slug')
+  })
+
+  it('returns error when eventId is missing', async () => {
+    const result = await deleteEventAction('track-slug', '')
+
+    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('returns error when trackSlug is missing', async () => {
+    const result = await deleteEventAction('', 'event-1')
+
+    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('handles API error response', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Not Found',
+      json: async () => ({ success: false, error: 'Event not found' })
+    })
+
+    const result = await deleteEventAction('track-slug', 'event-1')
+
+    expect(result.error).toBe('Event not found')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('handles network errors', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
+
+    const result = await deleteEventAction('track-slug', 'event-1')
+
+    expect(result.error).toBe('Failed to delete event: Network error')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('handles API error response without error message', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Bad Request',
+      json: async () => ({ success: false })
+    })
+
+    const result = await deleteEventAction('track-slug', 'event-1')
+
+    expect(result.error).toBe('Failed to delete event: Bad Request')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('handles JSON parse error in error response', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Bad Request',
+      json: async () => {
+        throw new Error('Invalid JSON')
+      }
+    })
+
+    const result = await deleteEventAction('track-slug', 'event-1')
+
+    expect(result.error).toContain('Failed to delete event')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('handles API response with success false', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: false, error: 'Deletion failed' })
+    })
+
+    const result = await deleteEventAction('track-slug', 'event-1')
+
+    expect(result.error).toBe('Deletion failed')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('handles non-Error exception', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
+
+    const result = await deleteEventAction('track-slug', 'event-1')
+
+    expect(result.error).toBe('Failed to delete event: Unknown error occurred')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('includes cookies in request when available', async () => {
+    ;(cookies as jest.Mock).mockResolvedValue({
+      getAll: jest.fn().mockReturnValue([
+        { name: 'session', value: 'session-value' },
+        { name: 'token', value: 'token-value' }
+      ])
+    })
+
+    const mockResponse: ApiResponse<never> = {
+      success: true
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    })
+
+    try {
+      await deleteEventAction('track-slug', 'event-1')
+    } catch (error: any) {
+      if (error.message !== 'NEXT_REDIRECT') {
+        throw error
+      }
+    }
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Cookie: 'session=session-value; token=token-value'
+        })
+      })
+    )
   })
 })

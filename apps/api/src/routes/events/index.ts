@@ -465,4 +465,88 @@ app.delete('/tracks/:slug/events/:eventId/attachment', async (c) => {
   }
 })
 
+app.delete('/tracks/:slug/events/:eventId', async (c) => {
+  try {
+    const slug = c.req.param('slug')
+    const eventId = c.req.param('eventId')
+
+    // Verify event exists and belongs to track
+    const existingEvent = await prisma.event.findFirst({
+      where: {
+        id: eventId,
+        track: {
+          slug: slug
+        }
+      },
+      select: {
+        id: true,
+        trackId: true,
+        fileUrl: true
+      }
+    })
+
+    if (!existingEvent) {
+      // Check if track exists
+      const trackExists = await prisma.healthTrack.findFirst({
+        where: { slug },
+        select: { id: true }
+      })
+
+      if (!trackExists) {
+        return c.json(
+          {
+            success: false,
+            error: 'Track not found'
+          },
+          404
+        )
+      }
+
+      return c.json(
+        {
+          success: false,
+          error: 'Event not found'
+        },
+        404
+      )
+    }
+
+    // If event has an attachment, delete it from S3
+    if (existingEvent.fileUrl) {
+      const key = getObjectKeyFromUrl(existingEvent.fileUrl)
+      if (key) {
+        try {
+          await deleteFile(key)
+        } catch (error) {
+          console.error('Error deleting file from S3:', error)
+          // Continue with event deletion even if S3 deletion fails
+        }
+      }
+    }
+
+    // Delete event from database
+    await prisma.event.delete({
+      where: {
+        id: eventId
+      }
+    })
+
+    const response: ApiResponse<never> = {
+      success: true
+    }
+
+    return c.json(response)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+    return c.json(
+      {
+        success: false,
+        error: errorMessage
+      },
+      500
+    )
+  }
+})
+
 export default app

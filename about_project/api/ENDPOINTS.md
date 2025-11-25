@@ -597,6 +597,61 @@ Confirm that an event document has been successfully uploaded to S3 and attach i
 }
 ```
 
+#### DELETE /api/tracks/:slug/events/:eventId
+
+Delete a health event and its associated attachment (if any).
+
+- **Authentication:** Not required (public endpoint)
+
+**Path Parameters:**
+
+- `slug` - Unique slug identifier for the track
+- `eventId` - Unique identifier for the event
+
+**Behavior:**
+
+- Verifies the event exists and belongs to the track
+- If the event has an attached document (`fileUrl`), deletes the file from S3
+- Deletes the event from the database
+- Returns success response
+
+**Response (200):**
+
+```json
+{
+  "success": true
+}
+```
+
+**Error Response (404):**
+
+```json
+{
+  "success": false,
+  "error": "Event not found"
+}
+```
+
+or
+
+```json
+{
+  "success": false,
+  "error": "Track not found"
+}
+```
+
+**Error Response (500):**
+
+```json
+{
+  "success": false,
+  "error": "Database connection failed"
+}
+```
+
+> **Note:** If S3 file deletion fails, the event deletion will still proceed. The S3 error is logged but does not prevent the event from being deleted.
+
 ## Future Endpoints
 
 ### Health Tracks (Authenticated)
@@ -608,4 +663,3 @@ Confirm that an event document has been successfully uploaded to S3 and attach i
 ### Events (Authenticated)
 
 - POST /api/tracks/:trackId/events - Create event
-- DELETE /api/tracks/:slug/events/:eventId - Delete event

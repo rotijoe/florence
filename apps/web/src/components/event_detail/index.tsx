@@ -11,6 +11,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { Field, FieldLabel, FieldContent } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,7 +27,8 @@ import { formatTimestamp, optimisticReducer } from './helpers'
 import type { EventDetailProps } from './types'
 import {
   updateEventAction,
-  deleteEventAttachmentAction
+  deleteEventAttachmentAction,
+  deleteEventAction
 } from '@/app/tracks/[trackSlug]/[eventId]/actions'
 import type { EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
@@ -29,6 +38,7 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [optimisticEvent, updateOptimisticEvent] = useOptimistic(event, optimisticReducer)
 
   async function formAction(formData: FormData) {
@@ -129,13 +139,43 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
     })
   }
 
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true)
+    setError(null)
+  }
+
+  const handleDeleteCancel = () => {
+    setShowDeleteDialog(false)
+  }
+
+  const handleDeleteEvent = async () => {
+    setError(null)
+    const result = await deleteEventAction(trackSlug, optimisticEvent.id)
+
+    if (result.error) {
+      setError(result.error)
+      setShowDeleteDialog(false)
+      return
+    }
+
+    // If successful, redirect will happen in the server action
+    // No need to close dialog here as redirect will navigate away
+  }
+
   return (
     <>
       <Card>
         <form action={formAction}>
           <input type="hidden" name="eventId" value={optimisticEvent.id} />
           <input type="hidden" name="trackSlug" value={trackSlug} />
-          {renderHeader(optimisticEvent, isEditing, handleCancel, handleEdit, handleUploadClick)}
+          {renderHeader(
+            optimisticEvent,
+            isEditing,
+            handleCancel,
+            handleEdit,
+            handleUploadClick,
+            handleDeleteClick
+          )}
           {renderContent(optimisticEvent, isEditing, handleDeleteAttachment)}
           {renderFooter(optimisticEvent)}
         </form>
@@ -153,11 +193,35 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
           onCancel={handleUploadCancel}
         />
       )}
+      {showDeleteDialog && (
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Event</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this event? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleDeleteCancel}>
+                Cancel
+              </Button>
+              <Button type="button" variant="destructive" onClick={handleDeleteEvent}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   )
 }
 
-function renderActionsMenu(onEditEvent: () => void, onUploadDocument: () => void) {
+function renderActionsMenu(
+  onEditEvent: () => void,
+  onUploadDocument: () => void,
+  onDeleteEvent: () => void
+) {
   return (
     <div>
       <DropdownMenu>
@@ -171,7 +235,9 @@ function renderActionsMenu(onEditEvent: () => void, onUploadDocument: () => void
           <DropdownMenuItem onSelect={onEditEvent}>Edit event</DropdownMenuItem>
           <DropdownMenuItem onSelect={onUploadDocument}>Upload document</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete event</DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={onDeleteEvent}>
+            Delete event
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -204,14 +270,15 @@ function renderHeader(
   isEditing: boolean,
   onCancel: () => void,
   handleEdit: () => void,
-  handleUploadClick: () => void
+  handleUploadClick: () => void,
+  handleDeleteClick: () => void
 ) {
   return (
     <CardHeader data-testid="event-header" className="gap-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex justify-end gap-2">
           <div className="flex gap-2">{renderEditingButtons(onCancel, isEditing)}</div>
-          {!isEditing && renderActionsMenu(handleEdit, handleUploadClick)}
+          {!isEditing && renderActionsMenu(handleEdit, handleUploadClick, handleDeleteClick)}
         </div>
         <div className="space-y-2">
           {renderTitle(isEditing, event)}

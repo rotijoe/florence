@@ -4,12 +4,14 @@ import { EventDetail } from '../index'
 import { EventType, type EventResponse } from '@packages/types'
 
 jest.mock('@/app/tracks/[trackSlug]/[eventId]/actions', () => ({
-  updateEventAction: jest.fn()
+  updateEventAction: jest.fn(),
+  deleteEventAction: jest.fn()
 }))
 
-import { updateEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
+import { updateEventAction, deleteEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
 
 const mockUpdateEventAction = updateEventAction as jest.MockedFunction<typeof updateEventAction>
+const mockDeleteEventAction = deleteEventAction as jest.MockedFunction<typeof deleteEventAction>
 
 describe('EventDetail', () => {
   const mockEvent: EventResponse = {
@@ -29,6 +31,7 @@ describe('EventDetail', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUpdateEventAction.mockResolvedValue({ event: undefined, error: undefined })
+    mockDeleteEventAction.mockResolvedValue({})
   })
 
   describe('basic rendering', () => {
@@ -345,6 +348,133 @@ describe('EventDetail', () => {
       await user.click(menuButtonAgain)
       const uploadMenuItem = await screen.findByRole('menuitem', { name: /upload document/i })
       await user.click(uploadMenuItem)
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('error-message')).not.toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('delete event', () => {
+    it('opens delete dialog when delete event menu item is clicked', async () => {
+      const user = userEvent.setup()
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const deleteMenuItem = await screen.findByRole('menuitem', { name: /delete event/i })
+      await user.click(deleteMenuItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+        expect(screen.getByText('Delete Event')).toBeInTheDocument()
+        expect(
+          screen.getByText(/Are you sure you want to delete this event\?/i)
+        ).toBeInTheDocument()
+      })
+    })
+
+    it('closes delete dialog when cancel is clicked', async () => {
+      const user = userEvent.setup()
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const deleteMenuItem = await screen.findByRole('menuitem', { name: /delete event/i })
+      await user.click(deleteMenuItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      })
+    })
+
+    it('calls deleteEventAction when delete button is clicked', async () => {
+      const user = userEvent.setup()
+      mockDeleteEventAction.mockResolvedValue({})
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const deleteMenuItem = await screen.findByRole('menuitem', { name: /delete event/i })
+      await user.click(deleteMenuItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      const deleteButton = screen.getByRole('button', { name: /^delete$/i })
+      await user.click(deleteButton)
+
+      await waitFor(() => {
+        expect(mockDeleteEventAction).toHaveBeenCalledWith(trackSlug, mockEvent.id)
+      })
+    })
+
+    it('displays error message when delete fails', async () => {
+      const user = userEvent.setup()
+      mockDeleteEventAction.mockResolvedValue({ error: 'Failed to delete event' })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const deleteMenuItem = await screen.findByRole('menuitem', { name: /delete event/i })
+      await user.click(deleteMenuItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      const deleteButton = screen.getByRole('button', { name: /^delete$/i })
+      await user.click(deleteButton)
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to delete event')
+      })
+    })
+
+    it('clears error when delete dialog is opened', async () => {
+      const user = userEvent.setup()
+      mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+
+      // First, trigger an error by trying to save with invalid data
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to update event')
+      })
+
+      // Cancel edit mode first to show the menu button again
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      // Now open delete dialog - error should be cleared
+      const menuButtonAgain = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButtonAgain)
+      const deleteMenuItem = await screen.findByRole('menuitem', { name: /delete event/i })
+      await user.click(deleteMenuItem)
 
       await waitFor(() => {
         expect(screen.queryByTestId('error-message')).not.toBeInTheDocument()

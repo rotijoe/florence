@@ -787,4 +787,188 @@ describe('Events API', () => {
       findFirstSpy.mockRestore()
     })
   })
+
+  describe('DELETE /api/tracks/:slug/events/:eventId', () => {
+    it('returns 404 for missing track', async () => {
+      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+
+      findFirstSpy.mockResolvedValue(null)
+      trackFindFirstSpy.mockResolvedValue(null)
+
+      const res = await app.request('/api/tracks/nonexistent-slug/events/event-1', {
+        method: 'DELETE'
+      })
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Track not found')
+
+      expect(mockS3Send).not.toHaveBeenCalled()
+
+      findFirstSpy.mockRestore()
+      trackFindFirstSpy.mockRestore()
+    })
+
+    it('returns 404 for missing event', async () => {
+      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const deleteSpy = jest.spyOn(prisma.event, 'delete')
+
+      findFirstSpy.mockResolvedValue(null)
+      trackFindFirstSpy.mockResolvedValue({
+        id: 'track-1',
+        slug: 'test-track',
+        userId: 'user-1',
+        title: 'Test Track',
+        description: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
+      })
+
+      const res = await app.request('/api/tracks/test-track/events/nonexistent-event', {
+        method: 'DELETE'
+      })
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Event not found')
+
+      expect(mockS3Send).not.toHaveBeenCalled()
+      expect(deleteSpy).not.toHaveBeenCalled()
+
+      findFirstSpy.mockRestore()
+      trackFindFirstSpy.mockRestore()
+      deleteSpy.mockRestore()
+    })
+
+    it('successfully deletes event without attachment', async () => {
+      const mockEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: new Date('2024-01-01T00:00:00Z'),
+        type: EventType.NOTE,
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
+      }
+
+      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const deleteSpy = jest.spyOn(prisma.event, 'delete')
+
+      findFirstSpy.mockResolvedValue(mockEvent)
+      deleteSpy.mockResolvedValue(mockEvent as any)
+
+      const res = await app.request('/api/tracks/test-track/events/event-1', {
+        method: 'DELETE'
+      })
+      expect(res.status).toBe(200)
+
+      const json = await res.json()
+      expect(json.success).toBe(true)
+
+      expect(mockS3Send).not.toHaveBeenCalled()
+      expect(deleteSpy).toHaveBeenCalledWith({
+        where: { id: 'event-1' }
+      })
+
+      findFirstSpy.mockRestore()
+      deleteSpy.mockRestore()
+    })
+
+    it('successfully deletes event with attachment', async () => {
+      const mockEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: new Date('2024-01-01T00:00:00Z'),
+        type: EventType.NOTE,
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
+      }
+
+      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const deleteSpy = jest.spyOn(prisma.event, 'delete')
+
+      findFirstSpy.mockResolvedValue(mockEvent)
+      deleteSpy.mockResolvedValue(mockEvent as any)
+
+      const res = await app.request('/api/tracks/test-track/events/event-1', {
+        method: 'DELETE'
+      })
+      expect(res.status).toBe(200)
+
+      const json = await res.json()
+      expect(json.success).toBe(true)
+
+      expect(mockS3Send).toHaveBeenCalledTimes(1)
+      const deleteCommand = mockS3Send.mock.calls[0][0] as DeleteObjectCommand
+      expect(deleteCommand.input.Key).toBe('events/event-1/file.pdf')
+      expect(deleteSpy).toHaveBeenCalledWith({
+        where: { id: 'event-1' }
+      })
+
+      findFirstSpy.mockRestore()
+      deleteSpy.mockRestore()
+    })
+
+    it('continues deletion even if S3 deletion fails', async () => {
+      const mockEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: new Date('2024-01-01T00:00:00Z'),
+        type: EventType.NOTE,
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
+      }
+
+      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const deleteSpy = jest.spyOn(prisma.event, 'delete')
+
+      findFirstSpy.mockResolvedValue(mockEvent)
+      deleteSpy.mockResolvedValue(mockEvent as any)
+      mockS3Send.mockReset()
+      mockS3Send.mockRejectedValue(new Error('S3 deletion failed'))
+
+      const res = await app.request('/api/tracks/test-track/events/event-1', {
+        method: 'DELETE'
+      })
+      expect(res.status).toBe(200)
+
+      const json = await res.json()
+      expect(json.success).toBe(true)
+
+      expect(deleteSpy).toHaveBeenCalledWith({
+        where: { id: 'event-1' }
+      })
+
+      findFirstSpy.mockRestore()
+      deleteSpy.mockRestore()
+    })
+
+    it('handles database errors gracefully', async () => {
+      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
+
+      const res = await app.request('/api/tracks/test-track/events/event-1', {
+        method: 'DELETE'
+      })
+      expect(res.status).toBe(500)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Database connection failed')
+
+      findFirstSpy.mockRestore()
+    })
+  })
 })
