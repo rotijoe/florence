@@ -9,7 +9,7 @@ jest.mock('@/hooks/use_event_upload', () => ({
   useEventUpload: jest.fn()
 }))
 
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { UploadDocument } from '../index'
 import { EventType, type EventResponse } from '@packages/types'
@@ -344,6 +344,7 @@ describe('UploadDocument', () => {
     // This test verifies that validation errors are displayed in the UI
     // We test the error path (lines 64-65) by using a workaround to trigger handleUpload
     // when selectedFile is null
+    const user = userEvent.setup()
     render(<UploadDocument {...defaultProps} />)
 
     const uploadButton = screen.getByRole('button', { name: /upload/i })
@@ -358,7 +359,7 @@ describe('UploadDocument', () => {
     // Use act to ensure React processes the state update
     await act(async () => {
       // Try multiple ways to trigger the click
-      fireEvent.click(buttonElement, { bubbles: true, cancelable: true })
+      await user.click(buttonElement)
       // Also try native event
       buttonElement.click()
     })

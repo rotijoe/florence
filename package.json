@@ -28,6 +28,7 @@
     "start": "turbo run start --filter=apps/web...",
     "db:push": "pnpm --filter @packages/database db:push",
     "db:seed": "pnpm --filter @packages/database db:seed",
+    "db:studio": "pnpm --filter @packages/database studio",
     "db:setup": "pnpm db:push && pnpm db:seed",
     "dev:clean": "pkill -f 'tsx watch' && pkill -f 'next dev' && pnpm dev",
     "kill-ports": "lsof -ti:3000,8787 | xargs kill -9",

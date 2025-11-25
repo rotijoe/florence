@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { NavSecondary } from '../index'
-import type { NavSecondaryItem } from '../index'
+import { NavSecondary, NavSecondaryItem } from '../index'
 import type { LucideIcon } from 'lucide-react'
 import React from 'react'
 
@@ -29,12 +28,16 @@ jest.mock('@/components/ui/sidebar', () => ({
 
 // Mock LucideIcon components
 const SettingsIcon = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} data-testid="settings-icon" {...props}><text>⚙️</text></svg>
+  <svg ref={ref} data-testid="settings-icon" {...props}>
+    <text>⚙️</text>
+  </svg>
 )) as LucideIcon
 SettingsIcon.displayName = 'SettingsIcon'
 
 const HelpIcon = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} data-testid="help-icon" {...props}><text>❓</text></svg>
+  <svg ref={ref} data-testid="help-icon" {...props}>
+    <text>❓</text>
+  </svg>
 )) as LucideIcon
 HelpIcon.displayName = 'HelpIcon'
 

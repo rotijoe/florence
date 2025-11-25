@@ -22,7 +22,7 @@ export async function fetchUserData(): Promise<UserWithTracks> {
 
 export function formatTrackDate(dateString: string): string {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'

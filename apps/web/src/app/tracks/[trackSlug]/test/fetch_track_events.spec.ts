@@ -43,9 +43,7 @@ describe('fetchTrackEvents', () => {
       statusText: 'Not Found'
     })
 
-    await expect(fetchTrackEvents('nonexistent')).rejects.toThrow(
-      'Failed to fetch events'
-    )
+    await expect(fetchTrackEvents('nonexistent')).rejects.toThrow('Failed to fetch events')
   })
 
   it('throws error when API returns error', async () => {
@@ -54,8 +52,6 @@ describe('fetchTrackEvents', () => {
       json: async () => ({ success: false, error: 'Track not found' })
     })
 
-    await expect(fetchTrackEvents('nonexistent')).rejects.toThrow(
-      'Track not found'
-    )
+    await expect(fetchTrackEvents('nonexistent')).rejects.toThrow('Track not found')
   })
 })
