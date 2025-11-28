@@ -1,4 +1,4 @@
-import type { ApiResponse, EventResponse, EventType } from '@packages/types'
+import { EventType, type ApiResponse, type EventResponse } from '@packages/types'
 import type { AppVariables } from '../../types.js'
 import { Hono } from 'hono'
 import { prisma } from '@packages/database'
@@ -87,6 +87,135 @@ app.get('/tracks/:slug/events', async (c) => {
     }
 
     return c.json(response)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return c.json(
+      {
+        success: false,
+        error: errorMessage
+      },
+      500
+    )
+  }
+})
+
+app.post('/tracks/:slug/events', async (c) => {
+  try {
+    const user = c.get('user')
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          error: 'Unauthorized'
+        },
+        401
+      )
+    }
+
+    const slug = c.req.param('slug')
+
+    // Verify track exists and belongs to user
+    const track = await prisma.healthTrack.findFirst({
+      where: {
+        slug,
+        userId: user.id
+      },
+      select: {
+        id: true
+      }
+    })
+
+    if (!track) {
+      return c.json(
+        {
+          success: false,
+          error: 'Track not found'
+        },
+        404
+      )
+    }
+
+    // Parse request body with defaults
+    const body = await c.req.json().catch(() => ({}))
+    const title = body.title ?? 'Untitled event'
+    const type = body.type ?? EventType.NOTE
+    const date = body.date ? new Date(body.date) : new Date()
+    const notes = body.notes ?? null
+
+    // Validate title if provided
+    if (title !== undefined && (!title || typeof title !== 'string' || title.trim().length === 0)) {
+      return c.json(
+        {
+          success: false,
+          error: 'Title is required and must be a non-empty string'
+        },
+        400
+      )
+    }
+
+    // Validate type if provided
+    if (type !== undefined && !Object.values(EventType).includes(type)) {
+      return c.json(
+        {
+          success: false,
+          error: `Type must be one of: ${Object.values(EventType).join(', ')}`
+        },
+        400
+      )
+    }
+
+    // Create event
+    const newEvent = await prisma.event.create({
+      data: {
+        trackId: track.id,
+        title: title.trim(),
+        type,
+        date,
+        notes
+      },
+      select: {
+        id: true,
+        trackId: true,
+        date: true,
+        type: true,
+        title: true,
+        notes: true,
+        fileUrl: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    let fileUrl = newEvent.fileUrl
+    if (fileUrl) {
+      const key = getObjectKeyFromUrl(fileUrl)
+      if (key) {
+        try {
+          fileUrl = await getPresignedDownloadUrl(key)
+        } catch (error) {
+          console.error('Error generating presigned URL:', error)
+        }
+      }
+    }
+
+    const formattedEvent: EventResponse = {
+      id: newEvent.id,
+      trackId: newEvent.trackId,
+      date: newEvent.date.toISOString(),
+      type: newEvent.type as EventType,
+      title: newEvent.title,
+      notes: newEvent.notes,
+      fileUrl,
+      createdAt: newEvent.createdAt.toISOString(),
+      updatedAt: newEvent.updatedAt.toISOString()
+    }
+
+    const response: ApiResponse<EventResponse> = {
+      success: true,
+      data: formattedEvent
+    }
+
+    return c.json(response, 201)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return c.json(

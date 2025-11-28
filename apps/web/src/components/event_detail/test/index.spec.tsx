@@ -481,4 +481,66 @@ describe('EventDetail', () => {
       })
     })
   })
+
+  describe('new event mode', () => {
+    it('starts in edit mode when isNew is true', () => {
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={true} />)
+
+      expect(screen.getByLabelText(/notes/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+    })
+
+    it('does not start in edit mode when isNew is false', () => {
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={false} />)
+
+      expect(screen.queryByLabelText(/notes/i)).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument()
+    })
+
+    it('calls deleteEventAction when cancel is clicked on a new event', async () => {
+      const user = userEvent.setup()
+      mockDeleteEventAction.mockResolvedValue({})
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={true} />)
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      await waitFor(() => {
+        expect(mockDeleteEventAction).toHaveBeenCalledWith(trackSlug, mockEvent.id)
+      })
+    })
+
+    it('displays error message when delete fails on cancel for new event', async () => {
+      const user = userEvent.setup()
+      mockDeleteEventAction.mockResolvedValue({ error: 'Failed to delete event' })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={true} />)
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to delete event')
+      })
+    })
+
+    it('does not delete event when cancel is clicked on existing event', async () => {
+      const user = userEvent.setup()
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={false} />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      expect(mockDeleteEventAction).not.toHaveBeenCalled()
+      expect(screen.queryByLabelText(/notes/i)).not.toBeInTheDocument()
+    })
+  })
 })

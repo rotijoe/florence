@@ -34,8 +34,8 @@ import type { EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
 import { EventAttachment } from '@/components/attachment_list'
 
-export function EventDetail({ event, trackSlug }: EventDetailProps) {
-  const [isEditing, setIsEditing] = useState(false)
+export function EventDetail({ event, trackSlug, isNew = false }: EventDetailProps) {
+  const [isEditing, setIsEditing] = useState(isNew)
   const [error, setError] = useState<string | null>(null)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -84,7 +84,17 @@ export function EventDetail({ event, trackSlug }: EventDetailProps) {
     setError(null)
   }
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    if (isNew) {
+      // Delete the event if it's a new event
+      const result = await deleteEventAction(trackSlug, optimisticEvent.id)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+      // If successful, redirect will happen in the server action
+      return
+    }
     setIsEditing(false)
     setError(null)
   }

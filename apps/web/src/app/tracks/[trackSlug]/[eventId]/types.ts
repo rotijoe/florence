@@ -3,6 +3,9 @@ export type EventPageProps = {
     trackSlug: string
     eventId: string
   }>
+  searchParams?: Promise<{
+    [key: string]: string | string[] | undefined
+  }>
 }
 
 export type EventLayoutProps = {
