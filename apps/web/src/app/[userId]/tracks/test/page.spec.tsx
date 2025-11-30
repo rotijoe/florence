@@ -21,6 +21,40 @@ jest.mock('../helpers', () => ({
   formatTrackDate: jest.fn((date) => new Date(date).toLocaleDateString())
 }))
 
+jest.mock('@/components/ui/dropdown-menu', () => ({
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="dropdown-menu">{children}</div>
+  ),
+  DropdownMenuTrigger: ({
+    asChild,
+    children
+  }: {
+    asChild?: boolean
+    children: React.ReactNode
+  }) => {
+    if (asChild) {
+      return <>{children}</>
+    }
+    return <button>{children}</button>
+  },
+  DropdownMenuContent: ({ children, align }: { children: React.ReactNode; align?: string }) => (
+    <div data-testid="dropdown-content" data-align={align}>
+      {children}
+    </div>
+  ),
+  DropdownMenuItem: ({
+    children,
+    onSelect
+  }: {
+    children: React.ReactNode
+    onSelect?: () => void
+  }) => (
+    <button onClick={onSelect} data-testid="dropdown-menu-item">
+      {children}
+    </button>
+  )
+}))
+
 describe('DashboardPage', () => {
   const mockRouter = {
     push: jest.fn()
@@ -354,23 +388,25 @@ describe('DashboardPage', () => {
       ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
     })
 
-    it('should render "Create health track" button when authenticated', async () => {
+    it('should render dropdown menu with "Create health track" option when authenticated', async () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
+        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
         expect(screen.getByText(/create health track/i)).toBeInTheDocument()
       })
     })
 
-    it('should open dialog when "Create health track" button is clicked', async () => {
+    it('should open dialog when "Create health track" menu item is clicked', async () => {
+      const user = userEvent.setup()
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByText(/create health track/i)).toBeInTheDocument()
+        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
       })
 
-      const createButton = screen.getByText(/create health track/i)
-      await userEvent.click(createButton)
+      const menuItem = screen.getByRole('button', { name: /create health track/i })
+      await user.click(menuItem)
 
       await waitFor(() => {
         expect(screen.getByText(/create new health track/i)).toBeInTheDocument()
@@ -401,11 +437,11 @@ describe('DashboardPage', () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByText(/create health track/i)).toBeInTheDocument()
+        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
       })
 
-      const createButton = screen.getByText(/create health track/i)
-      await userEvent.click(createButton)
+      const menuItem = screen.getByRole('button', { name: /create health track/i })
+      await userEvent.click(menuItem)
 
       await waitFor(() => {
         expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()
@@ -432,11 +468,11 @@ describe('DashboardPage', () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByText(/create health track/i)).toBeInTheDocument()
+        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
       })
 
-      const createButton = screen.getByText(/create health track/i)
-      await userEvent.click(createButton)
+      const menuItem = screen.getByRole('button', { name: /create health track/i })
+      await userEvent.click(menuItem)
 
       await waitFor(() => {
         expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()
@@ -457,11 +493,11 @@ describe('DashboardPage', () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByText(/create health track/i)).toBeInTheDocument()
+        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
       })
 
-      const createButton = screen.getByText(/create health track/i)
-      await userEvent.click(createButton)
+      const menuItem = screen.getByRole('button', { name: /create health track/i })
+      await userEvent.click(menuItem)
 
       await waitFor(() => {
         expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()
@@ -486,11 +522,11 @@ describe('DashboardPage', () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByText(/create health track/i)).toBeInTheDocument()
+        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
       })
 
-      const createButton = screen.getByText(/create health track/i)
-      await userEvent.click(createButton)
+      const menuItem = screen.getByRole('button', { name: /create health track/i })
+      await userEvent.click(menuItem)
 
       await waitFor(() => {
         expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()

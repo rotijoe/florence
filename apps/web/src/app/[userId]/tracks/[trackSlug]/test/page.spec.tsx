@@ -12,7 +12,15 @@ jest.mock('../helpers', () => ({
 
 // Mock TrackEventList component
 jest.mock('@/components/track_event_list', () => ({
-  TrackEventList: ({ events, trackSlug, userId }: { events: EventResponse[]; trackSlug: string; userId: string }) => (
+  TrackEventList: ({
+    events,
+    trackSlug,
+    userId
+  }: {
+    events: EventResponse[]
+    trackSlug: string
+    userId: string
+  }) => (
     <div data-testid="track-event-list">
       <div data-testid="track-slug">{trackSlug}</div>
       {events.map((event) => (
@@ -20,6 +28,15 @@ jest.mock('@/components/track_event_list', () => ({
           {event.title}
         </div>
       ))}
+    </div>
+  )
+}))
+
+// Mock TrackHeaderClient component
+jest.mock('@/components/track_header/track_header_client', () => ({
+  TrackHeaderClient: ({ track }: { track: TrackResponse }) => (
+    <div data-testid="track-header">
+      <h1>{track.name}</h1>
     </div>
   )
 }))
@@ -70,9 +87,10 @@ describe('TrackPage', () => {
 
     const params = Promise.resolve({ userId: 'user-1', trackSlug: 'test-track' })
     const result = await TrackPage({ params })
-    const { container } = render(result)
+    render(result)
 
-    expect(container.querySelector('h1')).toHaveTextContent('Test Track')
+    expect(screen.getByTestId('track-header')).toBeInTheDocument()
+    expect(screen.getByText('Test Track')).toBeInTheDocument()
   })
 
   it('renders TrackEventList with events and trackSlug', async () => {
@@ -112,4 +130,3 @@ describe('TrackPage', () => {
     expect(screen.queryByTestId(/^event-/)).not.toBeInTheDocument()
   })
 })
-

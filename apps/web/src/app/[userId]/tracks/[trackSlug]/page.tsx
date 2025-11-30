@@ -1,8 +1,8 @@
 import { fetchTrack, fetchTrackEvents } from './helpers'
 import { TrackEventList } from '@/components/track_event_list'
+import { TrackHeaderClient } from '@/components/track_header/track_header_client'
 import type { TrackPageProps } from './types'
 import { createEventAction } from './actions'
-import { Button } from '@/components/ui/button'
 
 export default async function TrackPage({ params }: TrackPageProps) {
   const { userId, trackSlug } = await params
@@ -19,14 +19,12 @@ export default async function TrackPage({ params }: TrackPageProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{track.name}</h1>
-        <form action={handleCreateEvent}>
-          <input type="hidden" name="userId" value={userId} />
-          <input type="hidden" name="trackSlug" value={trackSlug} />
-          <Button type="submit">Create event</Button>
-        </form>
-      </div>
+      <TrackHeaderClient
+        track={track}
+        userId={userId}
+        trackSlug={trackSlug}
+        createEventAction={handleCreateEvent}
+      />
       <div className="mt-8">
         <TrackEventList events={events} trackSlug={trackSlug} userId={userId} />
       </div>

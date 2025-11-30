@@ -16,9 +16,16 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { MoreVertical } from 'lucide-react'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -192,7 +199,19 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-bold tracking-tight">Welcome, {userData?.name || 'User'}</h1>
           <p className="text-muted-foreground mt-2">View and manage your health tracks</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>Create health track</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <MoreVertical className="size-4" />
+              <span className="sr-only">Page actions</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
+              Create health track
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     )
   }
