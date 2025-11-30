@@ -14,7 +14,15 @@ jest.mock('@/components/ui/sidebar', () => ({
   SidebarMenu: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="sidebar-menu">{children}</div>
   ),
-  SidebarMenuButton: ({ children, asChild, tooltip }: { children: React.ReactNode; asChild?: boolean; tooltip?: string }) => {
+  SidebarMenuButton: ({
+    children,
+    asChild,
+    tooltip
+  }: {
+    children: React.ReactNode
+    asChild?: boolean
+    tooltip?: string
+  }) => {
     if (asChild) {
       return <>{children}</>
     }
@@ -27,12 +35,16 @@ jest.mock('@/components/ui/sidebar', () => ({
 
 // Mock LucideIcon components
 const HomeIcon = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} data-testid="home-icon" {...props}><text>🏠</text></svg>
+  <svg ref={ref} data-testid="home-icon" {...props}>
+    <text>🏠</text>
+  </svg>
 )) as LucideIcon
 HomeIcon.displayName = 'HomeIcon'
 
 const TracksIcon = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} data-testid="tracks-icon" {...props}><text>📊</text></svg>
+  <svg ref={ref} data-testid="tracks-icon" {...props}>
+    <text>📊</text>
+  </svg>
 )) as LucideIcon
 TracksIcon.displayName = 'TracksIcon'
 
@@ -45,7 +57,7 @@ describe('NavMain', () => {
     },
     {
       title: 'Tracks',
-      url: '/tracks',
+      url: '/user-123/tracks',
       icon: TracksIcon
     }
   ]
@@ -83,7 +95,6 @@ describe('NavMain', () => {
     const tracksLink = screen.getByRole('link', { name: /tracks/i })
 
     expect(homeLink).toHaveAttribute('href', '/')
-    expect(tracksLink).toHaveAttribute('href', '/tracks')
+    expect(tracksLink).toHaveAttribute('href', '/user-123/tracks')
   })
 })
-

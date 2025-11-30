@@ -14,27 +14,28 @@ export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
     return breadcrumbs
   }
 
-  // Handle dashboard
-  if (segments[0] === 'tracks' && segments.length === 1) {
-    breadcrumbs.push({ label: 'tracks', href: '/tracks' })
-    return breadcrumbs
-  }
+  // Handle routes with userId: /[userId]/tracks/[trackSlug] or /[userId]/tracks/[trackSlug]/[eventId]
+  if (segments.length >= 2 && segments[1] === 'tracks') {
+    const userId = segments[0]
+    const basePath = `/${userId}/tracks`
 
-  // Handle tracks routes
-  if (segments[0] === 'tracks' && segments.length >= 2) {
-    const trackSlug = segments[1]
-    breadcrumbs.push({ label: 'tracks', href: '/tracks' })
+    // Add tracks breadcrumb
+    breadcrumbs.push({ label: 'tracks', href: basePath })
 
-    // Use track slug as label (will be updated by layout if needed)
-    breadcrumbs.push({ label: trackSlug, href: `/tracks/${trackSlug}` })
-
-    // If there's an eventId
+    // If there's a trackSlug
     if (segments.length >= 3) {
-      const eventId = segments[2]
-      breadcrumbs.push({
-        label: 'event',
-        href: `/tracks/${trackSlug}/${eventId}`,
-      })
+      const trackSlug = segments[2]
+      const trackPath = `${basePath}/${trackSlug}`
+      breadcrumbs.push({ label: trackSlug, href: trackPath })
+
+      // If there's an eventId
+      if (segments.length >= 4) {
+        const eventId = segments[3]
+        breadcrumbs.push({
+          label: 'event',
+          href: `${trackPath}/${eventId}`
+        })
+      }
     }
 
     return breadcrumbs

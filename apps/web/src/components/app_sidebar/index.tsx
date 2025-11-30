@@ -10,34 +10,45 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from '@/components/ui/sidebar'
 import { NavMain } from '@/components/nav_main'
 import { NavSecondary } from '@/components/nav_secondary'
 import { NavUser } from '@/components/nav_user'
-
-const navMainItems = [
-  {
-    title: 'Home',
-    url: '/',
-    icon: Home,
-  },
-  {
-    title: 'Tracks',
-    url: '/tracks',
-    icon: LayoutDashboard,
-  },
-]
+import { useSession } from '@/lib/auth_client'
 
 const navSecondaryItems = [
   {
     title: 'Settings',
     url: '/settings',
-    icon: Activity,
-  },
+    icon: Activity
+  }
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: session } = useSession()
+  const userId = session?.user?.id
+
+  const navMainItems = React.useMemo(() => {
+    const items = [
+      {
+        title: 'Home',
+        url: '/',
+        icon: Home
+      }
+    ]
+
+    if (userId) {
+      items.push({
+        title: 'Tracks',
+        url: `/${userId}/tracks`,
+        icon: LayoutDashboard
+      })
+    }
+
+    return items
+  }, [userId])
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>

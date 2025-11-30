@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from '@/lib/auth_server'
-import UserLayout from '../layout'
+import UserLayout from '@/app/[userId]/layout'
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({

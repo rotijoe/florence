@@ -1,6 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import { AppSidebar } from '../index'
 
+// Mock useSession
+const mockUseSession = jest.fn()
+jest.mock('@/lib/auth_client', () => ({
+  useSession: () => mockUseSession()
+}))
+
 // Mock child components
 jest.mock('@/components/nav_main', () => ({
   NavMain: ({ items }: { items: Array<{ title: string; url: string }> }) => (
@@ -48,7 +54,15 @@ jest.mock('@/components/ui/sidebar', () => ({
   SidebarMenu: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="sidebar-menu">{children}</div>
   ),
-  SidebarMenuButton: ({ children, asChild, ...props }: { children: React.ReactNode; asChild?: boolean; [key: string]: unknown }) => {
+  SidebarMenuButton: ({
+    children,
+    asChild,
+    ...props
+  }: {
+    children: React.ReactNode
+    asChild?: boolean
+    [key: string]: unknown
+  }) => {
     if (asChild) {
       return <>{children}</>
     }
@@ -60,6 +74,19 @@ jest.mock('@/components/ui/sidebar', () => ({
 }))
 
 describe('AppSidebar', () => {
+  beforeEach(() => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: 'user-123',
+          name: 'Test User',
+          email: 'test@example.com'
+        }
+      },
+      isPending: false
+    })
+  })
+
   it('renders sidebar with header, content, and footer', () => {
     render(<AppSidebar />)
 
@@ -77,12 +104,28 @@ describe('AppSidebar', () => {
     expect(link).toHaveAttribute('href', '/')
   })
 
-  it('renders NavMain with main navigation items', () => {
+  it('renders NavMain with main navigation items when user is authenticated', () => {
     render(<AppSidebar />)
 
     expect(screen.getByTestId('nav-main')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /tracks/i })).toBeInTheDocument()
+
+    const tracksLink = screen.getByRole('link', { name: /tracks/i })
+    expect(tracksLink).toHaveAttribute('href', '/user-123/tracks')
+  })
+
+  it('does not render Tracks link when user is not authenticated', () => {
+    mockUseSession.mockReturnValue({
+      data: null,
+      isPending: false
+    })
+
+    render(<AppSidebar />)
+
+    expect(screen.getByTestId('nav-main')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /tracks/i })).not.toBeInTheDocument()
   })
 
   it('renders NavSecondary with secondary navigation items', () => {
@@ -107,4 +150,3 @@ describe('AppSidebar', () => {
     expect(sidebar).toBeInTheDocument()
   })
 })
-
