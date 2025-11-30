@@ -212,6 +212,79 @@ Get current user's information with their health tracks.
 }
 ```
 
+#### POST /api/user/tracks
+
+Create a new health track for the authenticated user.
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "title": "Sleep",
+  "description": "Optional description for the track"
+}
+```
+
+**Validation:**
+
+- `title` - Required, must be a non-empty string after trimming
+- `description` - Optional, can be a string or null
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "track-id",
+    "userId": "user-id",
+    "title": "Sleep",
+    "slug": "sleep",
+    "description": "Optional description for the track",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+**Slug Generation:**
+
+- The `slug` is automatically generated from the `title`:
+  - Converted to lowercase
+  - Special characters removed
+  - Spaces replaced with hyphens
+  - Multiple hyphens collapsed to single hyphen
+- If a track with the same slug already exists for the user, a numeric suffix is appended (e.g., `sleep-2`, `sleep-3`)
+
+**Error Response (400):**
+
+```json
+{
+  "success": false,
+  "error": "Title is required and must be a non-empty string"
+}
+```
+
+**Error Response (401):**
+
+```json
+{
+  "success": false,
+  "error": "Unauthorized"
+}
+```
+
+**Error Response (500):**
+
+```json
+{
+  "success": false,
+  "error": "Database connection failed"
+}
+```
+
 ## Error Handling
 
 All endpoints follow a consistent error response format:

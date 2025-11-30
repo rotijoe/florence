@@ -181,9 +181,46 @@ The dashboard page follows component-structure rules:
   - Type badge for each event
   - Fully tested with Jest + RTL
 
+## Create Health Track Feature
+
+Users can create new health tracks directly from the tracks page using a dialog form.
+
+### UI Flow
+
+1. **Create Button:** A "Create health track" button appears in the header next to the welcome message
+2. **Dialog Form:** Clicking the button opens a dialog containing:
+   - **Track name** field (required)
+   - **Description** field (optional)
+   - **Create** and **Cancel** buttons
+3. **Submission:** On successful creation:
+   - Dialog closes automatically
+   - Form fields are reset
+   - Track list refreshes to show the new track
+   - User remains on the same page
+4. **Error Handling:** If creation fails, an error message is displayed in the dialog
+
+### API Integration
+
+- **POST** `/api/user/tracks`
+- **Authentication:** Required (uses session cookies)
+- **Request Body:**
+  ```json
+  {
+    "title": "Sleep",
+    "description": "Optional description"
+  }
+  ```
+- **Response:** Returns the created track with auto-generated slug
+
+### Helper Function
+
+- **createUserTrack(title, description?):** Creates a new track via API and returns the created track object
+- Throws error if creation fails
+- Uses same base URL logic as `fetchUserData`
+
 ## Future Enhancements
 
-1. Add ability to create new health tracks from dashboard
+1. ~~Add ability to create new health tracks from dashboard~~ ✅ Implemented
 2. Add search/filter functionality for tracks
 3. Display track statistics (number of events, last updated)
 4. Add sorting options (by date, alphabetically)

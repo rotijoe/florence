@@ -1,18 +1,31 @@
 import { ApiResponse, EventResponse, EventType } from '@packages/types'
-import { redirect } from 'next/navigation'
 import { createEventAction } from '../actions'
 import { API_BASE_URL } from '@/constants/api'
+
+// Mock next/headers
+jest.mock('next/headers', () => ({
+  cookies: jest.fn()
+}))
+
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn(() => {
+    throw new Error('NEXT_REDIRECT')
+  })
+}))
+
+import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+
+global.fetch = jest.fn()
 
 describe('createEventAction', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    const mockCookies = cookies as jest.Mock
-    const redirectMock = redirect as unknown as jest.Mock
-    redirectMock.mockImplementation(() => {
+    ;(redirect as unknown as jest.Mock).mockImplementation(() => {
       throw new Error('NEXT_REDIRECT')
     })
-    mockCookies.mockResolvedValue({
+    ;(cookies as jest.Mock).mockResolvedValue({
       getAll: jest.fn().mockReturnValue([
         { name: 'session', value: 'session-value' },
         { name: 'token', value: 'token-value' }

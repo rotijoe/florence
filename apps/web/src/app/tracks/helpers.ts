@@ -1,4 +1,4 @@
-import type { UserWithTracks, ApiResponse } from './types'
+import type { UserWithTracks, ApiResponse, HealthTrack } from './types'
 
 export async function fetchUserData(): Promise<UserWithTracks> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
@@ -15,6 +15,39 @@ export async function fetchUserData(): Promise<UserWithTracks> {
 
   if (!data.data) {
     throw new Error('No user data received')
+  }
+
+  return data.data
+}
+
+export async function createUserTrack(
+  title: string,
+  description?: string | null
+): Promise<HealthTrack> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
+
+  const body: { title: string; description?: string | null } = { title }
+  if (description !== undefined) {
+    body.description = description
+  }
+
+  const response = await fetch(`${apiUrl}/api/user/tracks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify(body)
+  })
+
+  const data: ApiResponse<HealthTrack> = await response.json()
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || 'Failed to create track')
+  }
+
+  if (!data.data) {
+    throw new Error('No track data received')
   }
 
   return data.data

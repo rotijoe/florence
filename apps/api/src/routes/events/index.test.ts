@@ -333,7 +333,7 @@ describe('Events API', () => {
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
-      createSpy.mockResolvedValue(mockEvent as any)
+      createSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.create>>)
 
       const res = await app.request('/api/tracks/test-track/events', {
         method: 'POST',
@@ -407,7 +407,7 @@ describe('Events API', () => {
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
-      createSpy.mockResolvedValue(mockEvent as any)
+      createSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.create>>)
 
       const res = await app.request('/api/tracks/test-track/events', {
         method: 'POST',
@@ -457,11 +457,21 @@ describe('Events API', () => {
         }
       }
 
+      const mockTrack = {
+        id: 'track-1',
+        slug: 'test-track',
+        userId: 'user-1',
+        title: 'Test Track',
+        description: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
+      }
+
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
-      findFirstSpy.mockResolvedValue(null)
+      findFirstSpy.mockResolvedValue(mockTrack)
 
       const res = await app.request('/api/tracks/test-track/events', {
         method: 'POST',
@@ -1165,7 +1175,7 @@ describe('Events API', () => {
       const deleteSpy = jest.spyOn(prisma.event, 'delete')
 
       findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as any)
+      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
 
       const res = await app.request('/api/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -1201,7 +1211,7 @@ describe('Events API', () => {
       const deleteSpy = jest.spyOn(prisma.event, 'delete')
 
       findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as any)
+      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
 
       const res = await app.request('/api/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -1239,7 +1249,7 @@ describe('Events API', () => {
       const deleteSpy = jest.spyOn(prisma.event, 'delete')
 
       findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as any)
+      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
       mockS3Send.mockReset()
       mockS3Send.mockRejectedValue(new Error('S3 deletion failed'))
 
