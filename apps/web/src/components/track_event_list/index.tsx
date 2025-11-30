@@ -10,7 +10,7 @@ import type {
   TrackEventListProps
 } from './types'
 
-export function TrackEventList({ events, trackSlug, activeEventId }: TrackEventListProps) {
+export function TrackEventList({ events, trackSlug, userId, activeEventId }: TrackEventListProps) {
   if (events.length === 0) {
     return renderEmptyState()
   }
@@ -26,6 +26,7 @@ export function TrackEventList({ events, trackSlug, activeEventId }: TrackEventL
           groupIndex,
           totalGroups: dateGroups.length,
           trackSlug,
+          userId,
           activeEventId
         })
       )}
@@ -43,13 +44,14 @@ function renderEmptyState() {
   )
 }
 
-function renderDateGroup({ group, groupIndex, trackSlug, activeEventId }: DateGroupProps) {
+function renderDateGroup({ group, groupIndex, trackSlug, userId, activeEventId }: DateGroupProps) {
   return (
     <div key={groupIndex}>
       {renderDateLabel(group.date)}
       {renderEventsGroup({
         events: group.events,
         trackSlug,
+        userId,
         activeEventId
       })}
     </div>
@@ -66,7 +68,7 @@ function renderDateLabel(date: string) {
   )
 }
 
-function renderEventsGroup({ events, trackSlug, activeEventId }: EventsGroupProps) {
+function renderEventsGroup({ events, trackSlug, userId, activeEventId }: EventsGroupProps) {
   return (
     <div className="space-y-3">
       {events.map((event) => {
@@ -75,6 +77,7 @@ function renderEventsGroup({ events, trackSlug, activeEventId }: EventsGroupProp
         return renderTimelineRow({
           event,
           trackSlug,
+          userId,
           isActive
         })
       })}
@@ -82,11 +85,11 @@ function renderEventsGroup({ events, trackSlug, activeEventId }: EventsGroupProp
   )
 }
 
-function renderTimelineRow({ event, trackSlug, isActive }: TimelineRowProps) {
+function renderTimelineRow({ event, trackSlug, userId, isActive }: TimelineRowProps) {
   return (
     <div key={event.id} className="relative">
       {renderTimelineNode(isActive)}
-      <Link href={`/tracks/${trackSlug}/${event.id}`} className="block">
+      <Link href={`/${userId}/tracks/${trackSlug}/${event.id}`} className="block">
         <TrackEventCard event={event} isActive={isActive} className="w-full" />
       </Link>
     </div>

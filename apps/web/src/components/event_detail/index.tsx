@@ -29,12 +29,12 @@ import {
   updateEventAction,
   deleteEventAttachmentAction,
   deleteEventAction
-} from '@/app/tracks/[trackSlug]/[eventId]/actions'
+} from '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
 import type { EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
 import { EventAttachment } from '@/components/attachment_list'
 
-export function EventDetail({ event, trackSlug, isNew = false }: EventDetailProps) {
+export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDetailProps) {
   const [isEditing, setIsEditing] = useState(isNew)
   const [error, setError] = useState<string | null>(null)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
@@ -87,7 +87,7 @@ export function EventDetail({ event, trackSlug, isNew = false }: EventDetailProp
   const handleCancel = async () => {
     if (isNew) {
       // Delete the event if it's a new event
-      const result = await deleteEventAction(trackSlug, optimisticEvent.id)
+      const result = await deleteEventAction(userId, trackSlug, optimisticEvent.id)
       if (result.error) {
         setError(result.error)
         return
@@ -127,7 +127,7 @@ export function EventDetail({ event, trackSlug, isNew = false }: EventDetailProp
       })
 
       // Call the server action
-      const result = await deleteEventAttachmentAction(trackSlug, optimisticEvent.id)
+      const result = await deleteEventAttachmentAction(userId, trackSlug, optimisticEvent.id)
 
       if (result.error) {
         // Rollback on error - restore original fileUrl
@@ -160,7 +160,7 @@ export function EventDetail({ event, trackSlug, isNew = false }: EventDetailProp
 
   const handleDeleteEvent = async () => {
     setError(null)
-    const result = await deleteEventAction(trackSlug, optimisticEvent.id)
+    const result = await deleteEventAction(userId, trackSlug, optimisticEvent.id)
 
     if (result.error) {
       setError(result.error)
@@ -176,6 +176,9 @@ export function EventDetail({ event, trackSlug, isNew = false }: EventDetailProp
     <>
       <Card>
         <form action={formAction}>
+          <input type="hidden" name="userId" value={userId} />
+          <input type="hidden" name="eventId" value={optimisticEvent.id} />
+          <input type="hidden" name="trackSlug" value={trackSlug} />
           <input type="hidden" name="eventId" value={optimisticEvent.id} />
           <input type="hidden" name="trackSlug" value={trackSlug} />
           {renderHeader(
@@ -199,6 +202,7 @@ export function EventDetail({ event, trackSlug, isNew = false }: EventDetailProp
         <UploadDocument
           event={optimisticEvent}
           trackSlug={trackSlug}
+          userId={userId}
           onUploadComplete={handleUploadComplete}
           onCancel={handleUploadCancel}
         />

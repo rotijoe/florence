@@ -2,6 +2,7 @@ import { EventResponse } from '@packages/types'
 import { UploadStatus } from './constants'
 
 export type UseEventUploadProps = {
+  userId: string
   eventId: string
   trackSlug: string
   onComplete?: (event: EventResponse) => void

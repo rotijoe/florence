@@ -4,13 +4,13 @@ import { EventType, type EventResponse } from '@packages/types'
 import { fetchEvent } from '@/lib/fetch_event'
 
 jest.mock('@/lib/fetch_event', () => ({
-  fetchEvent: jest.fn(),
+  fetchEvent: jest.fn()
 }))
 
 jest.mock('@/components/event_detail', () => ({
   EventDetail: ({ event }: { event: EventResponse }) => (
     <div data-testid="event-detail">{event.title}</div>
-  ),
+  )
 }))
 
 describe('EventSlotPage', () => {
@@ -23,7 +23,7 @@ describe('EventSlotPage', () => {
     type: EventType.NOTE,
     fileUrl: null,
     createdAt: '2025-10-21T00:00:00.000Z',
-    updatedAt: '2025-10-21T00:00:00.000Z',
+    updatedAt: '2025-10-21T00:00:00.000Z'
   }
 
   beforeEach(() => {
@@ -36,7 +36,7 @@ describe('EventSlotPage', () => {
 
   it('fetches and renders event', async () => {
     const page = await EventSlotPage({
-      params: Promise.resolve({ trackSlug: 'sleep', eventId: 'event-1' }),
+      params: Promise.resolve({ userId: 'user-1', trackSlug: 'sleep', eventId: 'event-1' })
     })
     render(page)
     expect(screen.getByTestId('event-detail')).toBeInTheDocument()
@@ -45,8 +45,8 @@ describe('EventSlotPage', () => {
 
   it('calls fetchEvent with correct parameters', async () => {
     await EventSlotPage({
-      params: Promise.resolve({ trackSlug: 'sleep', eventId: 'event-1' }),
+      params: Promise.resolve({ userId: 'user-1', trackSlug: 'sleep', eventId: 'event-1' })
     })
-    expect(fetchEvent).toHaveBeenCalledWith('event-1', 'sleep')
+    expect(fetchEvent).toHaveBeenCalledWith('event-1', 'user-1', 'sleep')
   })
 })

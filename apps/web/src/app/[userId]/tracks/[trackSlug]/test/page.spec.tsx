@@ -12,7 +12,7 @@ jest.mock('../helpers', () => ({
 
 // Mock TrackEventList component
 jest.mock('@/components/track_event_list', () => ({
-  TrackEventList: ({ events, trackSlug }: { events: EventResponse[]; trackSlug: string }) => (
+  TrackEventList: ({ events, trackSlug, userId }: { events: EventResponse[]; trackSlug: string; userId: string }) => (
     <div data-testid="track-event-list">
       <div data-testid="track-slug">{trackSlug}</div>
       {events.map((event) => (
@@ -68,7 +68,7 @@ describe('TrackPage', () => {
     mockFetchTrack.mockResolvedValueOnce(mockTrack)
     mockFetchTrackEvents.mockResolvedValueOnce(mockEvents)
 
-    const params = Promise.resolve({ trackSlug: 'test-track' })
+    const params = Promise.resolve({ userId: 'user-1', trackSlug: 'test-track' })
     const result = await TrackPage({ params })
     const { container } = render(result)
 
@@ -79,7 +79,7 @@ describe('TrackPage', () => {
     mockFetchTrack.mockResolvedValueOnce(mockTrack)
     mockFetchTrackEvents.mockResolvedValueOnce(mockEvents)
 
-    const params = Promise.resolve({ trackSlug: 'test-track' })
+    const params = Promise.resolve({ userId: 'user-1', trackSlug: 'test-track' })
     const result = await TrackPage({ params })
     render(result)
 
@@ -93,18 +93,18 @@ describe('TrackPage', () => {
     mockFetchTrack.mockResolvedValueOnce(mockTrack)
     mockFetchTrackEvents.mockResolvedValueOnce(mockEvents)
 
-    const params = Promise.resolve({ trackSlug: 'test-track' })
+    const params = Promise.resolve({ userId: 'user-1', trackSlug: 'test-track' })
     await TrackPage({ params })
 
-    expect(mockFetchTrack).toHaveBeenCalledWith('test-track')
-    expect(mockFetchTrackEvents).toHaveBeenCalledWith('test-track')
+    expect(mockFetchTrack).toHaveBeenCalledWith('user-1', 'test-track')
+    expect(mockFetchTrackEvents).toHaveBeenCalledWith('user-1', 'test-track')
   })
 
   it('renders empty event list when no events', async () => {
     mockFetchTrack.mockResolvedValueOnce(mockTrack)
     mockFetchTrackEvents.mockResolvedValueOnce([])
 
-    const params = Promise.resolve({ trackSlug: 'test-track' })
+    const params = Promise.resolve({ userId: 'user-1', trackSlug: 'test-track' })
     const result = await TrackPage({ params })
     render(result)
 

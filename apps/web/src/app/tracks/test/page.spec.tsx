@@ -204,7 +204,7 @@ describe('DashboardPage', () => {
 
     await waitFor(() => {
       const link = screen.getByRole('link', { name: /diabetes management/i })
-      expect(link).toHaveAttribute('href', '/tracks/diabetes-management')
+      expect(link).toHaveAttribute('href', '/user-123/tracks/diabetes-management')
     })
   })
 

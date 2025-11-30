@@ -7,6 +7,7 @@ export type TrackPageData = {
 
 export type TrackPageProps = {
   params: Promise<{
+    userId: string
     trackSlug: string
   }>
 }
@@ -14,6 +15,7 @@ export type TrackPageProps = {
 export type TrackLayoutProps = {
   children: React.ReactNode
   params: Promise<{
+    userId: string
     trackSlug: string
   }>
 }

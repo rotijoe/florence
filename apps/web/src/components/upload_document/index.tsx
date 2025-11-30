@@ -18,6 +18,7 @@ import { useEventUpload } from '@/hooks/use_event_upload'
 type UploadDocumentProps = {
   event: EventResponse
   trackSlug: string
+  userId: string
   onUploadComplete: (updatedEvent: EventResponse) => void
   onCancel: () => void
 }
@@ -25,6 +26,7 @@ type UploadDocumentProps = {
 export function UploadDocument({
   event,
   trackSlug,
+  userId,
   onUploadComplete,
   onCancel
 }: UploadDocumentProps) {
@@ -39,6 +41,7 @@ export function UploadDocument({
     isUploading,
     upload
   } = useEventUpload({
+    userId,
     eventId: event.id,
     trackSlug,
     onComplete: (updatedEvent) => {

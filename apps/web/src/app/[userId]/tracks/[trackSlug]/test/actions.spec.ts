@@ -57,6 +57,7 @@ describe('createEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('trackSlug', 'track-slug')
 
     try {
@@ -69,7 +70,7 @@ describe('createEventAction', () => {
     }
 
     expect(global.fetch).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/tracks/track-slug/events`,
+      `${API_BASE_URL}/api/users/user-1/tracks/track-slug/events`,
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
@@ -79,7 +80,7 @@ describe('createEventAction', () => {
         body: JSON.stringify({})
       })
     )
-    expect(redirect).toHaveBeenCalledWith('/tracks/track-slug/event-1?new=1')
+    expect(redirect).toHaveBeenCalledWith('/user-1/tracks/track-slug/event-1?new=1')
   })
 
   it('returns error when trackSlug is missing', async () => {
@@ -87,7 +88,7 @@ describe('createEventAction', () => {
 
     const result = await createEventAction(formData)
 
-    expect(result.error).toBe('Missing required fields: trackSlug is required')
+    expect(result.error).toBe('Missing required fields: userId and trackSlug are required')
     expect(redirect).not.toHaveBeenCalled()
   })
 
@@ -99,6 +100,7 @@ describe('createEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('trackSlug', 'track-slug')
 
     const result = await createEventAction(formData)
@@ -111,6 +113,7 @@ describe('createEventAction', () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('trackSlug', 'track-slug')
 
     const result = await createEventAction(formData)
@@ -126,6 +129,7 @@ describe('createEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('trackSlug', 'track-slug')
 
     const result = await createEventAction(formData)
@@ -162,6 +166,7 @@ describe('createEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('trackSlug', 'track-slug')
 
     try {

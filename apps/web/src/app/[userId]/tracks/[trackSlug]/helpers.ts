@@ -1,9 +1,9 @@
 import type { TrackResponse, EventResponse, ApiResponse } from '@packages/types'
 import { SERVER_API_BASE_URL } from '@/constants/api'
 
-export async function fetchTrack(slug: string): Promise<TrackResponse> {
+export async function fetchTrack(userId: string, slug: string): Promise<TrackResponse> {
   try {
-    const response = await fetch(`${SERVER_API_BASE_URL}/api/tracks/${slug}`, {
+    const response = await fetch(`${SERVER_API_BASE_URL}/api/users/${userId}/tracks/${slug}`, {
       cache: 'no-store'
     })
 
@@ -28,10 +28,10 @@ export async function fetchTrack(slug: string): Promise<TrackResponse> {
   }
 }
 
-export async function fetchTrackEvents(slug: string): Promise<EventResponse[]> {
+export async function fetchTrackEvents(userId: string, slug: string): Promise<EventResponse[]> {
   try {
     const response = await fetch(
-      `${SERVER_API_BASE_URL}/api/tracks/${slug}/events?sort=desc&limit=100`,
+      `${SERVER_API_BASE_URL}/api/users/${userId}/tracks/${slug}/events?sort=desc&limit=100`,
       {
         cache: 'no-store'
       }

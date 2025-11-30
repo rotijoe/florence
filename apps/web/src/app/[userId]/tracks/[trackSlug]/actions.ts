@@ -7,11 +7,12 @@ import { API_BASE_URL } from '@/constants/api'
 import { ApiResponse, EventResponse } from '@packages/types'
 
 export async function createEventAction(formData: FormData): Promise<CreateEventResult> {
+  const userId = formData.get('userId') as string
   const trackSlug = formData.get('trackSlug') as string
 
-  if (!trackSlug) {
+  if (!userId || !trackSlug) {
     return {
-      error: 'Missing required fields: trackSlug is required'
+      error: 'Missing required fields: userId and trackSlug are required'
     }
   }
 
@@ -22,7 +23,7 @@ export async function createEventAction(formData: FormData): Promise<CreateEvent
       .map((cookie) => `${cookie.name}=${cookie.value}`)
       .join('; ')
 
-    const response = await fetch(`${API_BASE_URL}/api/tracks/${trackSlug}/events`, {
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +51,7 @@ export async function createEventAction(formData: FormData): Promise<CreateEvent
     }
 
     // Redirect to the new event page with ?new=1 flag
-    redirect(`/tracks/${trackSlug}/${data.data.id}?new=1`)
+    redirect(`/${userId}/tracks/${trackSlug}/${data.data.id}?new=1`)
   } catch (error) {
     if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
       // This is how Next.js signals a redirect – do NOT convert it to an error

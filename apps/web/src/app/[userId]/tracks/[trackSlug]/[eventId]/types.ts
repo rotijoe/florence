@@ -1,5 +1,6 @@
 export type EventPageProps = {
   params: Promise<{
+    userId: string
     trackSlug: string
     eventId: string
   }>

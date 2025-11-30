@@ -93,7 +93,7 @@ export default function DashboardPage() {
         {userData.tracks.map((track) => (
           <Link
             key={track.id}
-            href={`/tracks/${track.slug}`}
+            href={`/${userData.id}/tracks/${track.slug}`}
             className="transition-transform hover:scale-105"
           >
             <Card className="h-full cursor-pointer hover:shadow-lg">

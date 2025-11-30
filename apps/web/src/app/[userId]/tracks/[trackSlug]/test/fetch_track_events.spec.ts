@@ -28,11 +28,11 @@ describe('fetchTrackEvents', () => {
       json: async () => ({ success: true, data: mockEvents })
     })
 
-    const events = await fetchTrackEvents('sleep')
+    const events = await fetchTrackEvents('user-1', 'sleep')
 
     expect(events).toEqual(mockEvents)
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/tracks/sleep/events?sort=desc&limit=100'),
+      expect.stringContaining('/api/users/user-1/tracks/sleep/events?sort=desc&limit=100'),
       expect.objectContaining({ cache: 'no-store' })
     )
   })
@@ -43,7 +43,9 @@ describe('fetchTrackEvents', () => {
       statusText: 'Not Found'
     })
 
-    await expect(fetchTrackEvents('nonexistent')).rejects.toThrow('Failed to fetch events')
+    await expect(fetchTrackEvents('user-1', 'nonexistent')).rejects.toThrow(
+      'Failed to fetch events'
+    )
   })
 
   it('throws error when API returns error', async () => {
@@ -52,6 +54,6 @@ describe('fetchTrackEvents', () => {
       json: async () => ({ success: false, error: 'Track not found' })
     })
 
-    await expect(fetchTrackEvents('nonexistent')).rejects.toThrow('Track not found')
+    await expect(fetchTrackEvents('user-1', 'nonexistent')).rejects.toThrow('Track not found')
   })
 })

@@ -6,8 +6,9 @@ import { getPresignedDownloadUrl, getObjectKeyFromUrl, deleteFile } from '@/lib/
 
 const app = new Hono<{ Variables: AppVariables }>()
 
-app.get('/tracks/:slug/events', async (c) => {
+app.get('/users/:userId/tracks/:slug/events', async (c) => {
   try {
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
     const limitParam = c.req.query('limit')
     const limit = limitParam ? Math.max(1, Math.min(parseInt(limitParam, 10), 1000)) : 100
@@ -16,6 +17,7 @@ app.get('/tracks/:slug/events', async (c) => {
     const events = await prisma.event.findMany({
       where: {
         track: {
+          userId,
           slug: slug
         }
       },
@@ -38,7 +40,7 @@ app.get('/tracks/:slug/events', async (c) => {
     if (events.length === 0) {
       // Double-check if track exists but has no events
       const trackExists = await prisma.healthTrack.findFirst({
-        where: { slug },
+        where: { userId, slug },
         select: { id: true }
       })
 
@@ -99,7 +101,7 @@ app.get('/tracks/:slug/events', async (c) => {
   }
 })
 
-app.post('/tracks/:slug/events', async (c) => {
+app.post('/users/:userId/tracks/:slug/events', async (c) => {
   try {
     const user = c.get('user')
     if (!user) {
@@ -112,13 +114,25 @@ app.post('/tracks/:slug/events', async (c) => {
       )
     }
 
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
+
+    // Verify userId matches authenticated user
+    if (userId !== user.id) {
+      return c.json(
+        {
+          success: false,
+          error: 'Forbidden'
+        },
+        403
+      )
+    }
 
     // Verify track exists and belongs to user
     const track = await prisma.healthTrack.findFirst({
       where: {
-        slug,
-        userId: user.id
+        userId,
+        slug
       },
       select: {
         id: true
@@ -228,8 +242,9 @@ app.post('/tracks/:slug/events', async (c) => {
   }
 })
 
-app.get('/tracks/:slug/events/:eventId', async (c) => {
+app.get('/users/:userId/tracks/:slug/events/:eventId', async (c) => {
   try {
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
@@ -238,6 +253,7 @@ app.get('/tracks/:slug/events/:eventId', async (c) => {
       where: {
         id: eventId,
         track: {
+          userId,
           slug: slug
         }
       },
@@ -257,7 +273,7 @@ app.get('/tracks/:slug/events/:eventId', async (c) => {
     if (!event) {
       // Check if track exists
       const trackExists = await prisma.healthTrack.findFirst({
-        where: { slug },
+        where: { userId, slug },
         select: { id: true }
       })
 
@@ -322,8 +338,9 @@ app.get('/tracks/:slug/events/:eventId', async (c) => {
   }
 })
 
-app.patch('/tracks/:slug/events/:eventId', async (c) => {
+app.patch('/users/:userId/tracks/:slug/events/:eventId', async (c) => {
   try {
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
@@ -332,6 +349,7 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
       where: {
         id: eventId,
         track: {
+          userId,
           slug: slug
         }
       },
@@ -344,7 +362,7 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
     if (!existingEvent) {
       // Check if track exists
       const trackExists = await prisma.healthTrack.findFirst({
-        where: { slug },
+        where: { userId, slug },
         select: { id: true }
       })
 
@@ -470,8 +488,9 @@ app.patch('/tracks/:slug/events/:eventId', async (c) => {
   }
 })
 
-app.delete('/tracks/:slug/events/:eventId/attachment', async (c) => {
+app.delete('/users/:userId/tracks/:slug/events/:eventId/attachment', async (c) => {
   try {
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
@@ -480,6 +499,7 @@ app.delete('/tracks/:slug/events/:eventId/attachment', async (c) => {
       where: {
         id: eventId,
         track: {
+          userId,
           slug: slug
         }
       },
@@ -493,7 +513,7 @@ app.delete('/tracks/:slug/events/:eventId/attachment', async (c) => {
     if (!existingEvent) {
       // Check if track exists
       const trackExists = await prisma.healthTrack.findFirst({
-        where: { slug },
+        where: { userId, slug },
         select: { id: true }
       })
 
@@ -594,8 +614,9 @@ app.delete('/tracks/:slug/events/:eventId/attachment', async (c) => {
   }
 })
 
-app.delete('/tracks/:slug/events/:eventId', async (c) => {
+app.delete('/users/:userId/tracks/:slug/events/:eventId', async (c) => {
   try {
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
@@ -604,6 +625,7 @@ app.delete('/tracks/:slug/events/:eventId', async (c) => {
       where: {
         id: eventId,
         track: {
+          userId,
           slug: slug
         }
       },
@@ -617,7 +639,7 @@ app.delete('/tracks/:slug/events/:eventId', async (c) => {
     if (!existingEvent) {
       // Check if track exists
       const trackExists = await prisma.healthTrack.findFirst({
-        where: { slug },
+        where: { userId, slug },
         select: { id: true }
       })
 

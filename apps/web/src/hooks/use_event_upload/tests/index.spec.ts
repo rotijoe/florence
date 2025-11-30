@@ -2,11 +2,11 @@ import { renderHook, act } from '@testing-library/react'
 import {
   createEventUploadIntentAction,
   confirmEventUploadAction
-} from '@/app/tracks/[trackSlug]/[eventId]/actions'
+} from '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
 import { useEventUpload } from '@hooks/use_event_upload'
 
 // Mock actions
-jest.mock('@/app/tracks/[trackSlug]/[eventId]/actions', () => ({
+jest.mock('@/app/[userId]/tracks/[trackSlug]/[eventId]/actions', () => ({
   createEventUploadIntentAction: jest.fn(),
   confirmEventUploadAction: jest.fn()
 }))
@@ -17,6 +17,7 @@ global.fetch = jest.fn()
 describe('useEventUpload', () => {
   const mockEventId = 'evt_123'
   const mockTrackSlug = 'track_123'
+  const mockUserId = 'user_123'
   const mockFile = new File(['content'], 'test.txt', { type: 'text/plain' })
   const mockOnComplete = jest.fn()
 
@@ -30,7 +31,7 @@ describe('useEventUpload', () => {
 
   it('should initialize with idle status', () => {
     const { result } = renderHook(() =>
-      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
     )
     expect(result.current.status).toBe('idle')
     expect(result.current.error).toBeNull()
@@ -47,7 +48,12 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug, onComplete: mockOnComplete })
+      useEventUpload({
+        userId: mockUserId,
+        eventId: mockEventId,
+        trackSlug: mockTrackSlug,
+        onComplete: mockOnComplete
+      })
     )
 
     await act(async () => {
@@ -67,7 +73,7 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
     )
 
     await act(async () => {
@@ -90,7 +96,7 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
     )
 
     await act(async () => {
@@ -103,7 +109,7 @@ describe('useEventUpload', () => {
 
   it('should reset status and error', () => {
     const { result } = renderHook(() =>
-      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
     )
 
     // Set an error state first
@@ -131,7 +137,7 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
     )
 
     await act(async () => {
@@ -153,7 +159,7 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
     )
 
     await act(async () => {

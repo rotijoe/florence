@@ -1,5 +1,5 @@
 // Mock Next.js server actions FIRST to avoid Request is not defined error
-jest.mock('@/app/tracks/[trackSlug]/[eventId]/actions', () => ({
+jest.mock('@/app/[userId]/tracks/[trackSlug]/[eventId]/actions', () => ({
   createEventUploadIntentAction: jest.fn(),
   confirmEventUploadAction: jest.fn()
 }))
@@ -33,6 +33,7 @@ describe('UploadDocument', () => {
   const defaultProps = {
     event: mockEvent,
     trackSlug: 'test-track',
+    userId: 'user-1',
     onUploadComplete: jest.fn(),
     onCancel: jest.fn()
   }

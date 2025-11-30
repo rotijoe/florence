@@ -5,12 +5,13 @@ import { prisma } from '@packages/database'
 
 const app = new Hono<{ Variables: AppVariables }>()
 
-app.get('/tracks/:slug', async (c) => {
+app.get('/users/:userId/tracks/:slug', async (c) => {
   try {
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
 
     const track = await prisma.healthTrack.findFirst({
-      where: { slug },
+      where: { userId, slug },
       select: {
         id: true,
         title: true,
@@ -41,8 +42,7 @@ app.get('/tracks/:slug', async (c) => {
 
     return c.json(response)
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error'
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return c.json(
       {
         success: false,

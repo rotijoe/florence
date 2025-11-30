@@ -25,9 +25,9 @@ describe('Events API', () => {
     mockS3Send.mockRestore()
   })
 
-  describe('GET /api/tracks/:slug/events', () => {
+  describe('GET /api/users/:userId/tracks/:slug/events', () => {
     it('returns 404 for missing slug', async () => {
-      const res = await app.request('/api/tracks/nonexistent-slug/events')
+      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events')
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -66,7 +66,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockTrack)
       findManySpy.mockResolvedValue(mockEvents)
 
-      const res = await app.request('/api/tracks/test-track/events')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -118,7 +118,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockTrack)
       findManySpy.mockResolvedValue(mockEvents)
 
-      const res = await app.request('/api/tracks/test-track/events?limit=3')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events?limit=3')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -127,7 +127,7 @@ describe('Events API', () => {
 
       // Verify that findMany was called with the correct limit
       expect(findManySpy).toHaveBeenCalledWith({
-        where: { track: { slug: 'test-track' } },
+        where: { track: { userId: 'user-1', slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 3,
         select: expect.any(Object)
@@ -155,12 +155,12 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockTrack)
       findManySpy.mockResolvedValue([])
 
-      const res = await app.request('/api/tracks/test-track/events?limit=2000')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events?limit=2000')
       expect(res.status).toBe(200)
 
       // Verify that findMany was called with limit 1000 (capped)
       expect(findManySpy).toHaveBeenCalledWith({
-        where: { track: { slug: 'test-track' } },
+        where: { track: { userId: 'user-1', slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 1000,
         select: expect.any(Object)
@@ -188,12 +188,12 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockTrack)
       findManySpy.mockResolvedValue([])
 
-      const res = await app.request('/api/tracks/test-track/events?limit=0')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events?limit=0')
       expect(res.status).toBe(200)
 
       // Verify that findMany was called with limit 1 (minimum)
       expect(findManySpy).toHaveBeenCalledWith({
-        where: { track: { slug: 'test-track' } },
+        where: { track: { userId: 'user-1', slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 1,
         select: expect.any(Object)
@@ -209,7 +209,7 @@ describe('Events API', () => {
       const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-track/events')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events')
       expect(res.status).toBe(500)
 
       const json = await res.json()
@@ -221,12 +221,12 @@ describe('Events API', () => {
     })
   })
 
-  describe('POST /api/tracks/:slug/events', () => {
+  describe('POST /api/users/:userId/tracks/:slug/events', () => {
     it('returns 401 when user is not authenticated', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/test-track/events', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
@@ -268,7 +268,7 @@ describe('Events API', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/nonexistent-slug/events', {
+      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
@@ -335,7 +335,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockTrack)
       createSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.create>>)
 
-      const res = await app.request('/api/tracks/test-track/events', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
@@ -409,7 +409,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockTrack)
       createSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.create>>)
 
-      const res = await app.request('/api/tracks/test-track/events', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -473,7 +473,7 @@ describe('Events API', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
 
-      const res = await app.request('/api/tracks/test-track/events', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -518,7 +518,7 @@ describe('Events API', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-track/events', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
@@ -534,7 +534,7 @@ describe('Events API', () => {
     })
   })
 
-  describe('GET /api/tracks/:slug/events/:eventId', () => {
+  describe('GET /api/users/:userId/tracks/:slug/events/:eventId', () => {
     it('returns 404 for missing track', async () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
@@ -542,7 +542,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/nonexistent-slug/events/event-1')
+      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1')
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -568,7 +568,7 @@ describe('Events API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
 
-      const res = await app.request('/api/tracks/test-track/events/nonexistent-event')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/nonexistent-event')
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -594,7 +594,7 @@ describe('Events API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
 
-      const res = await app.request('/api/tracks/test-track/events/other-track-event')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/other-track-event')
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -622,7 +622,7 @@ describe('Events API', () => {
 
       findFirstSpy.mockResolvedValue(mockEvent)
 
-      const res = await app.request('/api/tracks/test-track/events/event-1')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -650,7 +650,7 @@ describe('Events API', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-track/events/event-1')
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1')
       expect(res.status).toBe(500)
 
       const json = await res.json()
@@ -661,7 +661,7 @@ describe('Events API', () => {
     })
   })
 
-  describe('PATCH /api/tracks/:slug/events/:eventId', () => {
+  describe('PATCH /api/users/:userId/tracks/:slug/events/:eventId', () => {
     it('returns 404 for missing track', async () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
@@ -669,7 +669,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/nonexistent-slug/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated Title' })
@@ -699,11 +699,14 @@ describe('Events API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
 
-      const res = await app.request('/api/tracks/test-track/events/nonexistent-event', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'Updated Title' })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-track/events/nonexistent-event',
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: 'Updated Title' })
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -728,7 +731,7 @@ describe('Events API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: '' })
@@ -756,7 +759,7 @@ describe('Events API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: 123 })
@@ -805,7 +808,7 @@ describe('Events API', () => {
       })
       updateSpy.mockResolvedValue(updatedEvent)
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated Title' })
@@ -846,7 +849,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockEvent)
       updateSpy.mockResolvedValue(updatedEvent)
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: 'Updated Description' })
@@ -888,7 +891,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockEvent)
       updateSpy.mockResolvedValue(updatedEvent)
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated Title', notes: 'Updated Description' })
@@ -908,7 +911,7 @@ describe('Events API', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated Title' })
@@ -923,7 +926,7 @@ describe('Events API', () => {
     })
   })
 
-  describe('DELETE /api/tracks/:slug/events/:eventId/attachment', () => {
+  describe('DELETE /api/users/:userId/tracks/:slug/events/:eventId/attachment', () => {
     it('returns 404 for missing track', async () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
@@ -931,9 +934,12 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/nonexistent-slug/events/event-1/attachment', {
-        method: 'DELETE'
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/nonexistent-slug/events/event-1/attachment',
+        {
+          method: 'DELETE'
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -961,9 +967,12 @@ describe('Events API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
 
-      const res = await app.request('/api/tracks/test-track/events/nonexistent-event/attachment', {
-        method: 'DELETE'
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-track/events/nonexistent-event/attachment',
+        {
+          method: 'DELETE'
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -1001,9 +1010,12 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockEvent)
       updateSpy.mockResolvedValue(updatedEvent)
 
-      const res = await app.request('/api/tracks/test-track/events/event-1/attachment', {
-        method: 'DELETE'
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-track/events/event-1/attachment',
+        {
+          method: 'DELETE'
+        }
+      )
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -1040,9 +1052,12 @@ describe('Events API', () => {
 
       findFirstSpy.mockResolvedValue(mockEvent)
 
-      const res = await app.request('/api/tracks/test-track/events/event-1/attachment', {
-        method: 'DELETE'
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-track/events/event-1/attachment',
+        {
+          method: 'DELETE'
+        }
+      )
       expect(res.status).toBe(400)
 
       const json = await res.json()
@@ -1058,9 +1073,12 @@ describe('Events API', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-track/events/event-1/attachment', {
-        method: 'DELETE'
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-track/events/event-1/attachment',
+        {
+          method: 'DELETE'
+        }
+      )
       expect(res.status).toBe(500)
 
       const json = await res.json()
@@ -1089,9 +1107,12 @@ describe('Events API', () => {
       mockS3Send.mockReset()
       mockS3Send.mockRejectedValue(new Error('S3 deletion failed'))
 
-      const res = await app.request('/api/tracks/test-track/events/event-1/attachment', {
-        method: 'DELETE'
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-track/events/event-1/attachment',
+        {
+          method: 'DELETE'
+        }
+      )
       expect(res.status).toBe(500)
 
       const json = await res.json()
@@ -1102,7 +1123,7 @@ describe('Events API', () => {
     })
   })
 
-  describe('DELETE /api/tracks/:slug/events/:eventId', () => {
+  describe('DELETE /api/users/:userId/tracks/:slug/events/:eventId', () => {
     it('returns 404 for missing track', async () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
@@ -1110,7 +1131,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/nonexistent-slug/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1', {
         method: 'DELETE'
       })
       expect(res.status).toBe(404)
@@ -1141,9 +1162,12 @@ describe('Events API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
 
-      const res = await app.request('/api/tracks/test-track/events/nonexistent-event', {
-        method: 'DELETE'
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-track/events/nonexistent-event',
+        {
+          method: 'DELETE'
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -1177,7 +1201,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockEvent)
       deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
       })
       expect(res.status).toBe(200)
@@ -1213,7 +1237,7 @@ describe('Events API', () => {
       findFirstSpy.mockResolvedValue(mockEvent)
       deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
       })
       expect(res.status).toBe(200)
@@ -1253,7 +1277,7 @@ describe('Events API', () => {
       mockS3Send.mockReset()
       mockS3Send.mockRejectedValue(new Error('S3 deletion failed'))
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
       })
       expect(res.status).toBe(200)
@@ -1273,7 +1297,7 @@ describe('Events API', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-track/events/event-1', {
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
       })
       expect(res.status).toBe(500)

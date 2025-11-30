@@ -34,10 +34,10 @@ describe('fetchEvent', () => {
       json: async () => mockResponse
     })
 
-    const result = await fetchEvent('event-1', 'track-slug')
+    const result = await fetchEvent('event-1', 'user-1', 'track-slug')
 
     expect(global.fetch).toHaveBeenCalledWith(
-      `${SERVER_API_BASE_URL}/api/tracks/track-slug/events/event-1`,
+      `${SERVER_API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1`,
       { cache: 'no-store' }
     )
     expect(result).toEqual(mockEvent)
@@ -49,7 +49,7 @@ describe('fetchEvent', () => {
       statusText: 'Not Found'
     })
 
-    await expect(fetchEvent('event-1', 'track-slug')).rejects.toThrow(
+    await expect(fetchEvent('event-1', 'user-1', 'track-slug')).rejects.toThrow(
       'Failed to fetch event: Not Found'
     )
   })
@@ -66,7 +66,7 @@ describe('fetchEvent', () => {
       json: async () => mockResponse
     })
 
-    await expect(fetchEvent('event-1', 'track-slug')).rejects.toThrow('Event not found')
+    await expect(fetchEvent('event-1', 'user-1', 'track-slug')).rejects.toThrow('Event not found')
   })
 
   it('should throw generic error when API response fails without error message', async () => {
@@ -80,7 +80,7 @@ describe('fetchEvent', () => {
       json: async () => mockResponse
     })
 
-    await expect(fetchEvent('event-1', 'track-slug')).rejects.toThrow('Failed to fetch event')
+    await expect(fetchEvent('event-1', 'user-1', 'track-slug')).rejects.toThrow('Failed to fetch event')
   })
 })
 

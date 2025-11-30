@@ -13,17 +13,47 @@ describe('Tracks API', () => {
     jest.clearAllMocks()
   })
 
-  describe('GET /api/tracks/:slug', () => {
-    it('returns 404 for missing slug', async () => {
-      const res = await app.request('/api/tracks/nonexistent-slug')
+  describe('GET /api/users/:userId/tracks/:slug', () => {
+    it('returns 404 when userId does not match', async () => {
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      findFirstSpy.mockResolvedValue(null)
+
+      const res = await app.request('/api/users/user-1/tracks/test-track')
       expect(res.status).toBe(404)
 
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Track not found')
+
+      // Verify query was made with userId and slug
+      expect(findFirstSpy).toHaveBeenCalledWith({
+        where: { userId: 'user-1', slug: 'test-track' },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          createdAt: true
+        }
+      })
+
+      findFirstSpy.mockRestore()
     })
 
-    it('returns track data for valid slug', async () => {
+    it('returns 404 when slug does not exist for user', async () => {
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      findFirstSpy.mockResolvedValue(null)
+
+      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug')
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Track not found')
+
+      findFirstSpy.mockRestore()
+    })
+
+    it('returns track data for valid userId and slug', async () => {
       const mockTrack = {
         id: 'track-1',
         title: 'Test Track',
@@ -34,11 +64,10 @@ describe('Tracks API', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
-      // Use jest.spyOn to mock the database call
       const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
       findFirstSpy.mockResolvedValue(mockTrack)
 
-      const res = await app.request('/api/tracks/test-track')
+      const res = await app.request('/api/users/user-1/tracks/test-track')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -50,23 +79,46 @@ describe('Tracks API', () => {
         createdAt: '2024-01-01T00:00:00.000Z'
       })
 
-      // Clean up the spy
+      // Verify query was made with correct userId and slug
+      expect(findFirstSpy).toHaveBeenCalledWith({
+        where: { userId: 'user-1', slug: 'test-track' },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          createdAt: true
+        }
+      })
+
+      findFirstSpy.mockRestore()
+    })
+
+    it('returns 404 when track exists but belongs to different user', async () => {
+      // Track exists for user-2, but we're querying for user-1
+      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      findFirstSpy.mockResolvedValue(null)
+
+      const res = await app.request('/api/users/user-1/tracks/sleep')
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Track not found')
+
       findFirstSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
-      // Use jest.spyOn to mock the database call to throw an error
       const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-track')
+      const res = await app.request('/api/users/user-1/tracks/test-track')
       expect(res.status).toBe(500)
 
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Database connection failed')
 
-      // Clean up the spy
       findFirstSpy.mockRestore()
     })
   })

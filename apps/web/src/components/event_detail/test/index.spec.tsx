@@ -3,12 +3,15 @@ import userEvent from '@testing-library/user-event'
 import { EventDetail } from '../index'
 import { EventType, type EventResponse } from '@packages/types'
 
-jest.mock('@/app/tracks/[trackSlug]/[eventId]/actions', () => ({
+jest.mock('@/app/[userId]/tracks/[trackSlug]/[eventId]/actions', () => ({
   updateEventAction: jest.fn(),
   deleteEventAction: jest.fn()
 }))
 
-import { updateEventAction, deleteEventAction } from '@/app/tracks/[trackSlug]/[eventId]/actions'
+import {
+  updateEventAction,
+  deleteEventAction
+} from '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
 
 const mockUpdateEventAction = updateEventAction as jest.MockedFunction<typeof updateEventAction>
 const mockDeleteEventAction = deleteEventAction as jest.MockedFunction<typeof deleteEventAction>
@@ -27,6 +30,7 @@ describe('EventDetail', () => {
   }
 
   const trackSlug = 'test-track'
+  const userId = 'user-1'
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -36,26 +40,26 @@ describe('EventDetail', () => {
 
   describe('basic rendering', () => {
     it('renders event title', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       expect(screen.getByText('Test Event')).toBeInTheDocument()
     })
 
     it('displays formatted event date', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const dates = screen.getAllByText(/21 October 2025/i)
       expect(dates.length).toBeGreaterThan(0)
     })
 
     it('displays event type', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       expect(screen.getByText('NOTE')).toBeInTheDocument()
     })
 
     it('displays event notes when present', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const notesSection = screen.getByTestId('notes-section')
       expect(notesSection).toBeInTheDocument()
@@ -69,13 +73,13 @@ describe('EventDetail', () => {
         notes: null
       }
 
-      render(<EventDetail event={eventWithoutNotes} trackSlug={trackSlug} />)
+      render(<EventDetail event={eventWithoutNotes} trackSlug={trackSlug} userId={userId} />)
 
       expect(screen.queryByTestId('notes-section')).not.toBeInTheDocument()
     })
 
     it('displays attachments section when fileUrl is available', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       expect(screen.getByText('Attachments')).toBeInTheDocument()
       expect(screen.getByText('file.pdf')).toBeInTheDocument()
@@ -87,13 +91,13 @@ describe('EventDetail', () => {
         fileUrl: null
       }
 
-      render(<EventDetail event={eventWithoutFile} trackSlug={trackSlug} />)
+      render(<EventDetail event={eventWithoutFile} trackSlug={trackSlug} userId={userId} />)
 
       expect(screen.queryByText('Attachments')).not.toBeInTheDocument()
     })
 
     it('displays created timestamp', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       expect(screen.getByText(/Created:/i)).toBeInTheDocument()
     })
@@ -104,13 +108,13 @@ describe('EventDetail', () => {
         updatedAt: '2025-10-22T10:00:00.000Z'
       }
 
-      render(<EventDetail event={eventWithUpdate} trackSlug={trackSlug} />)
+      render(<EventDetail event={eventWithUpdate} trackSlug={trackSlug} userId={userId} />)
 
       expect(screen.getByText(/Updated:/i)).toBeInTheDocument()
     })
 
     it('does not display updated timestamp when same as created', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       expect(screen.queryByText(/Updated:/i)).not.toBeInTheDocument()
     })
@@ -119,7 +123,7 @@ describe('EventDetail', () => {
   describe('edit mode', () => {
     it('enters edit mode when edit event menu item is clicked', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -134,7 +138,7 @@ describe('EventDetail', () => {
 
     it('displays notes textarea with current notes value in edit mode', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -148,7 +152,7 @@ describe('EventDetail', () => {
 
     it('displays save and cancel buttons in header when in edit mode', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -174,7 +178,7 @@ describe('EventDetail', () => {
       }
       mockUpdateEventAction.mockResolvedValue({ event: updatedEvent })
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -200,7 +204,7 @@ describe('EventDetail', () => {
 
     it('cancels changes when cancel button is clicked', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -228,7 +232,7 @@ describe('EventDetail', () => {
           })
       )
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -239,14 +243,16 @@ describe('EventDetail', () => {
       const saveButton = screen.getByRole('button', { name: /save/i })
       await user.click(saveButton)
 
-      expect(screen.getByRole('button', { name: /saving/i })).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /saving/i })).toBeInTheDocument()
+      })
     })
 
     it('displays error message when save fails', async () => {
       const user = userEvent.setup()
       mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -266,7 +272,7 @@ describe('EventDetail', () => {
   describe('upload document', () => {
     it('opens upload dialog when upload document menu item is clicked', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -282,7 +288,7 @@ describe('EventDetail', () => {
 
     it('closes upload dialog when upload is cancelled', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -304,7 +310,7 @@ describe('EventDetail', () => {
 
     it('updates event fileUrl when upload completes', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -323,7 +329,7 @@ describe('EventDetail', () => {
       const user = userEvent.setup()
       mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       // First, trigger an error by trying to save with invalid data
       const menuButton = screen.getByRole('button', { name: /event actions/i })
@@ -358,7 +364,7 @@ describe('EventDetail', () => {
   describe('delete event', () => {
     it('opens delete dialog when delete event menu item is clicked', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -377,7 +383,7 @@ describe('EventDetail', () => {
 
     it('closes delete dialog when cancel is clicked', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -401,7 +407,7 @@ describe('EventDetail', () => {
       const user = userEvent.setup()
       mockDeleteEventAction.mockResolvedValue({})
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -417,7 +423,7 @@ describe('EventDetail', () => {
       await user.click(deleteButton)
 
       await waitFor(() => {
-        expect(mockDeleteEventAction).toHaveBeenCalledWith(trackSlug, mockEvent.id)
+        expect(mockDeleteEventAction).toHaveBeenCalledWith(userId, trackSlug, mockEvent.id)
       })
     })
 
@@ -425,7 +431,7 @@ describe('EventDetail', () => {
       const user = userEvent.setup()
       mockDeleteEventAction.mockResolvedValue({ error: 'Failed to delete event' })
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
@@ -450,7 +456,7 @@ describe('EventDetail', () => {
       const user = userEvent.setup()
       mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} />)
 
       // First, trigger an error by trying to save with invalid data
       const menuButton = screen.getByRole('button', { name: /event actions/i })
@@ -484,7 +490,7 @@ describe('EventDetail', () => {
 
   describe('new event mode', () => {
     it('starts in edit mode when isNew is true', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={true} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} isNew={true} />)
 
       expect(screen.getByLabelText(/notes/i)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument()
@@ -492,7 +498,7 @@ describe('EventDetail', () => {
     })
 
     it('does not start in edit mode when isNew is false', () => {
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={false} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} isNew={false} />)
 
       expect(screen.queryByLabelText(/notes/i)).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument()
@@ -502,13 +508,13 @@ describe('EventDetail', () => {
       const user = userEvent.setup()
       mockDeleteEventAction.mockResolvedValue({})
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={true} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} isNew={true} />)
 
       const cancelButton = screen.getByRole('button', { name: /cancel/i })
       await user.click(cancelButton)
 
       await waitFor(() => {
-        expect(mockDeleteEventAction).toHaveBeenCalledWith(trackSlug, mockEvent.id)
+        expect(mockDeleteEventAction).toHaveBeenCalledWith(userId, trackSlug, mockEvent.id)
       })
     })
 
@@ -516,7 +522,7 @@ describe('EventDetail', () => {
       const user = userEvent.setup()
       mockDeleteEventAction.mockResolvedValue({ error: 'Failed to delete event' })
 
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={true} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} isNew={true} />)
 
       const cancelButton = screen.getByRole('button', { name: /cancel/i })
       await user.click(cancelButton)
@@ -528,7 +534,7 @@ describe('EventDetail', () => {
 
     it('does not delete event when cancel is clicked on existing event', async () => {
       const user = userEvent.setup()
-      render(<EventDetail event={mockEvent} trackSlug={trackSlug} isNew={false} />)
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} isNew={false} />)
 
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)

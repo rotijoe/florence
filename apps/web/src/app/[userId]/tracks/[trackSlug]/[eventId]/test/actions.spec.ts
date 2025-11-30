@@ -59,6 +59,7 @@ describe('updateEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Updated Title')
@@ -67,7 +68,7 @@ describe('updateEventAction', () => {
     const result = await updateEventAction(null, formData)
 
     expect(global.fetch).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/tracks/track-slug/events/event-1`,
+      `${API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1`,
       expect.objectContaining({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -79,33 +80,36 @@ describe('updateEventAction', () => {
     )
     expect(result.event).toEqual(mockEvent)
     expect(result.error).toBeUndefined()
-    expect(revalidatePath).toHaveBeenCalledWith('/tracks/track-slug/event-1')
-    expect(revalidatePath).toHaveBeenCalledWith('/tracks/track-slug')
+    expect(revalidatePath).toHaveBeenCalledWith('/user-1/tracks/track-slug/event-1')
+    expect(revalidatePath).toHaveBeenCalledWith('/user-1/tracks/track-slug')
   })
 
   it('returns error when eventId is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
 
     const result = await updateEventAction(null, formData)
 
-    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
     expect(result.event).toBeUndefined()
   })
 
   it('returns error when trackSlug is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('title', 'Title')
 
     const result = await updateEventAction(null, formData)
 
-    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
   })
 
   it('returns error when title is empty', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', '   ')
@@ -134,6 +138,7 @@ describe('updateEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
@@ -161,6 +166,7 @@ describe('updateEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
@@ -178,6 +184,7 @@ describe('updateEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
@@ -197,6 +204,7 @@ describe('updateEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
@@ -210,6 +218,7 @@ describe('updateEventAction', () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
@@ -226,6 +235,7 @@ describe('updateEventAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
@@ -237,6 +247,7 @@ describe('updateEventAction', () => {
 
   it('returns error when title is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     // title is not appended, so formData.get('title') returns null
@@ -250,6 +261,7 @@ describe('updateEventAction', () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('title', 'Title')
@@ -297,6 +309,7 @@ describe('createEventUploadIntentAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -306,7 +319,7 @@ describe('createEventUploadIntentAction', () => {
     const result = await createEventUploadIntentAction(formData)
 
     expect(global.fetch).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/tracks/track-slug/events/event-1/upload-url`,
+      `${API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1/upload-url`,
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
@@ -328,6 +341,7 @@ describe('createEventUploadIntentAction', () => {
 
   it('returns error when eventId is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
     formData.append('contentType', 'application/pdf')
@@ -335,11 +349,12 @@ describe('createEventUploadIntentAction', () => {
 
     const result = await createEventUploadIntentAction(formData)
 
-    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
   })
 
   it('returns error when fileName is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('contentType', 'application/pdf')
@@ -360,6 +375,7 @@ describe('createEventUploadIntentAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -375,6 +391,7 @@ describe('createEventUploadIntentAction', () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -416,6 +433,7 @@ describe('createEventUploadIntentAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -437,6 +455,7 @@ describe('createEventUploadIntentAction', () => {
 
   it('returns error when trackSlug is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('fileName', 'file.pdf')
     formData.append('contentType', 'application/pdf')
@@ -444,11 +463,12 @@ describe('createEventUploadIntentAction', () => {
 
     const result = await createEventUploadIntentAction(formData)
 
-    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
   })
 
   it('returns error when contentType is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -463,6 +483,7 @@ describe('createEventUploadIntentAction', () => {
 
   it('returns error when size is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -483,6 +504,7 @@ describe('createEventUploadIntentAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -504,6 +526,7 @@ describe('createEventUploadIntentAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -522,6 +545,7 @@ describe('createEventUploadIntentAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -540,6 +564,7 @@ describe('createEventUploadIntentAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -555,6 +580,7 @@ describe('createEventUploadIntentAction', () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileName', 'file.pdf')
@@ -599,6 +625,7 @@ describe('confirmEventUploadAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -607,7 +634,7 @@ describe('confirmEventUploadAction', () => {
     const result = await confirmEventUploadAction(formData)
 
     expect(global.fetch).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/tracks/track-slug/events/event-1/upload-confirm`,
+      `${API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1/upload-confirm`,
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
@@ -621,12 +648,13 @@ describe('confirmEventUploadAction', () => {
     )
     expect(result.event).toEqual(mockEvent)
     expect(result.error).toBeUndefined()
-    expect(revalidatePath).toHaveBeenCalledWith('/tracks/track-slug/event-1')
-    expect(revalidatePath).toHaveBeenCalledWith('/tracks/track-slug')
+    expect(revalidatePath).toHaveBeenCalledWith('/user-1/tracks/track-slug/event-1')
+    expect(revalidatePath).toHaveBeenCalledWith('/user-1/tracks/track-slug')
   })
 
   it('returns error when fileUrl is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('key', 'events/event-1/file.pdf')
@@ -638,6 +666,7 @@ describe('confirmEventUploadAction', () => {
 
   it('returns error when key is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -655,6 +684,7 @@ describe('confirmEventUploadAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -669,6 +699,7 @@ describe('confirmEventUploadAction', () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -681,24 +712,26 @@ describe('confirmEventUploadAction', () => {
 
   it('returns error when eventId is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
     formData.append('key', 'events/event-1/file.pdf')
 
     const result = await confirmEventUploadAction(formData)
 
-    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
   })
 
   it('returns error when trackSlug is missing', async () => {
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
     formData.append('key', 'events/event-1/file.pdf')
 
     const result = await confirmEventUploadAction(formData)
 
-    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
   })
 
   it('handles API error response without error message', async () => {
@@ -709,6 +742,7 @@ describe('confirmEventUploadAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -729,6 +763,7 @@ describe('confirmEventUploadAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -746,6 +781,7 @@ describe('confirmEventUploadAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -763,6 +799,7 @@ describe('confirmEventUploadAction', () => {
     })
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -777,6 +814,7 @@ describe('confirmEventUploadAction', () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
 
     const formData = new FormData()
+    formData.append('userId', 'user-1')
     formData.append('eventId', 'event-1')
     formData.append('trackSlug', 'track-slug')
     formData.append('fileUrl', 'https://s3.amazonaws.com/file-url')
@@ -810,7 +848,7 @@ describe('deleteEventAction', () => {
     })
 
     try {
-      await deleteEventAction('track-slug', 'event-1')
+      await deleteEventAction('user-1', 'track-slug', 'event-1')
     } catch (error: any) {
       // redirect throws an error in Next.js
       if (error.message !== 'NEXT_REDIRECT') {
@@ -819,27 +857,27 @@ describe('deleteEventAction', () => {
     }
 
     expect(global.fetch).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/tracks/track-slug/events/event-1`,
+      `${API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1`,
       expect.objectContaining({
         method: 'DELETE',
         headers: {}
       })
     )
-    expect(revalidatePath).toHaveBeenCalledWith('/tracks/track-slug')
-    expect(redirect).toHaveBeenCalledWith('/tracks/track-slug')
+    expect(revalidatePath).toHaveBeenCalledWith('/user-1/tracks/track-slug')
+    expect(redirect).toHaveBeenCalledWith('/user-1/tracks/track-slug')
   })
 
   it('returns error when eventId is missing', async () => {
-    const result = await deleteEventAction('track-slug', '')
+    const result = await deleteEventAction('user-1', 'track-slug', '')
 
-    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
     expect(redirect).not.toHaveBeenCalled()
   })
 
   it('returns error when trackSlug is missing', async () => {
-    const result = await deleteEventAction('', 'event-1')
+    const result = await deleteEventAction('user-1', '', 'event-1')
 
-    expect(result.error).toBe('Missing required fields: eventId and trackSlug are required')
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
     expect(redirect).not.toHaveBeenCalled()
   })
 
@@ -850,7 +888,7 @@ describe('deleteEventAction', () => {
       json: async () => ({ success: false, error: 'Event not found' })
     })
 
-    const result = await deleteEventAction('track-slug', 'event-1')
+    const result = await deleteEventAction('user-1', 'track-slug', 'event-1')
 
     expect(result.error).toBe('Event not found')
     expect(redirect).not.toHaveBeenCalled()
@@ -859,7 +897,7 @@ describe('deleteEventAction', () => {
   it('handles network errors', async () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
-    const result = await deleteEventAction('track-slug', 'event-1')
+    const result = await deleteEventAction('user-1', 'track-slug', 'event-1')
 
     expect(result.error).toBe('Failed to delete event: Network error')
     expect(redirect).not.toHaveBeenCalled()
@@ -872,7 +910,7 @@ describe('deleteEventAction', () => {
       json: async () => ({ success: false })
     })
 
-    const result = await deleteEventAction('track-slug', 'event-1')
+    const result = await deleteEventAction('user-1', 'track-slug', 'event-1')
 
     expect(result.error).toBe('Failed to delete event: Bad Request')
     expect(redirect).not.toHaveBeenCalled()
@@ -887,7 +925,7 @@ describe('deleteEventAction', () => {
       }
     })
 
-    const result = await deleteEventAction('track-slug', 'event-1')
+    const result = await deleteEventAction('user-1', 'track-slug', 'event-1')
 
     expect(result.error).toContain('Failed to delete event')
     expect(redirect).not.toHaveBeenCalled()
@@ -899,7 +937,7 @@ describe('deleteEventAction', () => {
       json: async () => ({ success: false, error: 'Deletion failed' })
     })
 
-    const result = await deleteEventAction('track-slug', 'event-1')
+    const result = await deleteEventAction('user-1', 'track-slug', 'event-1')
 
     expect(result.error).toBe('Deletion failed')
     expect(redirect).not.toHaveBeenCalled()
@@ -908,7 +946,7 @@ describe('deleteEventAction', () => {
   it('handles non-Error exception', async () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
 
-    const result = await deleteEventAction('track-slug', 'event-1')
+    const result = await deleteEventAction('user-1', 'track-slug', 'event-1')
 
     expect(result.error).toBe('Failed to delete event: Unknown error occurred')
     expect(redirect).not.toHaveBeenCalled()
@@ -932,7 +970,7 @@ describe('deleteEventAction', () => {
     })
 
     try {
-      await deleteEventAction('track-slug', 'event-1')
+      await deleteEventAction('user-1', 'track-slug', 'event-1')
     } catch (error: any) {
       if (error.message !== 'NEXT_REDIRECT') {
         throw error

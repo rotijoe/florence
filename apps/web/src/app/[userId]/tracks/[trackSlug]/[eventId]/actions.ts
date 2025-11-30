@@ -38,11 +38,12 @@ export type CreateEventResult = {
 }
 
 export async function createEventAction(formData: FormData): Promise<CreateEventResult> {
+  const userId = formData.get('userId') as string
   const trackSlug = formData.get('trackSlug') as string
 
-  if (!trackSlug) {
+  if (!userId || !trackSlug) {
     return {
-      error: 'Missing required fields: trackSlug is required'
+      error: 'Missing required fields: userId and trackSlug are required'
     }
   }
 
@@ -53,7 +54,7 @@ export async function createEventAction(formData: FormData): Promise<CreateEvent
       .map((cookie) => `${cookie.name}=${cookie.value}`)
       .join('; ')
 
-    const response = await fetch(`${API_BASE_URL}/api/tracks/${trackSlug}/events`, {
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -81,7 +82,7 @@ export async function createEventAction(formData: FormData): Promise<CreateEvent
     }
 
     // Redirect to the new event page with ?new=1 flag
-    redirect(`/tracks/${trackSlug}/${data.data.id}?new=1`)
+    redirect(`/${userId}/tracks/${trackSlug}/${data.data.id}?new=1`)
   } catch (error) {
     if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
       // This is how Next.js signals a redirect – do NOT convert it to an error
@@ -99,14 +100,15 @@ export async function updateEventAction(
   prevState: UpdateEventState | null,
   formData: FormData
 ): Promise<UpdateEventState> {
+  const userId = formData.get('userId') as string
   const eventId = formData.get('eventId') as string
   const trackSlug = formData.get('trackSlug') as string
   const title = formData.get('title') as string
   const notes = formData.get('notes') as string | null
 
-  if (!eventId || !trackSlug) {
+  if (!userId || !eventId || !trackSlug) {
     return {
-      error: 'Missing required fields: eventId and trackSlug are required'
+      error: 'Missing required fields: userId, eventId and trackSlug are required'
     }
   }
 
@@ -117,16 +119,19 @@ export async function updateEventAction(
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        title: title.trim(),
-        notes: notes === '' ? null : notes
-      })
-    })
+    const response = await fetch(
+      `${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          notes: notes === '' ? null : notes
+        })
+      }
+    )
 
     if (!response.ok) {
       const errorData: ApiResponse<never> = await response.json().catch(() => ({
@@ -147,8 +152,8 @@ export async function updateEventAction(
     }
 
     // Revalidate the page to ensure fresh data on next render
-    revalidatePath(`/tracks/${trackSlug}/${eventId}`)
-    revalidatePath(`/tracks/${trackSlug}`)
+    revalidatePath(`/${userId}/tracks/${trackSlug}/${eventId}`)
+    revalidatePath(`/${userId}/tracks/${trackSlug}`)
 
     return {
       event: data.data
@@ -164,15 +169,16 @@ export async function updateEventAction(
 export async function createEventUploadIntentAction(
   formData: FormData
 ): Promise<UploadIntentResult> {
+  const userId = formData.get('userId') as string
   const eventId = formData.get('eventId') as string
   const trackSlug = formData.get('trackSlug') as string
   const fileName = formData.get('fileName') as string
   const contentType = formData.get('contentType') as string
   const size = formData.get('size') as string
 
-  if (!eventId || !trackSlug) {
+  if (!userId || !eventId || !trackSlug) {
     return {
-      error: 'Missing required fields: eventId and trackSlug are required'
+      error: 'Missing required fields: userId, eventId and trackSlug are required'
     }
   }
 
@@ -190,7 +196,7 @@ export async function createEventUploadIntentAction(
       .join('; ')
 
     const response = await fetch(
-      `${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}/upload-url`,
+      `${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}/upload-url`,
       {
         method: 'POST',
         headers: {
@@ -245,14 +251,15 @@ export async function createEventUploadIntentAction(
 }
 
 export async function confirmEventUploadAction(formData: FormData): Promise<ConfirmUploadResult> {
+  const userId = formData.get('userId') as string
   const eventId = formData.get('eventId') as string
   const trackSlug = formData.get('trackSlug') as string
   const fileUrl = formData.get('fileUrl') as string
   const key = formData.get('key') as string
 
-  if (!eventId || !trackSlug) {
+  if (!userId || !eventId || !trackSlug) {
     return {
-      error: 'Missing required fields: eventId and trackSlug are required'
+      error: 'Missing required fields: userId, eventId and trackSlug are required'
     }
   }
 
@@ -270,7 +277,7 @@ export async function confirmEventUploadAction(formData: FormData): Promise<Conf
       .join('; ')
 
     const response = await fetch(
-      `${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}/upload-confirm`,
+      `${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}/upload-confirm`,
       {
         method: 'POST',
         headers: {
@@ -303,8 +310,8 @@ export async function confirmEventUploadAction(formData: FormData): Promise<Conf
     }
 
     // Revalidate the page to ensure fresh data on next render
-    revalidatePath(`/tracks/${trackSlug}/${eventId}`)
-    revalidatePath(`/tracks/${trackSlug}`)
+    revalidatePath(`/${userId}/tracks/${trackSlug}/${eventId}`)
+    revalidatePath(`/${userId}/tracks/${trackSlug}`)
 
     return {
       event: data.data
@@ -318,12 +325,13 @@ export async function confirmEventUploadAction(formData: FormData): Promise<Conf
 }
 
 export async function deleteEventAttachmentAction(
+  userId: string,
   trackSlug: string,
   eventId: string
 ): Promise<DeleteAttachmentResult> {
-  if (!eventId || !trackSlug) {
+  if (!userId || !eventId || !trackSlug) {
     return {
-      error: 'Missing required fields: eventId and trackSlug are required'
+      error: 'Missing required fields: userId, eventId and trackSlug are required'
     }
   }
 
@@ -335,7 +343,7 @@ export async function deleteEventAttachmentAction(
       .join('; ')
 
     const response = await fetch(
-      `${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}/attachment`,
+      `${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}/attachment`,
       {
         method: 'DELETE',
         headers: {
@@ -363,8 +371,8 @@ export async function deleteEventAttachmentAction(
     }
 
     // Revalidate the page to ensure fresh data on next render
-    revalidatePath(`/tracks/${trackSlug}/${eventId}`)
-    revalidatePath(`/tracks/${trackSlug}`)
+    revalidatePath(`/${userId}/tracks/${trackSlug}/${eventId}`)
+    revalidatePath(`/${userId}/tracks/${trackSlug}`)
 
     return {
       event: data.data
@@ -378,12 +386,13 @@ export async function deleteEventAttachmentAction(
 }
 
 export async function deleteEventAction(
+  userId: string,
   trackSlug: string,
   eventId: string
 ): Promise<DeleteEventResult> {
-  if (!eventId || !trackSlug) {
+  if (!userId || !eventId || !trackSlug) {
     return {
-      error: 'Missing required fields: eventId and trackSlug are required'
+      error: 'Missing required fields: userId, eventId and trackSlug are required'
     }
   }
 
@@ -394,12 +403,15 @@ export async function deleteEventAction(
       .map((cookie) => `${cookie.name}=${cookie.value}`)
       .join('; ')
 
-    const response = await fetch(`${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}`, {
-      method: 'DELETE',
-      headers: {
-        ...(cookieHeader && { Cookie: cookieHeader })
+    const response = await fetch(
+      `${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          ...(cookieHeader && { Cookie: cookieHeader })
+        }
       }
-    })
+    )
 
     if (!response.ok) {
       const errorData: ApiResponse<never> = await response.json().catch(() => ({
@@ -420,7 +432,7 @@ export async function deleteEventAction(
     }
 
     // Revalidate the track page to ensure fresh data
-    revalidatePath(`/tracks/${trackSlug}`)
+    revalidatePath(`/${userId}/tracks/${trackSlug}`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
     return {
@@ -429,5 +441,5 @@ export async function deleteEventAction(
   }
 
   // Redirect to track page outside of try-catch block
-  redirect(`/tracks/${trackSlug}`)
+  redirect(`/${userId}/tracks/${trackSlug}`)
 }

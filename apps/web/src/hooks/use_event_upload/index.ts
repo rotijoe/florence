@@ -2,11 +2,12 @@ import { useState, useCallback } from 'react'
 import {
   createEventUploadIntentAction,
   confirmEventUploadAction
-} from '@/app/tracks/[trackSlug]/[eventId]/actions'
+} from '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
 import { UploadStatus } from './constants'
 import { UseEventUploadProps, UseEventUploadReturn } from './types'
 
 export function useEventUpload({
+  userId,
   eventId,
   trackSlug,
   onComplete
@@ -27,6 +28,7 @@ export function useEventUpload({
       try {
         // Step 1: Get presigned URL
         const formData = new FormData()
+        formData.append('userId', userId)
         formData.append('eventId', eventId)
         formData.append('trackSlug', trackSlug)
         formData.append('fileName', file.name)
@@ -61,6 +63,7 @@ export function useEventUpload({
         // Step 3: Confirm upload
         setStatus('confirming')
         const confirmFormData = new FormData()
+        confirmFormData.append('userId', userId)
         confirmFormData.append('eventId', eventId)
         confirmFormData.append('trackSlug', trackSlug)
         confirmFormData.append('fileUrl', intentResult.fileUrl)
@@ -80,7 +83,7 @@ export function useEventUpload({
         setStatus('error')
       }
     },
-    [eventId, trackSlug, onComplete]
+    [userId, eventId, trackSlug, onComplete]
   )
 
   const isUploading = status === 'getting-url' || status === 'uploading' || status === 'confirming'

@@ -1,32 +1,36 @@
-import type { EventResponse } from '@packages/types';
+import type { EventResponse } from '@packages/types'
 
 export type TrackEventListProps = {
-  events: EventResponse[];
-  trackSlug: string;
-  activeEventId?: string | null;
-};
+  events: EventResponse[]
+  trackSlug: string
+  userId: string
+  activeEventId?: string | null
+}
 
 export type EventDateGroup = {
-  date: string;
-  events: EventResponse[];
-};
+  date: string
+  events: EventResponse[]
+}
 
 export type DateGroupProps = {
-  group: { date: string; events: TrackEventListProps['events'] };
-  groupIndex: number;
-  totalGroups: number;
-  trackSlug: string;
-  activeEventId?: string | null;
-};
+  group: { date: string; events: TrackEventListProps['events'] }
+  groupIndex: number
+  totalGroups: number
+  trackSlug: string
+  userId: string
+  activeEventId?: string | null
+}
 
 export type TimelineRowProps = {
-  event: EventResponse;
-  trackSlug: string;
-  isActive: boolean;
-};
+  event: EventResponse
+  trackSlug: string
+  userId: string
+  isActive: boolean
+}
 
 export type EventsGroupProps = {
-  events: TrackEventListProps['events'];
-  trackSlug: string;
-  activeEventId?: string | null;
-};
+  events: TrackEventListProps['events']
+  trackSlug: string
+  userId: string
+  activeEventId?: string | null
+}
