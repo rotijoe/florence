@@ -1,10 +1,23 @@
 import { fetchTrackEvents } from '../helpers'
 import { EventType } from '@packages/types'
 
+// Mock next/headers cookies
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(() =>
+    Promise.resolve({
+      getAll: jest.fn(() => [
+        { name: 'session', value: 'test-session-value' },
+        { name: 'other-cookie', value: 'other-value' }
+      ])
+    })
+  )
+}))
+
 describe('fetchTrackEvents', () => {
   const originalFetch = global.fetch
 
   afterEach(() => {
+    jest.clearAllMocks()
     global.fetch = originalFetch
   })
 
@@ -33,7 +46,12 @@ describe('fetchTrackEvents', () => {
     expect(events).toEqual(mockEvents)
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/users/user-1/tracks/sleep/events?sort=desc&limit=100'),
-      expect.objectContaining({ cache: 'no-store' })
+      expect.objectContaining({
+        cache: 'no-store',
+        headers: expect.objectContaining({
+          Cookie: 'session=test-session-value; other-cookie=other-value'
+        })
+      })
     )
   })
 

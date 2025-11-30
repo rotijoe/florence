@@ -1,9 +1,22 @@
 import { fetchTrack } from '../helpers'
 
+// Mock next/headers cookies
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(() =>
+    Promise.resolve({
+      getAll: jest.fn(() => [
+        { name: 'session', value: 'test-session-value' },
+        { name: 'other-cookie', value: 'other-value' }
+      ])
+    })
+  )
+}))
+
 describe('fetchTrack', () => {
   const originalFetch = global.fetch
 
   afterEach(() => {
+    jest.clearAllMocks()
     global.fetch = originalFetch
   })
 
@@ -25,7 +38,12 @@ describe('fetchTrack', () => {
     expect(track).toEqual(mockTrack)
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/users/user-1/tracks/sleep'),
-      expect.objectContaining({ cache: 'no-store' })
+      expect.objectContaining({
+        cache: 'no-store',
+        headers: expect.objectContaining({
+          Cookie: 'session=test-session-value; other-cookie=other-value'
+        })
+      })
     )
   })
 

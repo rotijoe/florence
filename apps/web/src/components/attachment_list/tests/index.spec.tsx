@@ -38,14 +38,12 @@ describe('EventAttachment', () => {
     expect(screen.getByText('document.pdf')).toBeInTheDocument()
   })
 
-  it('renders Download and Delete buttons', () => {
+  it('renders Delete button', () => {
     const url = 'https://example.com/document.pdf'
     render(<EventAttachment fileUrl={url} />)
 
-    const downloadButton = screen.getByRole('button', { name: /download/i })
     const deleteButton = screen.getByRole('button', { name: /delete/i })
 
-    expect(downloadButton).toBeInTheDocument()
     expect(deleteButton).toBeInTheDocument()
   })
 
@@ -109,23 +107,6 @@ describe('EventAttachment', () => {
         fileType: 'other'
       })
     )
-  })
-
-  it('does not trigger expansion when Download button is clicked', async () => {
-    const user = userEvent.setup()
-    const url = 'https://example.com/document.pdf'
-    render(<EventAttachment fileUrl={url} />)
-
-    const downloadButton = screen.getByRole('button', { name: /download/i })
-
-    // DocumentViewer should already be rendered (always visible)
-    expect(screen.getByTestId('document-viewer')).toBeInTheDocument()
-
-    await user.click(downloadButton)
-
-    // DocumentViewer should still be rendered (no change)
-    expect(screen.getByTestId('document-viewer')).toBeInTheDocument()
-    expect(mockDocumentViewer).toHaveBeenCalledTimes(1)
   })
 
   it('does not trigger expansion when Delete button is clicked', async () => {

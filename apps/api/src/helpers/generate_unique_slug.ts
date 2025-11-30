@@ -22,3 +22,4 @@ export async function generateUniqueSlug(userId: string, title: string): Promise
     counter++
   }
 }
+

@@ -1,6 +1,6 @@
 'use client'
 
-import { FileText, Image, File, Download, Trash2 } from 'lucide-react'
+import { FileText, Image, File, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getFileDetails } from './helpers'
 import type { EventAttachmentProps } from './types'
@@ -20,32 +20,18 @@ export function EventAttachment({ fileUrl, onDelete }: EventAttachmentProps) {
         <div className="flex items-center gap-3 rounded-md border border-border bg-card p-3">
           <FileIcon fileType={details.fileType} />
           <span className="flex-1 text-sm text-foreground">{details.filename}</span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={(e) => {
-                e.stopPropagation()
-                // Placeholder - no functionality yet
-              }}
-              aria-label="Download"
-            >
-              <Download className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete?.()
-              }}
-              aria-label="Delete"
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete?.()
+            }}
+            aria-label="Delete"
+          >
+            <Trash2 className="size-4" />
+          </Button>
         </div>
       </div>
       <DocumentViewer url={fileUrl} fileType={details.fileType} />

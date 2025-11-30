@@ -1,10 +1,21 @@
 import { fetchEvent } from '../fetch_event'
 import { SERVER_API_BASE_URL } from '@/constants/api'
-import type { EventResponse, ApiResponse } from '@packages/types'
-import { EventType } from '@packages/types'
+import { EventType, type EventResponse, type ApiResponse } from '@packages/types'
 
 // Mock fetch globally
 global.fetch = jest.fn()
+
+// Mock next/headers cookies
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(() =>
+    Promise.resolve({
+      getAll: jest.fn(() => [
+        { name: 'session', value: 'test-session-value' },
+        { name: 'other-cookie', value: 'other-value' }
+      ])
+    })
+  )
+}))
 
 describe('fetchEvent', () => {
   beforeEach(() => {
@@ -38,7 +49,12 @@ describe('fetchEvent', () => {
 
     expect(global.fetch).toHaveBeenCalledWith(
       `${SERVER_API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1`,
-      { cache: 'no-store' }
+      expect.objectContaining({
+        cache: 'no-store',
+        headers: expect.objectContaining({
+          Cookie: 'session=test-session-value; other-cookie=other-value'
+        })
+      })
     )
     expect(result).toEqual(mockEvent)
   })
@@ -80,7 +96,8 @@ describe('fetchEvent', () => {
       json: async () => mockResponse
     })
 
-    await expect(fetchEvent('event-1', 'user-1', 'track-slug')).rejects.toThrow('Failed to fetch event')
+    await expect(fetchEvent('event-1', 'user-1', 'track-slug')).rejects.toThrow(
+      'Failed to fetch event'
+    )
   })
 })
-

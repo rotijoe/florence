@@ -242,3 +242,4 @@ await prisma.event.delete({
 3. **Undo Delete** - Add ability to undo deletion within a time window
 4. **Delete Confirmation with Event Details** - Show event title/date in confirmation dialog
 5. **Delete Animation** - Add smooth transition animation when event is deleted
+

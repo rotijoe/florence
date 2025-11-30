@@ -1,15 +1,25 @@
 import { SERVER_API_BASE_URL } from '@/constants/api'
 import type { EventResponse, ApiResponse } from '@packages/types'
+import { cookies } from 'next/headers'
 
 export async function fetchEvent(
   eventId: string,
   userId: string,
   trackSlug: string
 ): Promise<EventResponse> {
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore
+    .getAll()
+    .map((cookie) => `${cookie.name}=${cookie.value}`)
+    .join('; ')
+
   const response = await fetch(
     `${SERVER_API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}`,
     {
-      cache: 'no-store'
+      cache: 'no-store',
+      headers: {
+        ...(cookieHeader && { Cookie: cookieHeader })
+      }
     }
   )
 

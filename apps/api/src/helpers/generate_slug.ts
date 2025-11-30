@@ -6,3 +6,4 @@ export function generateSlug(title: string): string {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
 }
+

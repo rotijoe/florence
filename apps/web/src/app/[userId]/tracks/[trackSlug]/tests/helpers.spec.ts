@@ -4,6 +4,16 @@ import { SERVER_API_BASE_URL } from '@/constants/api'
 // Mock fetch globally
 global.fetch = jest.fn()
 
+// Mock next/headers cookies
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(() => ({
+    getAll: jest.fn(() => [
+      { name: 'session', value: 'test-session-value' },
+      { name: 'other-cookie', value: 'other-value' }
+    ])
+  }))
+}))
+
 describe('fetchTrack helpers', () => {
   beforeEach(() => {
     jest.clearAllMocks()
