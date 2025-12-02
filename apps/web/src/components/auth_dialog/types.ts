@@ -48,6 +48,7 @@ export type SignUpFormData = z.infer<typeof signUpSchema>
 export interface AuthDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  defaultTab?: 'signin' | 'signup'
 }
 
 export interface AuthResult {

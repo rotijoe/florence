@@ -1,3 +1,4 @@
+import { render } from '@testing-library/react'
 import { redirect } from 'next/navigation'
 import { getServerSession } from '@/lib/auth_server'
 import UserLayout from '@/app/[userId]/layout'
@@ -9,6 +10,23 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('@/lib/auth_server', () => ({
   getServerSession: jest.fn()
+}))
+
+jest.mock('@/components/ui/sidebar', () => ({
+  SidebarProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="sidebar-provider">{children}</div>
+  ),
+  SidebarInset: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="sidebar-inset">{children}</div>
+  )
+}))
+
+jest.mock('@/components/app_sidebar', () => ({
+  AppSidebar: () => <div data-testid="app-sidebar">AppSidebar</div>
+}))
+
+jest.mock('@/components/site_header', () => ({
+  SiteHeader: () => <div data-testid="site-header">SiteHeader</div>
 }))
 
 const mockRedirect = redirect as jest.MockedFunction<typeof redirect>
@@ -95,18 +113,23 @@ describe('UserLayout', () => {
   })
 
   describe('rendering', () => {
-    it('should render children when authorized', async () => {
+    it('should render sidebar components and children when authorized', async () => {
       mockGetServerSession.mockResolvedValueOnce({
         user: { id: 'user-1', name: 'Test User', email: 'test@test.com' },
         session: {}
       })
 
       const result = await UserLayout({
-        children: <div>Test Content</div>,
+        children: <div data-testid="test-content">Test Content</div>,
         params: createParams('user-1')
       })
 
-      expect(result).toBeTruthy()
+      const { container } = render(result as React.ReactElement)
+
+      expect(container.querySelector('[data-testid="sidebar-provider"]')).toBeInTheDocument()
+      expect(container.querySelector('[data-testid="app-sidebar"]')).toBeInTheDocument()
+      expect(container.querySelector('[data-testid="site-header"]')).toBeInTheDocument()
+      expect(container.querySelector('[data-testid="test-content"]')).toBeInTheDocument()
       expect(mockRedirect).not.toHaveBeenCalled()
     })
   })

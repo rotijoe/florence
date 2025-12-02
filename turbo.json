@@ -30,6 +30,11 @@
       "dependsOn": ["^build"],
       "cache": true,
       "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "outputs": ["coverage/**"]
     }
   },
   "globalDependencies": ["node_modules"]

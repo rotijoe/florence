@@ -387,4 +387,50 @@ describe('AuthDialog', () => {
     render(<AuthDialog {...defaultProps} />)
     expect(screen.queryByText(/error/i)).not.toBeInTheDocument()
   })
+
+  describe('defaultTab prop', () => {
+    it('defaults to signin tab when defaultTab is not provided', () => {
+      render(<AuthDialog {...defaultProps} />)
+
+      expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
+      expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+      expect(screen.queryByLabelText(/name/i)).not.toBeInTheDocument()
+    })
+
+    it('shows signin form when defaultTab is signin', () => {
+      render(<AuthDialog {...defaultProps} defaultTab="signin" />)
+
+      expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
+      expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+      expect(screen.queryByLabelText(/name/i)).not.toBeInTheDocument()
+    })
+
+    it('shows signup form when defaultTab is signup', async () => {
+      render(<AuthDialog {...defaultProps} defaultTab="signup" />)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
+        expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
+        expect(screen.getAllByLabelText(/password/i)).toHaveLength(2)
+        expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument()
+      })
+    })
+
+    it('allows switching tabs even when defaultTab is provided', async () => {
+      const user = userEvent.setup()
+      render(<AuthDialog {...defaultProps} defaultTab="signin" />)
+
+      expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
+
+      await user.click(screen.getByRole('tab', { name: /sign up/i }))
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument()
+      })
+    })
+  })
 })

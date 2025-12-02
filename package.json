@@ -25,6 +25,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\" --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\" --ignore-path .prettierignore",
     "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
     "start": "turbo run start --filter=apps/web...",
     "db:push": "pnpm --filter @packages/database db:push",
     "db:seed": "pnpm --filter @packages/database db:seed",
@@ -32,6 +33,7 @@
     "db:setup": "pnpm db:push && pnpm db:seed",
     "dev:clean": "pkill -f 'tsx watch' && pkill -f 'next dev' && pnpm dev",
     "kill-ports": "lsof -ti:3000,8787 | xargs kill -9",
-    "dev:reset": "pnpm kill-ports && pnpm dev"
+    "dev:reset": "pnpm kill-ports && pnpm dev",
+    "stop": "pnpm kill-ports && pkill -f 'tsx watch' && pkill -f 'next dev' && pkill -f 'turbo' || true"
   }
 }
