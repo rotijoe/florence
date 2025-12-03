@@ -33,7 +33,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const items = [
       {
         title: 'Home',
-        url: '/',
+        url: userId ? `/${userId}` : '/',
         icon: Home
       }
     ]

@@ -2,6 +2,14 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthDialog } from '../index'
 
+const mockPush = jest.fn()
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush
+  })
+}))
+
 jest.mock('../helpers', () => ({
   handleSignIn: jest.fn(),
   handleSignUp: jest.fn()
@@ -20,6 +28,7 @@ describe('AuthDialog', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockPush.mockClear()
   })
 
   it('renders accessible dialog with sign in form', () => {
@@ -73,9 +82,9 @@ describe('AuthDialog', () => {
     })
   })
 
-  it('calls handleSignIn with form data on successful submission', async () => {
+  it('calls handleSignIn with form data on successful submission and navigates to user page', async () => {
     const user = userEvent.setup()
-    mockHandleSignIn.mockResolvedValueOnce({ success: true, error: null })
+    mockHandleSignIn.mockResolvedValueOnce({ success: true, error: null, userId: 'user-123' })
 
     render(<AuthDialog {...defaultProps} />)
 
@@ -92,6 +101,7 @@ describe('AuthDialog', () => {
         password: 'password123'
       })
       expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false)
+      expect(mockPush).toHaveBeenCalledWith('/user-123')
     })
   })
 
@@ -119,7 +129,10 @@ describe('AuthDialog', () => {
   it('shows loading state during submission', async () => {
     const user = userEvent.setup()
     mockHandleSignIn.mockImplementationOnce(
-      () => new Promise((resolve) => setTimeout(() => resolve({ success: true, error: null }), 100))
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ success: true, error: null, userId: 'user-123' }), 100)
+        )
     )
 
     render(<AuthDialog {...defaultProps} />)
@@ -134,9 +147,9 @@ describe('AuthDialog', () => {
     expect(screen.getByText(/signing in/i)).toBeInTheDocument()
   })
 
-  it('calls handleSignUp with form data on successful sign up', async () => {
+  it('calls handleSignUp with form data on successful sign up and navigates to user page', async () => {
     const mockHandleSignUp = handleSignUp as jest.MockedFunction<typeof handleSignUp>
-    mockHandleSignUp.mockResolvedValueOnce({ success: true, error: null })
+    mockHandleSignUp.mockResolvedValueOnce({ success: true, error: null, userId: 'user-456' })
 
     const user = userEvent.setup()
     render(<AuthDialog {...defaultProps} />)
@@ -167,6 +180,7 @@ describe('AuthDialog', () => {
         confirmPassword: 'password123'
       })
       expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false)
+      expect(mockPush).toHaveBeenCalledWith('/user-456')
     })
   })
 
@@ -274,7 +288,10 @@ describe('AuthDialog', () => {
   it('disables button during loading state', async () => {
     const user = userEvent.setup()
     mockHandleSignIn.mockImplementationOnce(
-      () => new Promise((resolve) => setTimeout(() => resolve({ success: true, error: null }), 100))
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ success: true, error: null, userId: 'user-123' }), 100)
+        )
     )
 
     render(<AuthDialog {...defaultProps} />)

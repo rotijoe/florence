@@ -13,7 +13,13 @@ export async function handleSignIn(data: SignInFormData): Promise<AuthResult> {
       throw new Error(result.error.message)
     }
 
-    return { success: true, error: null }
+    const userId = result.data?.user?.id
+
+    if (!userId) {
+      throw new Error('User ID not found in response')
+    }
+
+    return { success: true, error: null, userId }
   } catch (error) {
     return {
       success: false,
@@ -37,7 +43,12 @@ export async function handleSignUp(data: SignUpFormData): Promise<AuthResult> {
       throw new Error(result.error.message)
     }
 
-    return { success: true, error: null }
+    const userId = result.data?.user?.id
+    if (!userId) {
+      throw new Error('User ID not found in response')
+    }
+
+    return { success: true, error: null, userId }
   } catch (error) {
     return {
       success: false,

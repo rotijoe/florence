@@ -54,4 +54,5 @@ export interface AuthDialogProps {
 export interface AuthResult {
   success: boolean
   error: string | null
+  userId?: string
 }

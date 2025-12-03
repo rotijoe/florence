@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -32,6 +33,7 @@ import { handleSignIn, handleSignUp } from './helpers'
 import { AUTH_DIALOG_CONSTANTS } from './constants'
 
 export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDialogProps) {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,9 +62,10 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
 
     const result = await handleSignIn(data)
 
-    if (result.success) {
+    if (result.success && result.userId) {
       onOpenChange(false)
       signInForm.reset()
+      router.push(`/${result.userId}`)
     } else {
       setError(result.error)
     }
@@ -76,9 +79,10 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
 
     const result = await handleSignUp(data)
 
-    if (result.success) {
+    if (result.success && result.userId) {
       onOpenChange(false)
       signUpForm.reset()
+      router.push(`/${result.userId}`)
     } else {
       setError(result.error)
     }

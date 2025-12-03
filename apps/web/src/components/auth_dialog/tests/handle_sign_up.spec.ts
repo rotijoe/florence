@@ -21,13 +21,13 @@ describe('handleSignUp', () => {
       confirmPassword: 'password123'
     }
     mockSignUp.mockResolvedValueOnce({
-      data: { user: { id: '1' } },
+      data: { user: { id: 'user-456' } },
       error: null
     })
 
     const result = await handleSignUp(data)
 
-    expect(result).toEqual({ success: true, error: null })
+    expect(result).toEqual({ success: true, error: null, userId: 'user-456' })
     expect(mockSignUp).toHaveBeenCalledWith({
       email: data.email,
       password: data.password,
@@ -83,6 +83,26 @@ describe('handleSignUp', () => {
     expect(result).toEqual({
       success: false,
       error: 'An error occurred during sign up'
+    })
+  })
+
+  it('returns error when user ID is missing from response', async () => {
+    const data = {
+      name: 'John Doe',
+      email: 'test@example.com',
+      password: 'password123',
+      confirmPassword: 'password123'
+    }
+    mockSignUp.mockResolvedValueOnce({
+      data: { user: null },
+      error: null
+    })
+
+    const result = await handleSignUp(data)
+
+    expect(result).toEqual({
+      success: false,
+      error: 'User ID not found in response'
     })
   })
 })

@@ -108,7 +108,9 @@ describe('AppSidebar', () => {
     render(<AppSidebar />)
 
     expect(screen.getByTestId('nav-main')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument()
+    const homeLink = screen.getByRole('link', { name: /home/i })
+    expect(homeLink).toBeInTheDocument()
+    expect(homeLink).toHaveAttribute('href', '/user-123')
     expect(screen.getByRole('link', { name: /tracks/i })).toBeInTheDocument()
 
     const tracksLink = screen.getByRole('link', { name: /tracks/i })
@@ -124,7 +126,9 @@ describe('AppSidebar', () => {
     render(<AppSidebar />)
 
     expect(screen.getByTestId('nav-main')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument()
+    const homeLink = screen.getByRole('link', { name: /home/i })
+    expect(homeLink).toBeInTheDocument()
+    expect(homeLink).toHaveAttribute('href', '/')
     expect(screen.queryByRole('link', { name: /tracks/i })).not.toBeInTheDocument()
   })
 
