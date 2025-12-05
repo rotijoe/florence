@@ -7,4 +7,3 @@ export interface ButtonDropdownProps {
   text: string
   dropdownItems: ButtonDropdownItem[]
 }
-
