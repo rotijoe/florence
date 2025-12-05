@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import TrackPage from '../page'
 import { fetchTrack, fetchTrackEvents } from '../helpers'
-import type { TrackResponse, EventResponse } from '@packages/types'
-import { EventType } from '@packages/types'
+import { EventType, type TrackResponse, type EventResponse } from '@packages/types'
 
 // Mock the helpers
 jest.mock('../helpers', () => ({
@@ -14,15 +13,14 @@ jest.mock('../helpers', () => ({
 jest.mock('@/components/track_event_list', () => ({
   TrackEventList: ({
     events,
-    trackSlug,
-    userId
+    trackSlug
   }: {
     events: EventResponse[]
     trackSlug: string
     userId: string
   }) => (
-    <div data-testid="track-event-list">
-      <div data-testid="track-slug">{trackSlug}</div>
+    <div data-testid='track-event-list'>
+      <div data-testid='track-slug'>{trackSlug}</div>
       {events.map((event) => (
         <div key={event.id} data-testid={`event-${event.id}`}>
           {event.title}
@@ -35,7 +33,7 @@ jest.mock('@/components/track_event_list', () => ({
 // Mock TrackHeaderClient component
 jest.mock('@/components/track_header/track_header_client', () => ({
   TrackHeaderClient: ({ track }: { track: TrackResponse }) => (
-    <div data-testid="track-header">
+    <div data-testid='track-header'>
       <h1>{track.name}</h1>
     </div>
   )

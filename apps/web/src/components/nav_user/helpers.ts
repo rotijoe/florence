@@ -11,4 +11,3 @@ export async function handleSignOut(): Promise<{ success: boolean; error?: strin
     }
   }
 }
-

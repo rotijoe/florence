@@ -25,4 +25,3 @@ describe('HubRecentActivity', () => {
     expect(screen.getByText('2 hours ago')).toBeInTheDocument()
   })
 })
-

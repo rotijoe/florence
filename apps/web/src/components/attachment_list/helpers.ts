@@ -16,11 +16,11 @@ export function getFileDetails(url: string): AttachmentItem {
   const urlObj = new URL(url)
   const pathname = urlObj.pathname
   const filename = pathname.split('/').pop() || 'attachment'
-  
+
   const extension = filename.split('.').pop()?.toLowerCase() || ''
-  
+
   let fileType: 'image' | 'pdf' | 'word' | 'text' | 'other' = 'other'
-  
+
   if (IMAGE_EXTENSIONS.includes(extension)) {
     fileType = 'image'
   } else if (PDF_EXTENSIONS.includes(extension)) {
@@ -30,11 +30,10 @@ export function getFileDetails(url: string): AttachmentItem {
   } else if (TEXT_EXTENSIONS.includes(extension)) {
     fileType = 'text'
   }
-  
+
   return {
     url,
     filename,
     fileType
   }
 }
-

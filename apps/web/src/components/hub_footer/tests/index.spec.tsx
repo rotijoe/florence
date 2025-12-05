@@ -9,7 +9,7 @@ describe('HubFooter', () => {
   })
 
   it('renders custom app name', () => {
-    render(<HubFooter appName="Custom App" />)
+    render(<HubFooter appName='Custom App' />)
 
     expect(screen.getByText(/Custom App/)).toBeInTheDocument()
   })
@@ -20,4 +20,3 @@ describe('HubFooter', () => {
     expect(screen.getByText('Made for quieter health admin moments.')).toBeInTheDocument()
   })
 })
-

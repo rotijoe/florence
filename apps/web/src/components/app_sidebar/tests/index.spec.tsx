@@ -10,7 +10,7 @@ jest.mock('@/lib/auth_client', () => ({
 // Mock child components
 jest.mock('@/components/nav_main', () => ({
   NavMain: ({ items }: { items: Array<{ title: string; url: string }> }) => (
-    <nav data-testid="nav-main">
+    <nav data-testid='nav-main'>
       {items.map((item) => (
         <a key={item.title} href={item.url}>
           {item.title}
@@ -22,7 +22,7 @@ jest.mock('@/components/nav_main', () => ({
 
 jest.mock('@/components/nav_secondary', () => ({
   NavSecondary: ({ items }: { items: Array<{ title: string; url: string }> }) => (
-    <nav data-testid="nav-secondary">
+    <nav data-testid='nav-secondary'>
       {items.map((item) => (
         <a key={item.title} href={item.url}>
           {item.title}
@@ -33,26 +33,26 @@ jest.mock('@/components/nav_secondary', () => ({
 }))
 
 jest.mock('@/components/nav_user', () => ({
-  NavUser: () => <div data-testid="nav-user">User Menu</div>
+  NavUser: () => <div data-testid='nav-user'>User Menu</div>
 }))
 
 jest.mock('@/components/ui/sidebar', () => ({
   Sidebar: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <aside data-testid="sidebar" {...props}>
+    <aside data-testid='sidebar' {...props}>
       {children}
     </aside>
   ),
   SidebarContent: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-content">{children}</div>
+    <div data-testid='sidebar-content'>{children}</div>
   ),
   SidebarFooter: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-footer">{children}</div>
+    <div data-testid='sidebar-footer'>{children}</div>
   ),
   SidebarHeader: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-header">{children}</div>
+    <div data-testid='sidebar-header'>{children}</div>
   ),
   SidebarMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-menu">{children}</div>
+    <div data-testid='sidebar-menu'>{children}</div>
   ),
   SidebarMenuButton: ({
     children,
@@ -69,7 +69,7 @@ jest.mock('@/components/ui/sidebar', () => ({
     return <button {...props}>{children}</button>
   },
   SidebarMenuItem: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-menu-item">{children}</div>
+    <div data-testid='sidebar-menu-item'>{children}</div>
   )
 }))
 

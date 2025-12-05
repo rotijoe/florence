@@ -2,11 +2,11 @@ import { formatTrackDate } from '../helpers'
 
 describe('formatTrackDate', () => {
   beforeEach(() => {
-    jest.spyOn(global.Date.prototype, 'toLocaleDateString').mockImplementation(
-      function (this: Date) {
-        return this.toISOString().split('T')[0]
-      }
-    )
+    jest.spyOn(global.Date.prototype, 'toLocaleDateString').mockImplementation(function (
+      this: Date
+    ) {
+      return this.toISOString().split('T')[0]
+    })
   })
 
   afterEach(() => {
@@ -35,5 +35,3 @@ describe('formatTrackDate', () => {
     expect(typeof formatted2).toBe('string')
   })
 })
-
-

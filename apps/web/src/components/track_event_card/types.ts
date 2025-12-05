@@ -1,7 +1,7 @@
-import type { EventResponse } from '@packages/types';
+import type { EventResponse } from '@packages/types'
 
 export type TrackEventCardProps = {
-  event: EventResponse;
-  isActive: boolean;
-  className?: string;
-};
+  event: EventResponse
+  isActive: boolean
+  className?: string
+}

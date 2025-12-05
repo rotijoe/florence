@@ -40,5 +40,3 @@ export interface AccountOverviewData {
   appointments: AppointmentSummary[]
   recentActivity: RecentActivityItem[]
 }
-
-

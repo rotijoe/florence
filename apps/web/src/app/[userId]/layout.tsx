@@ -26,11 +26,11 @@ export default async function UserLayout({ children, params }: UserLayoutProps) 
 
   return (
     <SidebarProvider>
-      <AppSidebar variant="inset" />
-      <SidebarInset className="overflow-auto max-h-[calc(100vh-1rem)]">
-        <SiteHeader className="sticky top-0 z-10" />
-        <main className="flex flex-1 flex-col">
-          <div className="flex flex-col gap-4 md:gap-6">{children}</div>
+      <AppSidebar variant='inset' />
+      <SidebarInset className='overflow-auto max-h-[calc(100vh-1rem)]'>
+        <SiteHeader className='sticky top-0 z-10' />
+        <main className='flex flex-1 flex-col'>
+          <div className='flex flex-col gap-4 md:gap-6'>{children}</div>
         </main>
       </SidebarInset>
     </SidebarProvider>

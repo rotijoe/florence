@@ -25,7 +25,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
         trackSlug={trackSlug}
         createEventAction={handleCreateEvent}
       />
-      <div className="mt-8">
+      <div className='mt-8'>
         <TrackEventList events={events} trackSlug={trackSlug} userId={userId} />
       </div>
     </>

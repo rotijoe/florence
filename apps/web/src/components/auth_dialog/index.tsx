@@ -97,20 +97,20 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
   const renderError = () => {
     if (!error) return null
 
-    return <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>
+    return <div className='text-sm text-red-600 bg-red-50 p-3 rounded-md'>{error}</div>
   }
 
   const renderSignInForm = () => (
     <Form {...signInForm}>
-      <form onSubmit={signInForm.handleSubmit(onSignInSubmit)} className="space-y-4">
+      <form onSubmit={signInForm.handleSubmit(onSignInSubmit)} className='space-y-4'>
         <FormField
           control={signInForm.control}
-          name="email"
+          name='email'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="Enter your email" {...field} />
+                <Input type='email' placeholder='Enter your email' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,19 +118,19 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
         />
         <FormField
           control={signInForm.control}
-          name="password"
+          name='password'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Enter your password" {...field} />
+                <Input type='password' placeholder='Enter your password' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         {renderError()}
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type='submit' className='w-full' disabled={isLoading}>
           {isLoading
             ? AUTH_DIALOG_CONSTANTS.UI.LOADING_STATES.SIGN_IN
             : AUTH_DIALOG_CONSTANTS.UI.BUTTON_TEXT.SIGN_IN}
@@ -141,15 +141,15 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
 
   const renderSignUpForm = () => (
     <Form {...signUpForm}>
-      <form onSubmit={signUpForm.handleSubmit(onSignUpSubmit)} className="space-y-4">
+      <form onSubmit={signUpForm.handleSubmit(onSignUpSubmit)} className='space-y-4'>
         <FormField
           control={signUpForm.control}
-          name="name"
+          name='name'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input type="text" placeholder="Enter your name" {...field} />
+                <Input type='text' placeholder='Enter your name' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -157,12 +157,12 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
         />
         <FormField
           control={signUpForm.control}
-          name="email"
+          name='email'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="Enter your email" {...field} />
+                <Input type='email' placeholder='Enter your email' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -170,12 +170,12 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
         />
         <FormField
           control={signUpForm.control}
-          name="password"
+          name='password'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Create a password" {...field} />
+                <Input type='password' placeholder='Create a password' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -183,19 +183,19 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
         />
         <FormField
           control={signUpForm.control}
-          name="confirmPassword"
+          name='confirmPassword'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Confirm Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Confirm your password" {...field} />
+                <Input type='password' placeholder='Confirm your password' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         {renderError()}
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type='submit' className='w-full' disabled={isLoading}>
           {isLoading
             ? AUTH_DIALOG_CONSTANTS.UI.LOADING_STATES.SIGN_UP
             : AUTH_DIALOG_CONSTANTS.UI.BUTTON_TEXT.SIGN_UP}
@@ -214,17 +214,17 @@ export function AuthDialog({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+        <Tabs defaultValue={defaultTab} className='w-full'>
+          <TabsList className='grid w-full grid-cols-2'>
+            <TabsTrigger value='signin'>Sign In</TabsTrigger>
+            <TabsTrigger value='signup'>Sign Up</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="signin" className="space-y-4">
+          <TabsContent value='signin' className='space-y-4'>
             {renderSignInForm()}
           </TabsContent>
 
-          <TabsContent value="signup" className="space-y-4">
+          <TabsContent value='signup' className='space-y-4'>
             {renderSignUpForm()}
           </TabsContent>
         </Tabs>

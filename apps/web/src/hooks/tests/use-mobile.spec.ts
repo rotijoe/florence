@@ -74,11 +74,13 @@ describe('useIsMobile', () => {
         onchange: null,
         addListener: jest.fn(),
         removeListener: jest.fn(),
-        addEventListener: jest.fn((event: string, handler: (event: MediaQueryListEvent) => void) => {
-          if (event === 'change') {
-            changeHandler = handler
+        addEventListener: jest.fn(
+          (event: string, handler: (event: MediaQueryListEvent) => void) => {
+            if (event === 'change') {
+              changeHandler = handler
+            }
           }
-        }),
+        ),
         removeEventListener: jest.fn(),
         dispatchEvent: jest.fn()
       }
@@ -121,4 +123,3 @@ describe('useIsMobile', () => {
     expect(removeEventListenerSpy).toHaveBeenCalled()
   })
 })
-

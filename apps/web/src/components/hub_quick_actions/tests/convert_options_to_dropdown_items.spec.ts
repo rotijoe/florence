@@ -58,4 +58,3 @@ describe('convertOptionsToDropdownItems', () => {
     expect(onSelect).toHaveBeenCalledWith({ kind: 'addAppointment', value: 'sleep' })
   })
 })
-

@@ -39,11 +39,11 @@ describe('getFileDetails', () => {
 
   it('identifies image files correctly', () => {
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']
-    
+
     imageExtensions.forEach((ext) => {
       const url = `https://example.com/image.${ext}`
       const result = getFileDetails(url)
-      
+
       expect(result.fileType).toBe('image')
       expect(result.filename).toBe(`image.${ext}`)
     })
@@ -66,11 +66,11 @@ describe('getFileDetails', () => {
 
   it('identifies Word files correctly', () => {
     const wordExtensions = ['doc', 'docx']
-    
+
     wordExtensions.forEach((ext) => {
       const url = `https://example.com/document.${ext}`
       const result = getFileDetails(url)
-      
+
       expect(result.fileType).toBe('word')
       expect(result.filename).toBe(`document.${ext}`)
     })
@@ -86,11 +86,11 @@ describe('getFileDetails', () => {
 
   it('identifies other file types correctly', () => {
     const otherExtensions = ['zip', 'xlsx', 'csv']
-    
+
     otherExtensions.forEach((ext) => {
       const url = `https://example.com/file.${ext}`
       const result = getFileDetails(url)
-      
+
       expect(result.fileType).toBe('other')
       expect(result.filename).toBe(`file.${ext}`)
     })
@@ -118,4 +118,3 @@ describe('getFileDetails', () => {
     expect(result.fileType).toBe('pdf')
   })
 })
-

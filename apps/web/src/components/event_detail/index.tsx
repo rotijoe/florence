@@ -176,11 +176,11 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
     <>
       <Card>
         <form action={formAction}>
-          <input type="hidden" name="userId" value={userId} />
-          <input type="hidden" name="eventId" value={optimisticEvent.id} />
-          <input type="hidden" name="trackSlug" value={trackSlug} />
-          <input type="hidden" name="eventId" value={optimisticEvent.id} />
-          <input type="hidden" name="trackSlug" value={trackSlug} />
+          <input type='hidden' name='userId' value={userId} />
+          <input type='hidden' name='eventId' value={optimisticEvent.id} />
+          <input type='hidden' name='trackSlug' value={trackSlug} />
+          <input type='hidden' name='eventId' value={optimisticEvent.id} />
+          <input type='hidden' name='trackSlug' value={trackSlug} />
           {renderHeader(
             optimisticEvent,
             isEditing,
@@ -193,7 +193,7 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
           {renderFooter(optimisticEvent)}
         </form>
         {error && (
-          <div data-testid="error-message" className="px-6 pb-4 text-sm text-destructive">
+          <div data-testid='error-message' className='px-6 pb-4 text-sm text-destructive'>
             {error}
           </div>
         )}
@@ -217,10 +217,10 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleDeleteCancel}>
+              <Button type='button' variant='outline' onClick={handleDeleteCancel}>
                 Cancel
               </Button>
-              <Button type="button" variant="destructive" onClick={handleDeleteEvent}>
+              <Button type='button' variant='destructive' onClick={handleDeleteEvent}>
                 Delete
               </Button>
             </DialogFooter>
@@ -240,16 +240,16 @@ function renderActionsMenu(
     <div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="w-full">
-            <MoreVertical className="size-4" />
-            <span className="sr-only">Event actions</span>
+          <Button variant='outline' size='sm' className='w-full'>
+            <MoreVertical className='size-4' />
+            <span className='sr-only'>Event actions</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align='end' className='w-48'>
           <DropdownMenuItem onSelect={onEditEvent}>Edit event</DropdownMenuItem>
           <DropdownMenuItem onSelect={onUploadDocument}>Upload document</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={onDeleteEvent}>
+          <DropdownMenuItem variant='destructive' onSelect={onDeleteEvent}>
             Delete event
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -263,10 +263,10 @@ function EditingButtons({ onCancel }: { onCancel: () => void }) {
 
   return (
     <>
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button type='submit' size='sm' disabled={pending}>
         {pending ? 'Saving...' : 'Save'}
       </Button>
-      <Button type="button" onClick={onCancel} variant="outline" size="sm" disabled={pending}>
+      <Button type='button' onClick={onCancel} variant='outline' size='sm' disabled={pending}>
         Cancel
       </Button>
     </>
@@ -288,15 +288,15 @@ function renderHeader(
   handleDeleteClick: () => void
 ) {
   return (
-    <CardHeader data-testid="event-header" className="gap-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex justify-end gap-2">
-          <div className="flex gap-2">{renderEditingButtons(onCancel, isEditing)}</div>
+    <CardHeader data-testid='event-header' className='gap-4'>
+      <div className='flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between'>
+        <div className='flex justify-end gap-2'>
+          <div className='flex gap-2'>{renderEditingButtons(onCancel, isEditing)}</div>
           {!isEditing && renderActionsMenu(handleEdit, handleUploadClick, handleDeleteClick)}
         </div>
-        <div className="space-y-2">
+        <div className='space-y-2'>
           {renderTitle(isEditing, event)}
-          <span className="w-fit rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.65rem] font-medium uppercase tracking-wide text-primary">
+          <span className='w-fit rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.65rem] font-medium uppercase tracking-wide text-primary'>
             {event.type}
           </span>
         </div>
@@ -309,26 +309,26 @@ function renderTitle(isEditing: boolean, event: EventResponse) {
   if (isEditing) {
     return (
       <Field>
-        <FieldLabel htmlFor="title" className="sr-only">
+        <FieldLabel htmlFor='title' className='sr-only'>
           Title
         </FieldLabel>
         <FieldContent>
           <Input
-            id="title"
-            name="title"
+            id='title'
+            name='title'
             defaultValue={event.title}
-            className="h-auto border-0 border-b border-border rounded-none bg-transparent p-0 shadow-none !text-3xl md:!text-3xl font-semibold leading-none focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring"
+            className='h-auto border-0 border-b border-border rounded-none bg-transparent p-0 shadow-none !text-3xl md:!text-3xl font-semibold leading-none focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring'
           />
         </FieldContent>
       </Field>
     )
   }
-  return <CardTitle className="text-3xl">{event.title}</CardTitle>
+  return <CardTitle className='text-3xl'>{event.title}</CardTitle>
 }
 
 function renderContent(event: EventResponse, isEditing: boolean, onDeleteAttachment?: () => void) {
   return (
-    <CardContent className="space-y-6">
+    <CardContent className='space-y-6'>
       {renderNotes(event, isEditing)}
       {renderAttachments(event.fileUrl, onDeleteAttachment)}
     </CardContent>
@@ -339,14 +339,14 @@ const renderNotes = (event: EventResponse, isEditing: boolean) => {
   if (isEditing) {
     return (
       <Field>
-        <FieldLabel htmlFor="notes">Notes</FieldLabel>
+        <FieldLabel htmlFor='notes'>Notes</FieldLabel>
         <FieldContent>
           <Textarea
-            id="notes"
-            name="notes"
+            id='notes'
+            name='notes'
             defaultValue={event.notes || ''}
             rows={6}
-            className="resize-none"
+            className='resize-none'
           />
         </FieldContent>
       </Field>
@@ -359,11 +359,11 @@ const renderNotes = (event: EventResponse, isEditing: boolean) => {
 
   return (
     <div
-      data-testid="notes-section"
-      className="border border-border px-3 py-2 rounded-md text-foreground bg-cardspace-y-2"
+      data-testid='notes-section'
+      className='border border-border px-3 py-2 rounded-md text-foreground bg-cardspace-y-2'
     >
-      <h3 className="text-sm font-semibold text-muted-foreground">Notes</h3>
-      <p className="text-sm leading-6">{event.notes}</p>
+      <h3 className='text-sm font-semibold text-muted-foreground'>Notes</h3>
+      <p className='text-sm leading-6'>{event.notes}</p>
     </div>
   )
 }
@@ -374,13 +374,13 @@ function renderAttachments(fileUrl: string | null | undefined, onDelete?: () => 
 
 function renderFooter(event: EventResponse) {
   return (
-    <CardFooter className="flex flex-col gap-2 border-t pt-4 text-xs text-muted-foreground">
+    <CardFooter className='flex flex-col gap-2 border-t pt-4 text-xs text-muted-foreground'>
       <div>
-        <span className="font-medium">Created:</span> {formatTimestamp(event.createdAt)}
+        <span className='font-medium'>Created:</span> {formatTimestamp(event.createdAt)}
       </div>
       {event.updatedAt !== event.createdAt && (
         <div>
-          <span className="font-medium">Updated:</span> {formatTimestamp(event.updatedAt)}
+          <span className='font-medium'>Updated:</span> {formatTimestamp(event.updatedAt)}
         </div>
       )}
     </CardFooter>

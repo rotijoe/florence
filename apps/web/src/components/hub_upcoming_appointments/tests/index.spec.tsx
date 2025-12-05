@@ -7,7 +7,9 @@ describe('HubUpcomingAppointments', () => {
     render(<HubUpcomingAppointments appointments={[]} />)
 
     expect(screen.getByText('Upcoming appointments')).toBeInTheDocument()
-    expect(screen.getByText('When you add upcoming appointments they will be listed here.')).toBeInTheDocument()
+    expect(
+      screen.getByText('When you add upcoming appointments they will be listed here.')
+    ).toBeInTheDocument()
   })
 
   it('renders appointments when present', () => {
@@ -26,4 +28,3 @@ describe('HubUpcomingAppointments', () => {
     expect(screen.getByText('Tomorrow at 2:00 PM · Clinic A')).toBeInTheDocument()
   })
 })
-

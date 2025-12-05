@@ -5,15 +5,15 @@ import React from 'react'
 
 jest.mock('@/components/ui/sidebar', () => ({
   SidebarGroup: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div data-testid="sidebar-group" {...props}>
+    <div data-testid='sidebar-group' {...props}>
       {children}
     </div>
   ),
   SidebarGroupContent: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-group-content">{children}</div>
+    <div data-testid='sidebar-group-content'>{children}</div>
   ),
   SidebarMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-menu">{children}</div>
+    <div data-testid='sidebar-menu'>{children}</div>
   ),
   SidebarMenuButton: ({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) => {
     if (asChild) {
@@ -22,20 +22,20 @@ jest.mock('@/components/ui/sidebar', () => ({
     return <button>{children}</button>
   },
   SidebarMenuItem: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-menu-item">{children}</div>
+    <div data-testid='sidebar-menu-item'>{children}</div>
   )
 }))
 
 // Mock LucideIcon components
 const SettingsIcon = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} data-testid="settings-icon" {...props}>
+  <svg ref={ref} data-testid='settings-icon' {...props}>
     <text>⚙️</text>
   </svg>
 )) as LucideIcon
 SettingsIcon.displayName = 'SettingsIcon'
 
 const HelpIcon = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} data-testid="help-icon" {...props}>
+  <svg ref={ref} data-testid='help-icon' {...props}>
     <text>❓</text>
   </svg>
 )) as LucideIcon
@@ -80,7 +80,7 @@ describe('NavSecondary', () => {
   })
 
   it('passes additional props to SidebarGroup', () => {
-    render(<NavSecondary items={mockItems} className="custom-class" />)
+    render(<NavSecondary items={mockItems} className='custom-class' />)
 
     const sidebarGroup = screen.getByTestId('sidebar-group')
     expect(sidebarGroup).toHaveClass('custom-class')

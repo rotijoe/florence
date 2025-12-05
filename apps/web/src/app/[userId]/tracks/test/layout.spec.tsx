@@ -14,19 +14,19 @@ jest.mock('@/lib/auth_server', () => ({
 
 jest.mock('@/components/ui/sidebar', () => ({
   SidebarProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-provider">{children}</div>
+    <div data-testid='sidebar-provider'>{children}</div>
   ),
   SidebarInset: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-inset">{children}</div>
+    <div data-testid='sidebar-inset'>{children}</div>
   )
 }))
 
 jest.mock('@/components/app_sidebar', () => ({
-  AppSidebar: () => <div data-testid="app-sidebar">AppSidebar</div>
+  AppSidebar: () => <div data-testid='app-sidebar'>AppSidebar</div>
 }))
 
 jest.mock('@/components/site_header', () => ({
-  SiteHeader: () => <div data-testid="site-header">SiteHeader</div>
+  SiteHeader: () => <div data-testid='site-header'>SiteHeader</div>
 }))
 
 const mockRedirect = redirect as jest.MockedFunction<typeof redirect>
@@ -120,7 +120,7 @@ describe('UserLayout', () => {
       })
 
       const result = await UserLayout({
-        children: <div data-testid="test-content">Test Content</div>,
+        children: <div data-testid='test-content'>Test Content</div>,
         params: createParams('user-1')
       })
 

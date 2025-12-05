@@ -12,7 +12,8 @@ describe('extractFilename', () => {
   })
 
   it('extracts filename from presigned S3 URL', () => {
-    const url = 'https://bucket.s3.amazonaws.com/events/event-id/file.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=abc123'
+    const url =
+      'https://bucket.s3.amazonaws.com/events/event-id/file.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=abc123'
     expect(extractFilename(url)).toBe('file.pdf')
   })
 
@@ -46,5 +47,3 @@ describe('extractFilename', () => {
     expect(extractFilename(url)).toBe('attachment')
   })
 })
-
-

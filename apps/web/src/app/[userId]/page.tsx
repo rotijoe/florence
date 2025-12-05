@@ -27,9 +27,9 @@ export default async function UserHomePage({ params }: UserHomePageProps) {
   const subtitle = getWelcomeSubtitle()
 
   return (
-    <div className="bg-background">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <section className="space-y-4">
+    <div className='bg-background'>
+      <div className='mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8'>
+        <section className='space-y-4'>
           <HubWelcomeHeader greeting={greeting} subtitle={subtitle} />
           <HubQuickActions
             symptomOptions={DEFAULT_SYMPTOM_OPTIONS}
@@ -38,13 +38,13 @@ export default async function UserHomePage({ params }: UserHomePageProps) {
           />
         </section>
 
-        <section className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]">
-          <div className="space-y-4">
+        <section className='grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]'>
+          <div className='space-y-4'>
             <HubHealthTracks tracks={overview.healthTracks} />
             <HubUpcomingAppointments appointments={overview.appointments} />
           </div>
 
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <HubNotifications notifications={overview.notifications} />
             <HubRecentActivity items={overview.recentActivity} />
           </div>

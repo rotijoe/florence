@@ -50,15 +50,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [userId])
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible='offcanvas' {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <Link href="/">
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-5 rounded bg-primary" />
-                  <span className="text-base font-semibold">Florence</span>
+            <SidebarMenuButton asChild className='data-[slot=sidebar-menu-button]:!p-1.5'>
+              <Link href='/'>
+                <div className='flex items-center gap-2'>
+                  <div className='h-5 w-5 rounded bg-primary' />
+                  <span className='text-base font-semibold'>Florence</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -67,7 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMainItems} />
-        <NavSecondary items={navSecondaryItems} className="mt-auto" />
+        <NavSecondary items={navSecondaryItems} className='mt-auto' />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

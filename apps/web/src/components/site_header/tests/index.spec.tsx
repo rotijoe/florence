@@ -12,39 +12,43 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('@/components/ui/sidebar', () => ({
   SidebarTrigger: ({ className }: { className?: string }) => (
-    <button data-testid="sidebar-trigger" className={className}>Menu</button>
+    <button data-testid='sidebar-trigger' className={className}>
+      Menu
+    </button>
   )
 }))
 
 jest.mock('@/components/ui/separator', () => ({
   Separator: ({ orientation, className }: { orientation?: string; className?: string }) => (
-    <hr data-testid="separator" data-orientation={orientation} className={className} />
+    <hr data-testid='separator' data-orientation={orientation} className={className} />
   )
 }))
 
 jest.mock('@/components/ui/breadcrumb', () => ({
   Breadcrumb: ({ children }: { children: React.ReactNode }) => (
-    <nav data-testid="breadcrumb">{children}</nav>
+    <nav data-testid='breadcrumb'>{children}</nav>
   ),
   BreadcrumbList: ({ children }: { children: React.ReactNode }) => (
-    <ol data-testid="breadcrumb-list">{children}</ol>
+    <ol data-testid='breadcrumb-list'>{children}</ol>
   ),
   BreadcrumbItem: ({ children }: { children: React.ReactNode }) => (
-    <li data-testid="breadcrumb-item">{children}</li>
+    <li data-testid='breadcrumb-item'>{children}</li>
   ),
   BreadcrumbLink: ({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) => {
     if (asChild) {
       return <>{children}</>
     }
-    return <a>{children}</a>
+    return <a href='https://www.google.com'>{children}</a>
   },
   BreadcrumbPage: ({ children }: { children: React.ReactNode }) => (
-    <span data-testid="breadcrumb-page">{children}</span>
+    <span data-testid='breadcrumb-page'>{children}</span>
   ),
-  BreadcrumbSeparator: () => <span data-testid="breadcrumb-separator">/</span>
+  BreadcrumbSeparator: () => <span data-testid='breadcrumb-separator'>/</span>
 }))
 
-const mockGenerateBreadcrumbs = generateBreadcrumbs as jest.MockedFunction<typeof generateBreadcrumbs>
+const mockGenerateBreadcrumbs = generateBreadcrumbs as jest.MockedFunction<
+  typeof generateBreadcrumbs
+>
 
 describe('SiteHeader', () => {
   beforeEach(() => {
@@ -76,9 +80,7 @@ describe('SiteHeader', () => {
   })
 
   it('renders single breadcrumb as heading', () => {
-    mockGenerateBreadcrumbs.mockReturnValue([
-      { label: 'Tracks', href: '/tracks' }
-    ])
+    mockGenerateBreadcrumbs.mockReturnValue([{ label: 'Tracks', href: '/tracks' }])
 
     render(<SiteHeader />)
 
@@ -103,10 +105,9 @@ describe('SiteHeader', () => {
   it('applies custom className', () => {
     mockGenerateBreadcrumbs.mockReturnValue([])
 
-    render(<SiteHeader className="custom-class" />)
+    render(<SiteHeader className='custom-class' />)
 
     const header = screen.getByRole('banner')
     expect(header).toHaveClass('custom-class')
   })
 })
-

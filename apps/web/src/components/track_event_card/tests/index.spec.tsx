@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
-import { TrackEventCard } from '../index';
-import { EventType, type EventResponse } from '@packages/types';
+import { render, screen } from '@testing-library/react'
+import { TrackEventCard } from '../index'
+import { EventType, type EventResponse } from '@packages/types'
 
 describe('TrackEventCard', () => {
   const mockEvent: EventResponse = {
@@ -12,59 +12,58 @@ describe('TrackEventCard', () => {
     type: EventType.NOTE,
     fileUrl: null,
     createdAt: '2025-10-21T14:30:00.000Z',
-    updatedAt: '2025-10-21T14:30:00.000Z',
-  };
+    updatedAt: '2025-10-21T14:30:00.000Z'
+  }
 
   it('renders event title', () => {
-    render(<TrackEventCard event={mockEvent} isActive={false} />);
+    render(<TrackEventCard event={mockEvent} isActive={false} />)
 
-    expect(screen.getByText('Test Event')).toBeInTheDocument();
-  });
+    expect(screen.getByText('Test Event')).toBeInTheDocument()
+  })
 
   it('renders event notes when present', () => {
-    render(<TrackEventCard event={mockEvent} isActive={false} />);
+    render(<TrackEventCard event={mockEvent} isActive={false} />)
 
-    expect(screen.getByText('Test description')).toBeInTheDocument();
-  });
+    expect(screen.getByText('Test description')).toBeInTheDocument()
+  })
 
   it('does not render notes when absent', () => {
-    const eventWithoutNotes = { ...mockEvent, notes: null };
-    render(<TrackEventCard event={eventWithoutNotes} isActive={false} />);
+    const eventWithoutNotes = { ...mockEvent, notes: null }
+    render(<TrackEventCard event={eventWithoutNotes} isActive={false} />)
 
-    expect(screen.queryByText('Test description')).not.toBeInTheDocument();
-  });
+    expect(screen.queryByText('Test description')).not.toBeInTheDocument()
+  })
 
   it('displays formatted event time', () => {
-    render(<TrackEventCard event={mockEvent} isActive={false} />);
+    render(<TrackEventCard event={mockEvent} isActive={false} />)
 
-    expect(screen.getByText('2:30 PM')).toBeInTheDocument();
-  });
+    expect(screen.getByText('2:30 PM')).toBeInTheDocument()
+  })
 
   it('displays event type', () => {
-    render(<TrackEventCard event={mockEvent} isActive={false} />);
+    render(<TrackEventCard event={mockEvent} isActive={false} />)
 
-    expect(screen.getByText('NOTE')).toBeInTheDocument();
-  });
+    expect(screen.getByText('NOTE')).toBeInTheDocument()
+  })
 
   it('applies active styles when isActive is true', () => {
-    render(<TrackEventCard event={mockEvent} isActive={true} />);
+    render(<TrackEventCard event={mockEvent} isActive={true} />)
 
-    const card = screen.getByTestId('track-event-card');
-    expect(card).toHaveAttribute('data-active', 'true');
-  });
+    const card = screen.getByTestId('track-event-card')
+    expect(card).toHaveAttribute('data-active', 'true')
+  })
 
   it('applies inactive styles when isActive is false', () => {
-    render(<TrackEventCard event={mockEvent} isActive={false} />);
+    render(<TrackEventCard event={mockEvent} isActive={false} />)
 
-    const card = screen.getByTestId('track-event-card');
-    expect(card).toHaveAttribute('data-active', 'false');
-  });
+    const card = screen.getByTestId('track-event-card')
+    expect(card).toHaveAttribute('data-active', 'false')
+  })
 
   it('renders different event types correctly', () => {
-    const appointmentEvent = { ...mockEvent, type: EventType.APPOINTMENT };
-    render(<TrackEventCard event={appointmentEvent} isActive={false} />);
+    const appointmentEvent = { ...mockEvent, type: EventType.APPOINTMENT }
+    render(<TrackEventCard event={appointmentEvent} isActive={false} />)
 
-    expect(screen.getByText('APPOINTMENT')).toBeInTheDocument();
-  });
-});
-
+    expect(screen.getByText('APPOINTMENT')).toBeInTheDocument()
+  })
+})

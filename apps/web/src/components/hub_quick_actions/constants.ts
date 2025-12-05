@@ -20,4 +20,3 @@ export const HUB_APPOINTMENT_QUICK_ACTIONS: HubQuickActionOption[] = [
   { value: 'therapy', label: 'Therapy session' },
   { value: 'scan', label: 'Scan or test' }
 ]
-

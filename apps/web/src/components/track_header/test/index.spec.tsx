@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TrackHeader } from '../index'
 import type { TrackHeaderProps } from '../types'
@@ -6,7 +6,7 @@ import type { TrackResponse } from '@packages/types'
 
 jest.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="dropdown-menu">{children}</div>
+    <div data-testid='dropdown-menu'>{children}</div>
   ),
   DropdownMenuTrigger: ({
     asChild,
@@ -21,7 +21,7 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
     return <button>{children}</button>
   },
   DropdownMenuContent: ({ children, align }: { children: React.ReactNode; align?: string }) => (
-    <div data-testid="dropdown-content" data-align={align}>
+    <div data-testid='dropdown-content' data-align={align}>
       {children}
     </div>
   ),
@@ -34,11 +34,11 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
     onSelect?: () => void
     disabled?: boolean
   }) => (
-    <button onClick={onSelect} disabled={disabled} data-testid="dropdown-menu-item">
+    <button onClick={onSelect} disabled={disabled} data-testid='dropdown-menu-item'>
       {children}
     </button>
   ),
-  DropdownMenuSeparator: () => <hr data-testid="dropdown-separator" />
+  DropdownMenuSeparator: () => <hr data-testid='dropdown-separator' />
 }))
 
 jest.mock('@/components/ui/button', () => ({
@@ -133,4 +133,3 @@ describe('TrackHeader', () => {
     expect(screen.getByTestId('dropdown-separator')).toBeInTheDocument()
   })
 })
-

@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "prettier:format": "prettier --write \"${npm_config_target:-.}\" --ignore-path ../../.prettierignore",
+    "prettier:check": "prettier --check \"${npm_config_target:-.}\" --ignore-path ../../.prettierignore",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "test:file": "jest --no-coverage",

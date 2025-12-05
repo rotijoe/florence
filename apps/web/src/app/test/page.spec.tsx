@@ -4,7 +4,7 @@ import HomePage from '../page'
 
 jest.mock('@/components/auth_dialog', () => ({
   AuthDialog: jest.fn(({ open, onOpenChange, defaultTab }) => (
-    <div data-testid="auth-dialog" data-open={open} data-default-tab={defaultTab}>
+    <div data-testid='auth-dialog' data-open={open} data-default-tab={defaultTab}>
       <button onClick={() => onOpenChange(false)}>Close Dialog</button>
     </div>
   ))
@@ -97,4 +97,3 @@ describe('HomePage', () => {
     expect(subtitle).toHaveClass('text-muted-foreground', 'text-lg')
   })
 })
-

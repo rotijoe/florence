@@ -19,8 +19,8 @@ export default tseslint.config(
       '**/*.config.cjs',
       '**/*.config.mjs',
       '**/*.config.ts',
-      '**/jest.setup.js',
-    ],
+      '**/jest.setup.js'
+    ]
   },
 
   // Base rules for all packages
@@ -38,17 +38,25 @@ export default tseslint.config(
       // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
 
       // General best practices
       'no-duplicate-imports': 'error',
-      'no-unused-expressions': 'error',
-    },
+      'no-unused-expressions': 'error'
+    }
   },
 
   // Prettier must be last to override formatting rules
-  prettier
+  prettier,
+
+  // Re-assert quote enforcement after Prettier disables formatting rules
+  {
+    rules: {
+      quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
+      'jsx-quotes': ['error', 'prefer-single']
+    }
+  }
 )

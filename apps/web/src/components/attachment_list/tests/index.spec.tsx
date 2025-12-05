@@ -4,7 +4,7 @@ import { EventAttachment } from '../index'
 
 // Mock DocumentViewer to verify it's rendered with correct props
 const mockDocumentViewer = jest.fn(({ url, fileType }: { url: string; fileType: string }) => (
-  <div data-testid="document-viewer" data-url={url} data-file-type={fileType}>
+  <div data-testid='document-viewer' data-url={url} data-file-type={fileType}>
     Document Viewer
   </div>
 ))

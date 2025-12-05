@@ -17,8 +17,7 @@ export interface NavSecondaryItem {
   icon: LucideIcon
 }
 
-export interface NavSecondaryProps
-  extends React.ComponentPropsWithoutRef<typeof SidebarGroup> {
+export interface NavSecondaryProps extends React.ComponentPropsWithoutRef<typeof SidebarGroup> {
   items: NavSecondaryItem[]
 }
 
@@ -42,4 +41,3 @@ export function NavSecondary({ items, ...props }: NavSecondaryProps) {
     </SidebarGroup>
   )
 }
-

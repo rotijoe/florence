@@ -7,4 +7,3 @@ describe('handleSelectFallback', () => {
     }).not.toThrow()
   })
 })
-

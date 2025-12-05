@@ -7,12 +7,12 @@ import type { HubUpcomingAppointmentsProps } from './types'
 export function HubUpcomingAppointments({ appointments }: HubUpcomingAppointmentsProps) {
   function renderEmptyState() {
     return (
-      <Card className="border-muted/40 bg-muted/30 shadow-none">
+      <Card className='border-muted/40 bg-muted/30 shadow-none'>
         <CardHeader>
-          <CardTitle className="text-base font-semibold">
+          <CardTitle className='text-base font-semibold'>
             {HUB_SECTION_TITLES.upcomingAppointments}
           </CardTitle>
-          <CardDescription className="text-sm">
+          <CardDescription className='text-sm'>
             When you add upcoming appointments they will be listed here.
           </CardDescription>
         </CardHeader>
@@ -24,11 +24,11 @@ export function HubUpcomingAppointments({ appointments }: HubUpcomingAppointment
     return appointments.map((appointment) => (
       <Card
         key={appointment.id}
-        className="bg-background/80 border-muted-foreground/15 shadow-none"
+        className='bg-background/80 border-muted-foreground/15 shadow-none'
       >
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">{appointment.title}</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
+          <CardTitle className='text-sm font-semibold'>{appointment.title}</CardTitle>
+          <CardDescription className='text-xs sm:text-sm'>
             {appointment.datetimeLabel}
             {appointment.location ? ` · ${appointment.location}` : ''}
           </CardDescription>
@@ -42,10 +42,9 @@ export function HubUpcomingAppointments({ appointments }: HubUpcomingAppointment
   }
 
   return (
-    <div className="space-y-3">
-      <h2 className="text-base font-semibold">{HUB_SECTION_TITLES.upcomingAppointments}</h2>
-      <div className="space-y-3">{renderAppointmentItems()}</div>
+    <div className='space-y-3'>
+      <h2 className='text-base font-semibold'>{HUB_SECTION_TITLES.upcomingAppointments}</h2>
+      <div className='space-y-3'>{renderAppointmentItems()}</div>
     </div>
   )
 }
-

@@ -7,7 +7,9 @@ describe('HubHealthTracks', () => {
     render(<HubHealthTracks tracks={[]} />)
 
     expect(screen.getByText('Health tracks')).toBeInTheDocument()
-    expect(screen.getByText('When you create health tracks they will appear here.')).toBeInTheDocument()
+    expect(
+      screen.getByText('When you create health tracks they will appear here.')
+    ).toBeInTheDocument()
   })
 
   it('renders tracks when present', () => {
@@ -42,4 +44,3 @@ describe('HubHealthTracks', () => {
     expect(screen.getByLabelText('Add health track')).toBeInTheDocument()
   })
 })
-

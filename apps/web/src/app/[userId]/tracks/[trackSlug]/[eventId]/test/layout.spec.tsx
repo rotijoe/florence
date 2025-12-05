@@ -32,7 +32,16 @@ describe('EventLayout', () => {
     )
 
     const section = container.querySelector('section')
-    expect(section).toHaveClass('mx-auto', 'flex', 'w-full', 'max-w-7xl', 'flex-col', 'gap-6', 'px-4', 'lg:min-h-[calc(100vh-8rem)]')
+    expect(section).toHaveClass(
+      'mx-auto',
+      'flex',
+      'w-full',
+      'max-w-7xl',
+      'flex-col',
+      'gap-6',
+      'px-4',
+      'lg:min-h-[calc(100vh-8rem)]'
+    )
   })
 
   it('wraps children in inner div with correct classes', () => {
@@ -67,4 +76,3 @@ describe('EventLayout', () => {
     expect(section).toBeInTheDocument()
   })
 })
-

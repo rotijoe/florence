@@ -9,7 +9,7 @@ jest.mock('@/lib/fetch_event', () => ({
 
 jest.mock('@/components/event_detail', () => ({
   EventDetail: ({ event }: { event: EventResponse }) => (
-    <div data-testid="event-detail">{event.title}</div>
+    <div data-testid='event-detail'>{event.title}</div>
   )
 }))
 

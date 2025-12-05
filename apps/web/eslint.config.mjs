@@ -1,31 +1,31 @@
-import rootConfig from '../../eslint.config.mjs';
-import react from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
+import rootConfig from '../../eslint.config.mjs'
+import react from 'eslint-plugin-react'
+import reactHooks from 'eslint-plugin-react-hooks'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
 
 export default [
   ...rootConfig,
   {
-    ignores: ['next-env.d.ts', '**/*.spec.tsx', '**/*.test.tsx'],
+    ignores: ['next-env.d.ts']
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
       react,
       'react-hooks': reactHooks,
-      'jsx-a11y': jsxA11y,
+      'jsx-a11y': jsxA11y
     },
     languageOptions: {
       parserOptions: {
         ecmaFeatures: {
-          jsx: true,
-        },
-      },
+          jsx: true
+        }
+      }
     },
     settings: {
       react: {
-        version: 'detect',
-      },
+        version: 'detect'
+      }
     },
     rules: {
       // React rules
@@ -46,16 +46,16 @@ export default [
           ignoreDestructuring: false,
           ignoreImports: true, // Allow non-camelCase imports (like Geist_Mono)
           ignoreGlobals: false,
-          allow: ['^Geist_', '^Geist-', '^[A-Z]'],
-        },
+          allow: ['^Geist_', '^Geist-', '^[A-Z]']
+        }
       ],
 
       // Allow require in test files
       '@typescript-eslint/no-require-imports': 'off',
 
       // Disable triple-slash reference check (Next.js uses these)
-      '@typescript-eslint/triple-slash-reference': 'off',
-    },
+      '@typescript-eslint/triple-slash-reference': 'off'
+    }
   },
   {
     files: ['**/*.spec.{ts,tsx}', '**/*.test.{ts,tsx}'],
@@ -63,9 +63,9 @@ export default [
       // More lenient rules for test files
       '@typescript-eslint/no-unused-vars': [
         'warn',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
       ],
-      'no-duplicate-imports': 'off', // Sometimes needed in tests
-    },
-  },
-];
+      'no-duplicate-imports': 'off' // Sometimes needed in tests
+    }
+  }
+]

@@ -842,16 +842,17 @@ describe('deleteEventAction', () => {
       success: true
     }
 
-    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+    const globalFetch = global.fetch as jest.Mock
+    globalFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse
-    })
+    } as Response)
 
     try {
       await deleteEventAction('user-1', 'track-slug', 'event-1')
-    } catch (error: any) {
+    } catch (error) {
       // redirect throws an error in Next.js
-      if (error.message !== 'NEXT_REDIRECT') {
+      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
         throw error
       }
     }
@@ -971,8 +972,8 @@ describe('deleteEventAction', () => {
 
     try {
       await deleteEventAction('user-1', 'track-slug', 'event-1')
-    } catch (error: any) {
-      if (error.message !== 'NEXT_REDIRECT') {
+    } catch (error) {
+      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
         throw error
       }
     }

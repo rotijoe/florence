@@ -23,7 +23,7 @@ jest.mock('../helpers', () => ({
 
 jest.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="dropdown-menu">{children}</div>
+    <div data-testid='dropdown-menu'>{children}</div>
   ),
   DropdownMenuTrigger: ({
     asChild,
@@ -38,7 +38,7 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
     return <button>{children}</button>
   },
   DropdownMenuContent: ({ children, align }: { children: React.ReactNode; align?: string }) => (
-    <div data-testid="dropdown-content" data-align={align}>
+    <div data-testid='dropdown-content' data-align={align}>
       {children}
     </div>
   ),
@@ -49,7 +49,7 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
     children: React.ReactNode
     onSelect?: () => void
   }) => (
-    <button onClick={onSelect} data-testid="dropdown-menu-item">
+    <button onClick={onSelect} data-testid='dropdown-menu-item'>
       {children}
     </button>
   )

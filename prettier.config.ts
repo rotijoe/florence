@@ -1,4 +1,4 @@
-import { type Config } from "prettier";
+import { type Config } from 'prettier';
 
 const config: Config = {
   semi: false,
@@ -9,7 +9,7 @@ const config: Config = {
   arrowParens: 'always',
   endOfLine: 'lf',
   bracketSpacing: true,
-  jsxSingleQuote: false,
+  jsxSingleQuote: true,
 };
 
 export default config;

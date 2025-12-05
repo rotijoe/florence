@@ -4,4 +4,3 @@ export function validateFileSelection(selectedFile: File | null): string | null 
   }
   return null
 }
-

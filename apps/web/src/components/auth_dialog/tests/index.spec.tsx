@@ -416,7 +416,7 @@ describe('AuthDialog', () => {
     })
 
     it('shows signin form when defaultTab is signin', () => {
-      render(<AuthDialog {...defaultProps} defaultTab="signin" />)
+      render(<AuthDialog {...defaultProps} defaultTab='signin' />)
 
       expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
       expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
@@ -425,7 +425,7 @@ describe('AuthDialog', () => {
     })
 
     it('shows signup form when defaultTab is signup', async () => {
-      render(<AuthDialog {...defaultProps} defaultTab="signup" />)
+      render(<AuthDialog {...defaultProps} defaultTab='signup' />)
 
       await waitFor(() => {
         expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
@@ -438,7 +438,7 @@ describe('AuthDialog', () => {
 
     it('allows switching tabs even when defaultTab is provided', async () => {
       const user = userEvent.setup()
-      render(<AuthDialog {...defaultProps} defaultTab="signin" />)
+      render(<AuthDialog {...defaultProps} defaultTab='signin' />)
 
       expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
 

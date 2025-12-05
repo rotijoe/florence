@@ -11,4 +11,3 @@ export interface HubQuickActionsProps {
   appointmentOptions: HubQuickActionOption[]
   onSelectOption?: (args: { kind: HubQuickActionKind; value: string }) => void
 }
-

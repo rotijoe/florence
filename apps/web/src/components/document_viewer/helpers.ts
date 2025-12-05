@@ -8,5 +8,3 @@ export function extractFilename(url: string): string {
     return url.split('/').pop() || 'attachment'
   }
 }
-
-

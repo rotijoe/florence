@@ -6,13 +6,13 @@ import React from 'react'
 
 jest.mock('@/components/ui/sidebar', () => ({
   SidebarGroup: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-group">{children}</div>
+    <div data-testid='sidebar-group'>{children}</div>
   ),
   SidebarGroupContent: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-group-content">{children}</div>
+    <div data-testid='sidebar-group-content'>{children}</div>
   ),
   SidebarMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-menu">{children}</div>
+    <div data-testid='sidebar-menu'>{children}</div>
   ),
   SidebarMenuButton: ({
     children,
@@ -29,20 +29,20 @@ jest.mock('@/components/ui/sidebar', () => ({
     return <button title={tooltip}>{children}</button>
   },
   SidebarMenuItem: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-menu-item">{children}</div>
+    <div data-testid='sidebar-menu-item'>{children}</div>
   )
 }))
 
 // Mock LucideIcon components
 const HomeIcon = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} data-testid="home-icon" {...props}>
+  <svg ref={ref} data-testid='home-icon' {...props}>
     <text>🏠</text>
   </svg>
 )) as LucideIcon
 HomeIcon.displayName = 'HomeIcon'
 
 const TracksIcon = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} data-testid="tracks-icon" {...props}>
+  <svg ref={ref} data-testid='tracks-icon' {...props}>
     <text>📊</text>
   </svg>
 )) as LucideIcon

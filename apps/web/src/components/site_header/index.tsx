@@ -12,7 +12,7 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
+  BreadcrumbSeparator
 } from '@/components/ui/breadcrumb'
 import { generateBreadcrumbs } from './helpers'
 import { cn } from '@/lib/utils'
@@ -26,11 +26,11 @@ export function SiteHeader({ className }: { className?: string }) {
 
   const renderBreadcrumbs = () => {
     if (breadcrumbs.length === 0) {
-      return <h1 className="text-base font-medium">Home</h1>
+      return <h1 className='text-base font-medium'>Home</h1>
     }
 
     if (breadcrumbs.length === 1) {
-      return <h1 className="text-base font-medium">{breadcrumbs[0].label}</h1>
+      return <h1 className='text-base font-medium'>{breadcrumbs[0].label}</h1>
     }
 
     return (
@@ -65,9 +65,9 @@ export function SiteHeader({ className }: { className?: string }) {
         className
       )}
     >
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+      <div className='flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6'>
+        <SidebarTrigger className='-ml-1' />
+        <Separator orientation='vertical' className='mx-2 data-[orientation=vertical]:h-4' />
         {renderBreadcrumbs()}
       </div>
     </header>

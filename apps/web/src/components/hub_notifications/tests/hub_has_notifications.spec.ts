@@ -23,4 +23,3 @@ describe('hubHasNotifications', () => {
     expect(hubHasNotifications(notifications)).toBe(true)
   })
 })
-

@@ -5,7 +5,7 @@ import type { ButtonDropdownProps } from '../types'
 
 jest.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="dropdown-menu">{children}</div>
+    <div data-testid='dropdown-menu'>{children}</div>
   ),
   DropdownMenuTrigger: ({
     asChild,
@@ -28,7 +28,7 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
     align?: string
     className?: string
   }) => (
-    <div data-testid="dropdown-content" data-align={align} className={className}>
+    <div data-testid='dropdown-content' data-align={align} className={className}>
       {children}
     </div>
   ),
@@ -39,7 +39,7 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
     children: React.ReactNode
     onSelect?: () => void
   }) => (
-    <button onClick={onSelect} data-testid="dropdown-menu-item">
+    <button onClick={onSelect} data-testid='dropdown-menu-item'>
       {children}
     </button>
   )
@@ -52,7 +52,7 @@ jest.mock('@/components/ui/button', () => ({
 }))
 
 jest.mock('lucide-react', () => ({
-  MoreVertical: () => <span data-testid="more-vertical-icon">MoreVertical</span>
+  MoreVertical: () => <span data-testid='more-vertical-icon'>MoreVertical</span>
 }))
 
 describe('ButtonDropdown', () => {
@@ -121,7 +121,7 @@ describe('ButtonDropdown', () => {
       { label: 'Item 2', onSelect: onSelect2 }
     ]
 
-    render(<ButtonDropdown text="Test" dropdownItems={items} />)
+    render(<ButtonDropdown text='Test' dropdownItems={items} />)
 
     const item1 = screen.getByText('Item 1')
     await user.click(item1)
@@ -138,7 +138,7 @@ describe('ButtonDropdown', () => {
   })
 
   it('handles empty dropdown items array', () => {
-    render(<ButtonDropdown text="Test" dropdownItems={[]} />)
+    render(<ButtonDropdown text='Test' dropdownItems={[]} />)
 
     expect(screen.getByText('Test')).toBeInTheDocument()
     expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()

@@ -32,21 +32,25 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 ## Testing
 
 ### Run all tests with coverage
+
 ```bash
 pnpm test
 ```
 
 ### Run tests in watch mode
+
 ```bash
 pnpm test:watch
 ```
 
 ### Run a single test file (without coverage)
+
 ```bash
 pnpm test:file <path-to-test-file>
 ```
 
 Example:
+
 ```bash
 pnpm test:file src/components/upload_document/tests/index.spec.tsx
 ```

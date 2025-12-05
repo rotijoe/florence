@@ -111,7 +111,7 @@ describe('TrackEventList', () => {
 
   it('highlights active event', () => {
     render(
-      <TrackEventList events={mockEvents} trackSlug={trackSlug} userId={userId} activeEventId="1" />
+      <TrackEventList events={mockEvents} trackSlug={trackSlug} userId={userId} activeEventId='1' />
     )
 
     const activeCard = screen

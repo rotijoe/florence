@@ -15,7 +15,7 @@ jest.mock('../helpers', () => ({
 jest.mock('@/components/auth_dialog', () => ({
   AuthDialog: ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) =>
     open ? (
-      <div data-testid="auth-dialog" role="dialog">
+      <div data-testid='auth-dialog' role='dialog'>
         <button onClick={() => onOpenChange(false)}>Close</button>
       </div>
     ) : null
@@ -25,10 +25,10 @@ const mockUseSidebar = jest.fn(() => ({ isMobile: false }))
 
 jest.mock('@/components/ui/sidebar', () => ({
   SidebarMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-menu">{children}</div>
+    <div data-testid='sidebar-menu'>{children}</div>
   ),
   SidebarMenuItem: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-menu-item">{children}</div>
+    <div data-testid='sidebar-menu-item'>{children}</div>
   ),
   SidebarMenuButton: ({
     children,
@@ -50,19 +50,19 @@ jest.mock('@/components/ui/sidebar', () => ({
 
 jest.mock('@/components/ui/avatar', () => ({
   Avatar: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="avatar">{children}</div>
+    <div data-testid='avatar'>{children}</div>
   ),
   AvatarImage: ({ src, alt }: { src?: string; alt?: string }) => (
-    <img src={src} alt={alt} data-testid="avatar-image" />
+    <img src={src} alt={alt} data-testid='avatar-image' />
   ),
   AvatarFallback: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="avatar-fallback">{children}</div>
+    <div data-testid='avatar-fallback'>{children}</div>
   )
 }))
 
 jest.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="dropdown-menu">{children}</div>
+    <div data-testid='dropdown-menu'>{children}</div>
   ),
   DropdownMenuTrigger: ({
     asChild,
@@ -88,7 +88,7 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
     sideOffset?: number
   }) => (
     <div
-      data-testid="dropdown-content"
+      data-testid='dropdown-content'
       data-side={side}
       data-align={align}
       data-side-offset={sideOffset}
@@ -112,9 +112,9 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
     </button>
   ),
   DropdownMenuLabel: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="dropdown-label">{children}</div>
+    <div data-testid='dropdown-label'>{children}</div>
   ),
-  DropdownMenuSeparator: () => <hr data-testid="dropdown-separator" />
+  DropdownMenuSeparator: () => <hr data-testid='dropdown-separator' />
 }))
 
 jest.mock('@/components/ui/button', () => ({

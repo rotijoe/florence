@@ -19,18 +19,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-8">
-        <div className="flex flex-col items-center gap-2">
-          <h1 className="text-6xl font-bold tracking-tight">Florence</h1>
-          <p className="text-muted-foreground text-lg">Health Tracking</p>
+    <div className='flex min-h-screen items-center justify-center'>
+      <div className='flex flex-col items-center gap-8'>
+        <div className='flex flex-col items-center gap-2'>
+          <h1 className='text-6xl font-bold tracking-tight'>Florence</h1>
+          <p className='text-muted-foreground text-lg'>Health Tracking</p>
         </div>
 
-        <div className="flex gap-4">
-          <Button onClick={handleSignInClick} variant="default" size="lg">
+        <div className='flex gap-4'>
+          <Button onClick={handleSignInClick} variant='default' size='lg'>
             Sign In
           </Button>
-          <Button onClick={handleSignUpClick} variant="outline" size="lg">
+          <Button onClick={handleSignUpClick} variant='outline' size='lg'>
             Sign Up
           </Button>
         </div>
@@ -44,5 +44,4 @@ export default function HomePage() {
     </div>
   )
 }
-
 
