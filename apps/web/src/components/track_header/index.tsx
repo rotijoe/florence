@@ -32,3 +32,4 @@ export function TrackHeader({ track, onCreateEvent }: TrackHeaderProps) {
     </div>
   )
 }
+

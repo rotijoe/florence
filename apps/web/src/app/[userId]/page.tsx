@@ -1,103 +1,59 @@
-import Image from "next/image";
+import { getServerSession } from '@/lib/auth_server'
+import { HubFooter } from '@/components/hub_footer'
+import { HubHealthTracks } from '@/components/hub_health_tracks'
+import { HubNotifications } from '@/components/hub_notifications'
+import { HubQuickActions } from '@/components/hub_quick_actions'
+import {
+  HUB_APPOINTMENT_QUICK_ACTIONS as DEFAULT_APPOINTMENT_OPTIONS,
+  HUB_EVENT_QUICK_ACTIONS as DEFAULT_EVENT_OPTIONS,
+  HUB_SYMPTOM_QUICK_ACTIONS as DEFAULT_SYMPTOM_OPTIONS
+} from '@/components/hub_quick_actions/constants'
+import { HubRecentActivity } from '@/components/hub_recent_activity'
+import { HubUpcomingAppointments } from '@/components/hub_upcoming_appointments'
+import { HubWelcomeHeader } from '@/components/hub_welcome_header'
+import { buildMockAccountOverviewData, getGreetingForUser, getWelcomeSubtitle } from './helpers'
 
-export default function Home() {
+interface UserHomePageProps {
+  params: Promise<{ userId: string }>
+}
+
+export default async function UserHomePage({ params }: UserHomePageProps) {
+  const { userId } = await params
+  const session = await getServerSession()
+  const sessionName = session?.user?.name ?? userId ?? null
+
+  const overview = buildMockAccountOverviewData(sessionName)
+  const greeting = getGreetingForUser(overview.user.name)
+  const subtitle = getWelcomeSubtitle()
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="bg-background">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <section className="space-y-4">
+          <HubWelcomeHeader greeting={greeting} subtitle={subtitle} />
+          <HubQuickActions
+            symptomOptions={DEFAULT_SYMPTOM_OPTIONS}
+            eventOptions={DEFAULT_EVENT_OPTIONS}
+            appointmentOptions={DEFAULT_APPOINTMENT_OPTIONS}
+          />
+        </section>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <section className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]">
+          <div className="space-y-4">
+            <HubHealthTracks tracks={overview.healthTracks} />
+            <HubUpcomingAppointments appointments={overview.appointments} />
+          </div>
+
+          <div className="space-y-4">
+            <HubNotifications notifications={overview.notifications} />
+            <HubRecentActivity items={overview.recentActivity} />
+          </div>
+        </section>
+
+        <section>
+          <HubFooter />
+        </section>
+      </div>
     </div>
-  );
+  )
 }

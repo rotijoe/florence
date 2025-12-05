@@ -13,3 +13,4 @@ export type TrackHeaderClientProps = {
   trackSlug: string
   createEventAction: (formData: FormData) => Promise<void>
 }
+

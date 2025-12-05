@@ -133,3 +133,4 @@ describe('TrackHeader', () => {
     expect(screen.getByTestId('dropdown-separator')).toBeInTheDocument()
   })
 })
+
