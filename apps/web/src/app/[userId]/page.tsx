@@ -3,11 +3,7 @@ import { HubFooter } from '@/components/hub_footer'
 import { HubHealthTracks } from '@/components/hub_health_tracks'
 import { HubNotifications } from '@/components/hub_notifications'
 import { HubQuickActions } from '@/components/hub_quick_actions'
-import {
-  HUB_APPOINTMENT_QUICK_ACTIONS as DEFAULT_APPOINTMENT_OPTIONS,
-  HUB_EVENT_QUICK_ACTIONS as DEFAULT_EVENT_OPTIONS,
-  HUB_SYMPTOM_QUICK_ACTIONS as DEFAULT_SYMPTOM_OPTIONS
-} from '@/components/hub_quick_actions/constants'
+import { HUB_EVENT_QUICK_ACTIONS as DEFAULT_EVENT_OPTIONS } from '@/components/hub_quick_actions/constants'
 import { HubRecentActivity } from '@/components/hub_recent_activity'
 import { HubUpcomingAppointments } from '@/components/hub_upcoming_appointments'
 import { HubWelcomeHeader } from '@/components/hub_welcome_header'
@@ -32,9 +28,13 @@ export default async function UserHomePage({ params }: UserHomePageProps) {
         <section className='space-y-4'>
           <HubWelcomeHeader greeting={greeting} subtitle={subtitle} />
           <HubQuickActions
-            symptomOptions={DEFAULT_SYMPTOM_OPTIONS}
             eventOptions={DEFAULT_EVENT_OPTIONS}
-            appointmentOptions={DEFAULT_APPOINTMENT_OPTIONS}
+            tracks={overview.healthTracks.map((track) => ({
+              slug: track.slug,
+              title: track.title,
+              lastUpdatedAt: track.lastUpdatedAt
+            }))}
+            userId={userId}
           />
         </section>
 

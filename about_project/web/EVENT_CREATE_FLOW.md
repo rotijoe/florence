@@ -41,6 +41,14 @@ The event creation flow allows users to create new events within a health track.
 - **Validation:**
   - Validates `title` if provided (must be non-empty string)
   - Validates `type` if provided (must be valid `EventType`)
+  - Validates `severity` if provided (must be integer between 1-5)
+  - Validates `symptomType` if provided (must be string)
+- **Request Body Fields:**
+  - `type`: EventType (defaults to `EventType.NOTE`)
+  - `title`: string (defaults to "Untitled event")
+  - `notes`: string | null (optional)
+  - `symptomType`: string | null (optional, used for `EventType.SYMPTOM`)
+  - `severity`: number | null (optional, 1-5, used for `EventType.SYMPTOM`)
 - **Response:** Returns `ApiResponse<EventResponse>` with status 201
 
 ### 4. Event Page with `?new=1` Flag

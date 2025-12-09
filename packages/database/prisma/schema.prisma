@@ -99,6 +99,8 @@ model Event {
   title       String
   notes       String?
   fileUrl     String?
+  symptomType String?
+  severity    Int?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
@@ -116,5 +118,6 @@ enum EventType {
   LETTER
   FEELING
   EXERCISE
+  SYMPTOM
 }
 

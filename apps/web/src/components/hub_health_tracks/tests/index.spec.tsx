@@ -18,7 +18,9 @@ describe('HubHealthTracks', () => {
         id: '1',
         title: 'Test Track',
         description: 'Test description',
-        lastUpdatedLabel: 'Updated today'
+        lastUpdatedLabel: 'Updated today',
+        slug: 'test-track',
+        lastUpdatedAt: new Date()
       }
     ]
 
@@ -35,7 +37,9 @@ describe('HubHealthTracks', () => {
         id: '1',
         title: 'Test Track',
         description: null,
-        lastUpdatedLabel: 'Updated today'
+        lastUpdatedLabel: 'Updated today',
+        slug: 'test-track',
+        lastUpdatedAt: new Date()
       }
     ]
 

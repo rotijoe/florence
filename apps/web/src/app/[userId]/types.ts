@@ -18,6 +18,8 @@ export interface HealthTrackSummary {
   title: string
   description?: string | null
   lastUpdatedLabel: string
+  slug: string
+  lastUpdatedAt: Date | string
 }
 
 export interface AppointmentSummary {

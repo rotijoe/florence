@@ -31,6 +31,8 @@ app.get('/users/:userId/tracks/:slug/events', async (c) => {
         title: true,
         notes: true,
         fileUrl: true,
+        symptomType: true,
+        severity: true,
         createdAt: true,
         updatedAt: true
       }
@@ -77,6 +79,8 @@ app.get('/users/:userId/tracks/:slug/events', async (c) => {
           title: e.title,
           notes: e.notes,
           fileUrl,
+          symptomType: e.symptomType,
+          severity: e.severity,
           createdAt: e.createdAt.toISOString(),
           updatedAt: e.updatedAt.toISOString()
         }
@@ -155,6 +159,8 @@ app.post('/users/:userId/tracks/:slug/events', async (c) => {
     const type = body.type ?? EventType.NOTE
     const date = body.date ? new Date(body.date) : new Date()
     const notes = body.notes ?? null
+    const symptomType = body.symptomType ?? null
+    const severity = body.severity ?? null
 
     // Validate title if provided
     if (title !== undefined && (!title || typeof title !== 'string' || title.trim().length === 0)) {
@@ -178,6 +184,30 @@ app.post('/users/:userId/tracks/:slug/events', async (c) => {
       )
     }
 
+    // Validate severity if provided (must be 1-5)
+    if (severity !== null && severity !== undefined) {
+      if (typeof severity !== 'number' || severity < 1 || severity > 5) {
+        return c.json(
+          {
+            success: false,
+            error: 'Severity must be a number between 1 and 5'
+          },
+          400
+        )
+      }
+    }
+
+    // Validate symptomType if provided
+    if (symptomType !== null && symptomType !== undefined && typeof symptomType !== 'string') {
+      return c.json(
+        {
+          success: false,
+          error: 'SymptomType must be a string'
+        },
+        400
+      )
+    }
+
     // Create event
     const newEvent = await prisma.event.create({
       data: {
@@ -185,7 +215,9 @@ app.post('/users/:userId/tracks/:slug/events', async (c) => {
         title: title.trim(),
         type,
         date,
-        notes
+        notes,
+        symptomType,
+        severity
       },
       select: {
         id: true,
@@ -195,6 +227,8 @@ app.post('/users/:userId/tracks/:slug/events', async (c) => {
         title: true,
         notes: true,
         fileUrl: true,
+        symptomType: true,
+        severity: true,
         createdAt: true,
         updatedAt: true
       }
@@ -220,6 +254,8 @@ app.post('/users/:userId/tracks/:slug/events', async (c) => {
       title: newEvent.title,
       notes: newEvent.notes,
       fileUrl,
+      symptomType: newEvent.symptomType,
+      severity: newEvent.severity,
       createdAt: newEvent.createdAt.toISOString(),
       updatedAt: newEvent.updatedAt.toISOString()
     }
@@ -265,6 +301,8 @@ app.get('/users/:userId/tracks/:slug/events/:eventId', async (c) => {
         title: true,
         notes: true,
         fileUrl: true,
+        symptomType: true,
+        severity: true,
         createdAt: true,
         updatedAt: true
       }
@@ -316,6 +354,8 @@ app.get('/users/:userId/tracks/:slug/events/:eventId', async (c) => {
       title: event.title,
       notes: event.notes,
       fileUrl,
+      symptomType: event.symptomType,
+      severity: event.severity,
       createdAt: event.createdAt.toISOString(),
       updatedAt: event.updatedAt.toISOString()
     }
@@ -441,6 +481,8 @@ app.patch('/users/:userId/tracks/:slug/events/:eventId', async (c) => {
         title: true,
         notes: true,
         fileUrl: true,
+        symptomType: true,
+        severity: true,
         createdAt: true,
         updatedAt: true
       }
@@ -466,6 +508,8 @@ app.patch('/users/:userId/tracks/:slug/events/:eventId', async (c) => {
       title: updatedEvent.title,
       notes: updatedEvent.notes,
       fileUrl,
+      symptomType: updatedEvent.symptomType,
+      severity: updatedEvent.severity,
       createdAt: updatedEvent.createdAt.toISOString(),
       updatedAt: updatedEvent.updatedAt.toISOString()
     }
@@ -579,6 +623,8 @@ app.delete('/users/:userId/tracks/:slug/events/:eventId/attachment', async (c) =
         title: true,
         notes: true,
         fileUrl: true,
+        symptomType: true,
+        severity: true,
         createdAt: true,
         updatedAt: true
       }
@@ -592,6 +638,8 @@ app.delete('/users/:userId/tracks/:slug/events/:eventId/attachment', async (c) =
       title: updatedEvent.title,
       notes: updatedEvent.notes,
       fileUrl: updatedEvent.fileUrl,
+      symptomType: updatedEvent.symptomType,
+      severity: updatedEvent.severity,
       createdAt: updatedEvent.createdAt.toISOString(),
       updatedAt: updatedEvent.updatedAt.toISOString()
     }

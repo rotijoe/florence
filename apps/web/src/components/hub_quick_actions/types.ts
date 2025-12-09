@@ -5,9 +5,15 @@ export interface HubQuickActionOption {
   label: string
 }
 
+export interface TrackOption {
+  slug: string
+  title: string
+  lastUpdatedAt: Date | string
+}
+
 export interface HubQuickActionsProps {
-  symptomOptions: HubQuickActionOption[]
   eventOptions: HubQuickActionOption[]
-  appointmentOptions: HubQuickActionOption[]
+  tracks: TrackOption[]
+  userId: string
   onSelectOption?: (args: { kind: HubQuickActionKind; value: string }) => void
 }

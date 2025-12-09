@@ -47,13 +47,17 @@ export function buildMockAccountOverviewData(name: string | null | undefined): A
         id: 'sleep-track',
         title: 'Sleep',
         description: 'Track your sleep quality and routines.',
-        lastUpdatedLabel: 'Updated yesterday'
+        lastUpdatedLabel: 'Updated yesterday',
+        slug: 'sleep',
+        lastUpdatedAt: new Date(Date.now() - 86400000)
       },
       {
         id: 'pain-track',
         title: 'Pain',
         description: 'Log pain levels and triggers to spot patterns.',
-        lastUpdatedLabel: 'Updated this morning'
+        lastUpdatedLabel: 'Updated this morning',
+        slug: 'pain',
+        lastUpdatedAt: new Date()
       }
     ],
     appointments: [

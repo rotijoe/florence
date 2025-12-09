@@ -26,6 +26,8 @@ export type Event = {
   title: string
   notes?: string
   fileUrl?: string
+  symptomType?: string
+  severity?: number
   createdAt: Date
 }
 
@@ -35,7 +37,8 @@ export enum EventType {
   RESULT = 'RESULT',
   LETTER = 'LETTER',
   FEELING = 'FEELING',
-  EXERCISE = 'EXERCISE'
+  EXERCISE = 'EXERCISE',
+  SYMPTOM = 'SYMPTOM'
 }
 
 export type ApiResponse<T> = {
@@ -59,6 +62,8 @@ export type EventResponse = {
   title: string
   notes?: string | null
   fileUrl?: string | null
+  symptomType?: string | null
+  severity?: number | null
   createdAt: string
   updatedAt: string
 }

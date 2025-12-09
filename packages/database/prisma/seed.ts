@@ -33,6 +33,14 @@ const tracksForUser = [
         title: 'Mood check-in',
         date: new Date(Date.now() - 2 * 86400000),
         notes: 'Calm'
+      },
+      {
+        type: EventType.SYMPTOM,
+        title: 'Headache',
+        date: new Date(Date.now() - 3 * 86400000),
+        notes: 'Mild headache in the afternoon',
+        symptomType: 'headache',
+        severity: 2
       }
     ]
   },
@@ -92,6 +100,14 @@ const additionalTracksForUser = [
         title: '7h 0m sleep',
         date: new Date(Date.now() - 3 * 86400000),
         notes: 'Average sleep quality'
+      },
+      {
+        type: EventType.SYMPTOM,
+        title: 'Fatigue',
+        date: new Date(Date.now() - 4 * 86400000),
+        notes: 'Feeling very tired throughout the day',
+        symptomType: 'fatigue',
+        severity: 4
       }
     ]
   },
@@ -117,6 +133,14 @@ const additionalTracksForUser = [
         title: '3.0L water intake',
         date: new Date(Date.now() - 2 * 86400000),
         notes: 'Excellent hydration, exceeded goal'
+      },
+      {
+        type: EventType.SYMPTOM,
+        title: 'Thirst',
+        date: new Date(Date.now() - 5 * 86400000),
+        notes: 'Experienced excessive thirst',
+        symptomType: 'thirst',
+        severity: 3
       }
     ]
   }

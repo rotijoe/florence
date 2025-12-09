@@ -54,6 +54,8 @@ describe('Events API', () => {
           title: 'Test Event',
           notes: 'Test Description',
           fileUrl: null,
+          symptomType: null,
+          severity: null,
           createdAt: new Date('2024-01-01T00:00:00Z'),
           updatedAt: new Date('2024-01-01T00:00:00Z')
         }
@@ -80,6 +82,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z'
       })
@@ -107,6 +111,8 @@ describe('Events API', () => {
         title: `Test Event ${i + 1}`,
         notes: 'Test Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }))
@@ -614,6 +620,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/file.pdf',
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -727,6 +735,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
@@ -755,6 +765,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
@@ -782,6 +794,8 @@ describe('Events API', () => {
         title: 'Original Title',
         notes: 'Original Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -803,6 +817,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       })
@@ -833,6 +849,8 @@ describe('Events API', () => {
         title: 'Test Title',
         notes: 'Original Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -874,6 +892,8 @@ describe('Events API', () => {
         title: 'Original Title',
         notes: 'Original Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -994,6 +1014,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -1044,6 +1066,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -1097,6 +1121,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -1191,6 +1217,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: null,
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -1227,6 +1255,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
@@ -1265,6 +1295,8 @@ describe('Events API', () => {
         title: 'Test Event',
         notes: 'Test Description',
         fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
+        symptomType: null,
+        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
