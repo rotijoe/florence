@@ -1,8 +1,6 @@
-export interface TrackOption {
-  slug: string
-  title: string
-  lastUpdatedAt: Date | string
-}
+import type { TrackOption } from '../types'
+
+export type { TrackOption }
 
 export interface SymptomDialogueProps {
   open: boolean

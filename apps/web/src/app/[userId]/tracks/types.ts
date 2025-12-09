@@ -1,11 +1,8 @@
-export interface HealthTrack {
-  id: string
-  title: string
-  description: string | null
+import type { HealthTrack as BaseHealthTrack, ApiResponse as BaseApiResponse } from '@packages/types'
+
+export type HealthTrack = Omit<BaseHealthTrack, 'user' | 'events' | 'createdAt' | 'updatedAt'> & {
   createdAt: string
   updatedAt: string
-  userId: string
-  slug: string
 }
 
 export interface UserWithTracks {
@@ -15,8 +12,4 @@ export interface UserWithTracks {
   tracks: HealthTrack[]
 }
 
-export interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  error?: string
-}
+export type ApiResponse<T> = BaseApiResponse<T>

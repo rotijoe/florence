@@ -14,6 +14,7 @@ export type HealthTrack = {
   slug: string
   description?: string
   createdAt: Date
+  updatedAt: Date
   events: Event[]
 }
 

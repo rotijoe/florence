@@ -1,3 +1,5 @@
+import type { HealthTrack } from '@packages/types'
+
 export type HubQuickActionKind = 'logSymptom' | 'createEvent' | 'addAppointment'
 
 export interface HubQuickActionOption {
@@ -5,10 +7,8 @@ export interface HubQuickActionOption {
   label: string
 }
 
-export interface TrackOption {
-  slug: string
-  title: string
-  lastUpdatedAt: Date | string
+export type TrackOption = Pick<HealthTrack, 'slug' | 'title'> & {
+  lastUpdatedAt: HealthTrack['updatedAt'] | string
 }
 
 export interface HubQuickActionsProps {
