@@ -1,56 +1,11 @@
-import type { ApiResponse, TrackResponse } from '@packages/types'
-import type { AppVariables } from '../../types.js'
+import type { AppVariables } from '../../types/index.js'
 import { Hono } from 'hono'
-import { prisma } from '@packages/database'
+import * as get from './handlers/get.js'
+import * as create from './handlers/create.js'
 
 const app = new Hono<{ Variables: AppVariables }>()
 
-app.get('/users/:userId/tracks/:slug', async (c) => {
-  try {
-    const userId = c.req.param('userId')
-    const slug = c.req.param('slug')
-
-    const track = await prisma.healthTrack.findFirst({
-      where: { userId, slug },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        createdAt: true
-      }
-    })
-
-    if (!track) {
-      return c.json(
-        {
-          success: false,
-          error: 'Track not found'
-        },
-        404
-      )
-    }
-
-    const response: ApiResponse<TrackResponse> = {
-      success: true,
-      data: {
-        id: track.id,
-        name: track.title,
-        slug: track.slug,
-        createdAt: track.createdAt.toISOString()
-      }
-    }
-
-    return c.json(response)
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    return c.json(
-      {
-        success: false,
-        error: errorMessage
-      },
-      500
-    )
-  }
-})
+app.get('/users/:userId/tracks/:slug', get.handler)
+app.post('/user/tracks', create.handler)
 
 export default app

@@ -22,7 +22,8 @@ module.exports = {
     '^@/(.*)\\.js$': '<rootDir>/src/$1.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@routes/(.*)$': '<rootDir>/src/routes/$1',
-    '^@types$': '<rootDir>/../../packages/types/src/index'
+    '^@types$': '<rootDir>/../../packages/types/src/index',
+    '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   clearMocks: true,
@@ -36,5 +37,13 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))']
+  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))'],
+  coverageThreshold: {
+    global: {
+      branches: 54,
+      functions: 54,
+      lines: 66,
+      statements: 65
+    }
+  }
 }

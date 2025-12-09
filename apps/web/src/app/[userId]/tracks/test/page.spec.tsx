@@ -344,7 +344,7 @@ describe('DashboardPage', () => {
           id: 'track-1',
           title: 'Diabetes Management',
           slug: 'diabetes-management',
-          description: null,
+          description: undefined,
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-01T00:00:00Z',
           userId: 'user-123'
@@ -546,7 +546,7 @@ describe('DashboardPage', () => {
         id: 'track-new',
         title: 'New Track',
         slug: 'new-track',
-        description: null,
+        description: undefined,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z',
         userId: 'user-123'

@@ -1,4 +1,7 @@
-import type { HealthTrack as BaseHealthTrack, ApiResponse as BaseApiResponse } from '@packages/types'
+import type {
+  HealthTrack as BaseHealthTrack,
+  ApiResponse as BaseApiResponse
+} from '@packages/types'
 
 export type HealthTrack = Omit<BaseHealthTrack, 'user' | 'events' | 'createdAt' | 'updatedAt'> & {
   createdAt: string
