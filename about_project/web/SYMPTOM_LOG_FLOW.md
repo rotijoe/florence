@@ -215,4 +215,3 @@ Located in `apps/web/src/components/hub_quick_actions/symptom_dialogue/tests/`:
 
 - **Event Creation Flow:** See `EVENT_CREATE_FLOW.md` for general event creation
 - **Quick Actions:** See `DASHBOARD.md` for Quick Actions section overview
-

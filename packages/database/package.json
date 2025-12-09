@@ -10,6 +10,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma db push --force-reset && pnpm db:seed",
+    "db:sync": "pnpm db:push && pnpm db:generate && pnpm db:seed",
     "studio": "lsof -ti:5555 | xargs kill -9 || true && sleep 1 && prisma studio --port 5555",
     "studio:stop": "lsof -ti:5555 | xargs kill -9 || true",
     "typecheck": "tsc --noEmit --pretty",

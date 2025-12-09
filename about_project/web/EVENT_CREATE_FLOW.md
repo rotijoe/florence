@@ -152,4 +152,3 @@ const handleCancel = async () => {
 - **Event Edit Flow:** See `EVENT_EDIT_FLOW.md` for details on editing existing events
 - **Event Delete Flow:** See `EVENT_DELETE_FLOW.md` for details on deleting events
 - **Upload Document Flow:** See `UPLOAD_DOCUMENT_FLOW.md` for details on uploading attachments
-

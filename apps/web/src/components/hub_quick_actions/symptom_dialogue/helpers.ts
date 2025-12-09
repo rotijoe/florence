@@ -13,4 +13,3 @@ export function getDefaultTrack(tracks: TrackOption[]): string | undefined {
 
   return sortedTracks[0]?.slug
 }
-

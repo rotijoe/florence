@@ -126,10 +126,7 @@ export function SymptomDialogue({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className='w-[var(--radix-dropdown-menu-trigger-width)]'>
                   {tracks.map((track) => (
-                    <DropdownMenuItem
-                      key={track.slug}
-                      onClick={() => setSelectedTrack(track.slug)}
-                    >
+                    <DropdownMenuItem key={track.slug} onClick={() => setSelectedTrack(track.slug)}>
                       {track.title}
                     </DropdownMenuItem>
                   ))}
@@ -226,4 +223,3 @@ export function SymptomDialogue({
     </Dialog>
   )
 }
-

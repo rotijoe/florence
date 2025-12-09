@@ -1,0 +1,52 @@
+---
+description: Required procedure when modifying Prisma schema
+globs:
+  - packages/database/prisma/schema.prisma
+alwaysApply: false
+---
+
+# Prisma Schema Change Procedure
+
+When modifying `packages/database/prisma/schema.prisma`, you MUST follow these steps after making changes:
+
+## Required Steps (in order)
+
+1. **Push schema changes to database**
+   ```bash
+   cd packages/database && pnpm db:push
+   ```
+   This syncs the database with the new schema.
+
+2. **Regenerate Prisma Client**
+   ```bash
+   cd packages/database && pnpm db:generate
+   ```
+   This updates the TypeScript types for the new schema.
+
+3. **Re-seed the database** (if schema affects existing data or adds new models)
+   ```bash
+   cd packages/database && pnpm db:seed
+   ```
+   This recreates test users and sample data.
+
+## Convenience Scripts
+
+- `pnpm db:sync` - Runs push + generate + seed in one command (recommended)
+- `pnpm db:reset` - Force resets database and re-seeds (destructive)
+
+## Why This Matters
+
+- Skipping `db:push` → Database doesn't have new columns/tables
+- Skipping `db:generate` → TypeScript types are stale, code may compile but fail at runtime
+- Skipping `db:seed` → Users/test data may be missing or have stale structure
+
+## Common Issues
+
+- **401 on login after schema changes** → Users don't exist, run `pnpm db:seed`
+- **Runtime errors about missing fields** → Run `pnpm db:generate`
+- **Database constraint errors** → Schema not pushed, run `pnpm db:push`
+
+## Seed File Location
+
+When adding new fields to existing models, update the seed file at:
+`packages/database/prisma/seed.ts`

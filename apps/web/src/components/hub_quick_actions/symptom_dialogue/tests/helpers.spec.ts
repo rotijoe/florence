@@ -62,4 +62,3 @@ describe('getDefaultTrack', () => {
     expect(getDefaultTrack(tracks)).toBe('track-1')
   })
 })
-

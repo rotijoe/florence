@@ -16,4 +16,3 @@ export const SEVERITY_LABELS = {
   4: 'Severe',
   5: 'Very severe'
 } as const
-
