@@ -161,7 +161,9 @@ describe('Tracks API - Create Handler', () => {
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null) // No existing track with this slug
-      createSpy.mockResolvedValue(mockCreatedTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.create>>)
+      createSpy.mockResolvedValue(
+        mockCreatedTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.create>>
+      )
 
       const res = await app.request('/api/user/tracks', {
         method: 'POST',
@@ -240,7 +242,9 @@ describe('Tracks API - Create Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       // First call finds existing track with slug 'sleep', second call finds nothing (for 'sleep-2')
       findFirstSpy.mockResolvedValueOnce(existingTrack).mockResolvedValueOnce(null)
-      createSpy.mockResolvedValue(mockCreatedTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.create>>)
+      createSpy.mockResolvedValue(
+        mockCreatedTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.create>>
+      )
 
       const res = await app.request('/api/user/tracks', {
         method: 'POST',

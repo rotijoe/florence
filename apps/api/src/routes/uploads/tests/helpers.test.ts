@@ -14,7 +14,9 @@ describe('Uploads Helpers', () => {
       }
 
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      findFirstSpy.mockResolvedValue(mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>)
+      findFirstSpy.mockResolvedValue(
+        mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
+      )
 
       const result = await verifyEventAndTrack('event-1', 'test-slug')
 
@@ -29,7 +31,9 @@ describe('Uploads Helpers', () => {
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
       eventFindFirstSpy.mockResolvedValue(null)
-      trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>)
+      trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<
+        ReturnType<typeof prisma.healthTrack.findFirst>
+      >)
 
       const result = await verifyEventAndTrack('nonexistent-event', 'test-slug')
 

@@ -78,7 +78,9 @@ describe('Events Helpers', () => {
     it('returns track when it exists', async () => {
       const mockTrack = { id: 'track-1' }
       const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      findFirstSpy.mockResolvedValue(mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>)
+      findFirstSpy.mockResolvedValue(
+        mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>
+      )
 
       const result = await verifyTrackExists('user-1', 'test-slug')
 
@@ -120,7 +122,9 @@ describe('Events Helpers', () => {
       }
 
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      findFirstSpy.mockResolvedValue(mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>)
+      findFirstSpy.mockResolvedValue(
+        mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
+      )
 
       const result = await verifyEventInTrack('user-1', 'test-slug', 'event-1')
 
@@ -135,7 +139,9 @@ describe('Events Helpers', () => {
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
       eventFindFirstSpy.mockResolvedValue(null)
-      trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>)
+      trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<
+        ReturnType<typeof prisma.healthTrack.findFirst>
+      >)
 
       const result = await verifyEventInTrack('user-1', 'test-slug', 'nonexistent-event')
 

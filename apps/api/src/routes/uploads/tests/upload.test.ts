@@ -253,7 +253,9 @@ describe('Uploads API - Upload Handler', () => {
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
-      trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>)
+      trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<
+        ReturnType<typeof prisma.healthTrack.findFirst>
+      >)
 
       const res = await app.request('/api/tracks/test-slug/events/nonexistent-event/upload-url', {
         method: 'POST',
@@ -306,7 +308,9 @@ describe('Uploads API - Upload Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
-      findFirstSpy.mockResolvedValue(mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>)
+      findFirstSpy.mockResolvedValue(
+        mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
+      )
 
       // Mock S3 send to simulate successful presigned URL generation
       // The actual getSignedUrl will be called internally
@@ -473,7 +477,9 @@ describe('Uploads API - Upload Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
-      findFirstSpy.mockResolvedValue(mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>)
+      findFirstSpy.mockResolvedValue(
+        mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
+      )
       mockS3Send.mockRejectedValueOnce(new Error('Not found'))
 
       const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
@@ -540,8 +546,12 @@ describe('Uploads API - Upload Handler', () => {
       const updateSpy = jest.spyOn(prisma.event, 'update')
 
       getSessionSpy.mockResolvedValue(mockSession)
-      findFirstSpy.mockResolvedValue(mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>)
-      updateSpy.mockResolvedValue(updatedEvent as unknown as Awaited<ReturnType<typeof prisma.event.update>>)
+      findFirstSpy.mockResolvedValue(
+        mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
+      )
+      updateSpy.mockResolvedValue(
+        updatedEvent as unknown as Awaited<ReturnType<typeof prisma.event.update>>
+      )
 
       const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
         method: 'POST',
@@ -639,7 +649,9 @@ describe('Uploads API - Upload Handler', () => {
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
-      trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>)
+      trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<
+        ReturnType<typeof prisma.healthTrack.findFirst>
+      >)
 
       const res = await app.request(
         '/api/tracks/test-slug/events/nonexistent-event/upload-confirm',

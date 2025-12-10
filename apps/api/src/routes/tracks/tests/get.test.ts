@@ -36,7 +36,9 @@ describe('Tracks API - Get Handler', () => {
       }
 
       const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      findFirstSpy.mockResolvedValue(mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>)
+      findFirstSpy.mockResolvedValue(
+        mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>
+      )
 
       const res = await app.request('/api/users/user-1/tracks/test-track')
       expect(res.status).toBe(200)
