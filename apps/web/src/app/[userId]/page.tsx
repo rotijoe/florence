@@ -3,6 +3,7 @@ import { HubFooter } from '@/components/hub_footer'
 import { HubHealthTracks } from '@/components/hub_health_tracks'
 import { HubNotifications } from '@/components/hub_notifications'
 import { HubQuickActions } from '@/components/hub_quick_actions'
+import { buildTrackOptions } from '@/components/hub_quick_actions/helpers'
 import { HubRecentActivity } from '@/components/hub_recent_activity'
 import { HubUpcomingAppointments } from '@/components/hub_upcoming_appointments'
 import { HubWelcomeHeader } from '@/components/hub_welcome_header'
@@ -20,25 +21,20 @@ export default async function Hub({ params }: UserHomePageProps) {
 
   const overview = buildMockAccountOverviewData(userName)
   const greeting = getGreetingForUser(overview.user.name)
+  const trackSummaries = overview.healthTracks
+  const quickActionTrackOptions = buildTrackOptions(trackSummaries)
 
   return (
     <div className='bg-background'>
       <div className='mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8'>
         <section className='space-y-4'>
           <HubWelcomeHeader greeting={greeting} subtitle={WELCOME_SUBTITLE} />
-          <HubQuickActions
-            tracks={overview.healthTracks.map((track) => ({
-              slug: track.slug,
-              title: track.title,
-              lastUpdatedAt: track.lastUpdatedAt
-            }))}
-            userId={userId}
-          />
+          <HubQuickActions tracks={quickActionTrackOptions} userId={userId} />
         </section>
 
         <section className='grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]'>
           <div className='space-y-4'>
-            <HubHealthTracks tracks={overview.healthTracks} />
+            <HubHealthTracks tracks={trackSummaries} />
             <HubUpcomingAppointments appointments={overview.appointments} />
           </div>
 

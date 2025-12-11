@@ -5,11 +5,13 @@ import { SYMPTOM_TYPES, SEVERITY_LABELS } from '../constants'
 
 const mockTracks = [
   {
+    id: 'sleep-track',
     slug: 'sleep-track',
     title: 'Sleep',
     lastUpdatedAt: new Date('2024-01-15T10:00:00Z')
   },
   {
+    id: 'pain-track',
     slug: 'pain-track',
     title: 'Pain',
     lastUpdatedAt: new Date('2024-01-14T08:00:00Z')

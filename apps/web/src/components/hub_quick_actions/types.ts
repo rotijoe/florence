@@ -7,7 +7,7 @@ export interface HubQuickActionOption {
   label: string
 }
 
-export type TrackOption = Pick<HealthTrack, 'slug' | 'title'> & {
+export type TrackOption = Pick<HealthTrack, 'id' | 'slug' | 'title'> & {
   lastUpdatedAt: HealthTrack['updatedAt'] | string
 }
 
