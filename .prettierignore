@@ -4,9 +4,9 @@ dist
 coverage
 build
 *.config.js
-*.config.ts
 pnpm-lock.yaml
 turbo.json
 .cursor
 .pnpm-store
+
 

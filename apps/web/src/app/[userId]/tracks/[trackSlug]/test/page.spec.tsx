@@ -30,9 +30,9 @@ jest.mock('@/components/track_event_list', () => ({
   )
 }))
 
-// Mock TrackHeaderClient component
-jest.mock('@/components/track_header/track_header_client', () => ({
-  TrackHeaderClient: ({ track }: { track: TrackResponse }) => (
+// Mock TrackHeader component
+jest.mock('@/components/track_header', () => ({
+  TrackHeader: ({ track }: { track: TrackResponse }) => (
     <div data-testid='track-header'>
       <h1>{track.name}</h1>
     </div>

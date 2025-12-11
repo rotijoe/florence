@@ -1,11 +1,10 @@
-export type EventPageProps = {
+export type NewEventPageProps = {
   params: Promise<{
     userId: string
     trackSlug: string
-    eventId: string
   }>
 }
 
-export type EventLayoutProps = {
+export type NewEventLayoutProps = {
   children: React.ReactNode
 }

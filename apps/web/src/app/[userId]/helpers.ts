@@ -13,10 +13,6 @@ export function getGreetingForUser(name: string | null | undefined): string {
   return `Welcome back, ${trimmedName}`
 }
 
-export function getWelcomeSubtitle(): string {
-  return 'Log how you are feeling, keep your details up to date, and stay on top of upcoming care.'
-}
-
 export function buildMockAccountOverviewData(name: string | null | undefined): AccountOverviewData {
   const displayName = name && name.trim().length > 0 ? name : 'there'
 

@@ -14,3 +14,4 @@ describe('User API - Route Composition', () => {
     expect(res.status).toBeLessThan(500)
   })
 })
+

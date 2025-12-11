@@ -1,6 +1,6 @@
 import type { HealthTrack } from '@packages/types'
 
-export type HubQuickActionKind = 'logSymptom' | 'createEvent' | 'addAppointment'
+export type HubQuickActionKind = 'symptom' | 'event' | 'track' | 'document'
 
 export interface HubQuickActionOption {
   value: string
@@ -12,7 +12,6 @@ export type TrackOption = Pick<HealthTrack, 'slug' | 'title'> & {
 }
 
 export interface HubQuickActionsProps {
-  eventOptions: HubQuickActionOption[]
   tracks: TrackOption[]
   userId: string
   onSelectOption?: (args: { kind: HubQuickActionKind; value: string }) => void

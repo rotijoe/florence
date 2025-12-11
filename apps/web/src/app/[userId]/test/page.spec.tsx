@@ -10,8 +10,11 @@ jest.mock('@/lib/auth_server', () => ({
 
 jest.mock('../helpers', () => ({
   buildMockAccountOverviewData: jest.fn(),
-  getGreetingForUser: jest.fn(),
-  getWelcomeSubtitle: jest.fn()
+  getGreetingForUser: jest.fn()
+}))
+
+jest.mock('../constants', () => ({
+  WELCOME_SUBTITLE: 'Test subtitle'
 }))
 
 jest.mock('@/components/hub_footer', () => ({
@@ -35,31 +38,11 @@ jest.mock('@/components/hub_notifications', () => ({
 }))
 
 jest.mock('@/components/hub_quick_actions', () => ({
-  HubQuickActions: ({
-    eventOptions,
-    tracks,
-    userId
-  }: {
-    eventOptions: unknown[]
-    tracks: unknown[]
-    userId: string
-  }) => (
-    <div
-      data-testid='hub-quick-actions'
-      data-user-id={userId}
-      data-tracks-count={tracks.length}
-      data-event-options-count={eventOptions.length}
-    >
+  HubQuickActions: ({ tracks, userId }: { tracks: unknown[]; userId: string }) => (
+    <div data-testid='hub-quick-actions' data-user-id={userId} data-tracks-count={tracks.length}>
       Quick Actions
     </div>
   )
-}))
-
-jest.mock('@/components/hub_quick_actions/constants', () => ({
-  HUB_EVENT_QUICK_ACTIONS: [
-    { id: 'action-1', label: 'Action 1' },
-    { id: 'action-2', label: 'Action 2' }
-  ]
 }))
 
 jest.mock('@/components/hub_recent_activity', () => ({
@@ -90,7 +73,6 @@ describe('UserHomePage', () => {
   const mockGetServerSession = getServerSession as jest.Mock
   const mockBuildMockAccountOverviewData = helpers.buildMockAccountOverviewData as jest.Mock
   const mockGetGreetingForUser = helpers.getGreetingForUser as jest.Mock
-  const mockGetWelcomeSubtitle = helpers.getWelcomeSubtitle as jest.Mock
 
   const mockOverviewData = {
     user: { id: 'user-123', name: 'John Doe' },
@@ -114,7 +96,6 @@ describe('UserHomePage', () => {
     })
     mockBuildMockAccountOverviewData.mockReturnValue(mockOverviewData)
     mockGetGreetingForUser.mockReturnValue('Welcome back, John Doe')
-    mockGetWelcomeSubtitle.mockReturnValue('Test subtitle')
   })
 
   it('should render all hub components', async () => {
@@ -176,15 +157,13 @@ describe('UserHomePage', () => {
   })
 
   it('should pass subtitle to HubWelcomeHeader', async () => {
-    mockGetWelcomeSubtitle.mockReturnValue('Custom subtitle message')
-
     const params = Promise.resolve({ userId: 'user-123' })
     const result = await UserHomePage({ params })
 
     render(result)
 
     const welcomeHeader = screen.getByTestId('hub-welcome-header')
-    expect(welcomeHeader).toHaveAttribute('data-subtitle', 'Custom subtitle message')
+    expect(welcomeHeader).toHaveAttribute('data-subtitle', 'Test subtitle')
   })
 
   it('should pass userId to HubQuickActions', async () => {
@@ -302,12 +281,4 @@ describe('UserHomePage', () => {
 
     expect(mockGetGreetingForUser).toHaveBeenCalledWith('Alice')
   })
-
-  it('should call getWelcomeSubtitle', async () => {
-    const params = Promise.resolve({ userId: 'user-123' })
-    await UserHomePage({ params })
-
-    expect(mockGetWelcomeSubtitle).toHaveBeenCalled()
-  })
 })
-

@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useOptimistic, startTransition } from 'react'
+import { useState, useOptimistic, startTransition, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useFormStatus } from 'react-dom'
+import { toast } from 'sonner'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,16 +32,45 @@ import {
   deleteEventAttachmentAction,
   deleteEventAction
 } from '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
+import { createEventOnSaveAction } from '@/app/[userId]/tracks/[trackSlug]/new/actions'
 import type { EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
 import { EventAttachment } from '@/components/attachment_list'
 
-export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDetailProps) {
-  const [isEditing, setIsEditing] = useState(isNew)
+export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps) {
+  const router = useRouter()
+  const isCreateMode = mode === 'create'
+  const [isEditing, setIsEditing] = useState(isCreateMode)
   const [error, setError] = useState<string | null>(null)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [optimisticEvent, updateOptimisticEvent] = useOptimistic(event, optimisticReducer)
+
+  // Track initial values for dirty checking
+  const initialTitleRef = useRef(isCreateMode ? '' : event.title)
+  const initialNotesRef = useRef(isCreateMode ? null : (event.notes ?? null))
+  const [currentTitle, setCurrentTitle] = useState(initialTitleRef.current)
+  const [currentNotes, setCurrentNotes] = useState(initialNotesRef.current)
+
+  // Calculate if form is dirty
+  const isDirty =
+    currentTitle !== initialTitleRef.current || currentNotes !== initialNotesRef.current
+
+  // Unsaved change protection
+  useEffect(() => {
+    if (!isDirty) return
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [isDirty])
 
   async function formAction(formData: FormData) {
     setError(null)
@@ -47,14 +78,27 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
     const title = (formData.get('title') as string) ?? ''
     const notes = (formData.get('notes') as string | null) ?? null
 
-    // Optimistic update - this is inside an action, so React is happy
+    if (isCreateMode) {
+      // Create mode: use createEventOnSaveAction
+      const result = await createEventOnSaveAction(formData)
+
+      if (result.error) {
+        toast.error(result.error)
+        setError(result.error)
+        return
+      }
+
+      // Success: redirect happens in server action
+      return
+    }
+
+    // Edit mode: use updateEventAction with optimistic updates
     updateOptimisticEvent({
       title: title.trim(),
       notes: notes === '' ? null : notes,
       updatedAt: new Date().toISOString()
     })
 
-    // Call the server action
     const result = await updateEventAction(null, formData)
 
     if (result.error) {
@@ -64,6 +108,7 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
         notes: event.notes ?? null,
         updatedAt: event.updatedAt
       })
+      toast.error(result.error)
       setError(result.error)
       return
     }
@@ -75,6 +120,11 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
         notes: result.event.notes ?? null,
         updatedAt: result.event.updatedAt
       })
+      // Update initial refs for dirty checking
+      initialTitleRef.current = result.event.title
+      initialNotesRef.current = result.event.notes ?? null
+      setCurrentTitle(result.event.title)
+      setCurrentNotes(result.event.notes ?? null)
       setIsEditing(false)
     }
   }
@@ -84,19 +134,22 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
     setError(null)
   }
 
-  const handleCancel = async () => {
-    if (isNew) {
-      // Delete the event if it's a new event
-      const result = await deleteEventAction(userId, trackSlug, optimisticEvent.id)
-      if (result.error) {
-        setError(result.error)
-        return
-      }
-      // If successful, redirect will happen in the server action
+  const handleCancel = () => {
+    if (isCreateMode) {
+      // In create mode, just navigate back to track page
+      router.push(`/${userId}/tracks/${trackSlug}`)
       return
     }
+    // In edit mode, reset to original values
     setIsEditing(false)
     setError(null)
+    setCurrentTitle(initialTitleRef.current)
+    setCurrentNotes(initialNotesRef.current)
+    updateOptimisticEvent({
+      title: event.title,
+      notes: event.notes ?? null,
+      updatedAt: event.updatedAt
+    })
   }
 
   const handleUploadClick = () => {
@@ -135,6 +188,7 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
           fileUrl: event.fileUrl ?? null,
           updatedAt: event.updatedAt
         })
+        toast.error(result.error)
         setError(result.error)
         return
       }
@@ -163,6 +217,7 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
     const result = await deleteEventAction(userId, trackSlug, optimisticEvent.id)
 
     if (result.error) {
+      toast.error(result.error)
       setError(result.error)
       setShowDeleteDialog(false)
       return
@@ -179,18 +234,27 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
           <input type='hidden' name='userId' value={userId} />
           <input type='hidden' name='eventId' value={optimisticEvent.id} />
           <input type='hidden' name='trackSlug' value={trackSlug} />
-          <input type='hidden' name='eventId' value={optimisticEvent.id} />
-          <input type='hidden' name='trackSlug' value={trackSlug} />
           {renderHeader(
             optimisticEvent,
             isEditing,
             handleCancel,
             handleEdit,
             handleUploadClick,
-            handleDeleteClick
+            handleDeleteClick,
+            isCreateMode,
+            setCurrentTitle
           )}
-          {renderContent(optimisticEvent, isEditing, handleDeleteAttachment)}
-          {renderFooter(optimisticEvent)}
+          {renderContent(
+            optimisticEvent,
+            isEditing,
+            handleDeleteAttachment,
+            isCreateMode,
+            currentTitle,
+            currentNotes,
+            setCurrentTitle,
+            setCurrentNotes
+          )}
+          {renderFooter(optimisticEvent, isCreateMode)}
         </form>
         {error && (
           <div data-testid='error-message' className='px-6 pb-4 text-sm text-destructive'>
@@ -234,8 +298,13 @@ export function EventDetail({ event, trackSlug, userId, isNew = false }: EventDe
 function renderActionsMenu(
   onEditEvent: () => void,
   onUploadDocument: () => void,
-  onDeleteEvent: () => void
+  onDeleteEvent: () => void,
+  isCreateMode: boolean
 ) {
+  if (isCreateMode) {
+    return null
+  }
+
   return (
     <div>
       <DropdownMenu>
@@ -285,17 +354,20 @@ function renderHeader(
   onCancel: () => void,
   handleEdit: () => void,
   handleUploadClick: () => void,
-  handleDeleteClick: () => void
+  handleDeleteClick: () => void,
+  isCreateMode: boolean,
+  setCurrentTitle?: (value: string) => void
 ) {
   return (
     <CardHeader data-testid='event-header' className='gap-4'>
       <div className='flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between'>
         <div className='flex justify-end gap-2'>
           <div className='flex gap-2'>{renderEditingButtons(onCancel, isEditing)}</div>
-          {!isEditing && renderActionsMenu(handleEdit, handleUploadClick, handleDeleteClick)}
+          {!isEditing &&
+            renderActionsMenu(handleEdit, handleUploadClick, handleDeleteClick, isCreateMode)}
         </div>
         <div className='space-y-2'>
-          {renderTitle(isEditing, event)}
+          {renderTitle(isEditing, event, setCurrentTitle)}
           <span className='w-fit rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.65rem] font-medium uppercase tracking-wide text-primary'>
             {event.type}
           </span>
@@ -305,7 +377,11 @@ function renderHeader(
   )
 }
 
-function renderTitle(isEditing: boolean, event: EventResponse) {
+function renderTitle(
+  isEditing: boolean,
+  event: EventResponse,
+  setCurrentTitle?: (value: string) => void
+) {
   if (isEditing) {
     return (
       <Field>
@@ -317,6 +393,7 @@ function renderTitle(isEditing: boolean, event: EventResponse) {
             id='title'
             name='title'
             defaultValue={event.title}
+            onChange={(e) => setCurrentTitle?.(e.target.value)}
             className='h-auto border-0 border-b border-border rounded-none bg-transparent p-0 shadow-none !text-3xl md:!text-3xl font-semibold leading-none focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring'
           />
         </FieldContent>
@@ -326,16 +403,41 @@ function renderTitle(isEditing: boolean, event: EventResponse) {
   return <CardTitle className='text-3xl'>{event.title}</CardTitle>
 }
 
-function renderContent(event: EventResponse, isEditing: boolean, onDeleteAttachment?: () => void) {
+function renderContent(
+  event: EventResponse,
+  isEditing: boolean,
+  onDeleteAttachment?: () => void,
+  isCreateMode?: boolean,
+  currentTitle?: string,
+  currentNotes?: string | null,
+  setCurrentTitle?: (value: string) => void,
+  setCurrentNotes?: (value: string | null) => void
+) {
   return (
     <CardContent className='space-y-6'>
-      {renderNotes(event, isEditing)}
-      {renderAttachments(event.fileUrl, onDeleteAttachment)}
+      {renderNotes(
+        event,
+        isEditing,
+        isCreateMode,
+        currentTitle,
+        currentNotes,
+        setCurrentTitle,
+        setCurrentNotes
+      )}
+      {!isCreateMode && renderAttachments(event.fileUrl, onDeleteAttachment)}
     </CardContent>
   )
 }
 
-const renderNotes = (event: EventResponse, isEditing: boolean) => {
+const renderNotes = (
+  event: EventResponse,
+  isEditing: boolean,
+  isCreateMode?: boolean,
+  currentTitle?: string,
+  currentNotes?: string | null,
+  setCurrentTitle?: (value: string) => void,
+  setCurrentNotes?: (value: string | null) => void
+) => {
   if (isEditing) {
     return (
       <Field>
@@ -345,6 +447,7 @@ const renderNotes = (event: EventResponse, isEditing: boolean) => {
             id='notes'
             name='notes'
             defaultValue={event.notes || ''}
+            onChange={(e) => setCurrentNotes?.(e.target.value || null)}
             rows={6}
             className='resize-none'
           />
@@ -372,7 +475,11 @@ function renderAttachments(fileUrl: string | null | undefined, onDelete?: () => 
   return <EventAttachment fileUrl={fileUrl} onDelete={onDelete} />
 }
 
-function renderFooter(event: EventResponse) {
+function renderFooter(event: EventResponse, isCreateMode: boolean) {
+  if (isCreateMode) {
+    return null
+  }
+
   return (
     <CardFooter className='flex flex-col gap-2 border-t pt-4 text-xs text-muted-foreground'>
       <div>

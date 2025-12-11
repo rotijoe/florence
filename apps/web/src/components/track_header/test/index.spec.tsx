@@ -4,6 +4,14 @@ import { TrackHeader } from '../index'
 import type { TrackHeaderProps } from '../types'
 import type { TrackResponse } from '@packages/types'
 
+const mockPush = jest.fn()
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush
+  })
+}))
+
 jest.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => (
     <div data-testid='dropdown-menu'>{children}</div>
@@ -60,8 +68,7 @@ describe('TrackHeader', () => {
   const defaultProps: TrackHeaderProps = {
     track: mockTrack,
     userId: 'user-1',
-    trackSlug: 'test-track',
-    onCreateEvent: jest.fn()
+    trackSlug: 'test-track'
   }
 
   beforeEach(() => {
@@ -102,21 +109,19 @@ describe('TrackHeader', () => {
     expect(exportItem.closest('button')).toBeDisabled()
   })
 
-  it('calls onCreateEvent when "Create event" is clicked', async () => {
+  it('navigates to new event page when "Create event" is clicked', async () => {
     const user = userEvent.setup()
-    const onCreateEvent = jest.fn()
-    render(<TrackHeader {...defaultProps} onCreateEvent={onCreateEvent} />)
+    render(<TrackHeader {...defaultProps} />)
 
     const createEventItem = screen.getByText('Create event')
     await user.click(createEventItem)
 
-    expect(onCreateEvent).toHaveBeenCalled()
+    expect(mockPush).toHaveBeenCalledWith('/user-1/tracks/test-track/new')
   })
 
-  it('does not call onCreateEvent when disabled items are clicked', async () => {
+  it('does not navigate when disabled items are clicked', async () => {
     const user = userEvent.setup()
-    const onCreateEvent = jest.fn()
-    render(<TrackHeader {...defaultProps} onCreateEvent={onCreateEvent} />)
+    render(<TrackHeader {...defaultProps} />)
 
     const deleteItem = screen.getByText('Delete track')
     const exportItem = screen.getByText('Export track data')
@@ -124,7 +129,7 @@ describe('TrackHeader', () => {
     await user.click(deleteItem)
     await user.click(exportItem)
 
-    expect(onCreateEvent).not.toHaveBeenCalled()
+    expect(mockPush).not.toHaveBeenCalled()
   })
 
   it('renders separator between create event and other actions', () => {

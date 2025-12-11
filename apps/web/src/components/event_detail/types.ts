@@ -4,5 +4,5 @@ export type EventDetailProps = {
   event: EventResponse
   trackSlug: string
   userId: string
-  isNew?: boolean
+  mode: 'create' | 'edit'
 }

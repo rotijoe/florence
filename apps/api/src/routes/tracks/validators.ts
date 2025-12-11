@@ -6,3 +6,4 @@ export const createTrackSchema = z.object({
 })
 
 export type CreateTrackInput = z.infer<typeof createTrackSchema>
+

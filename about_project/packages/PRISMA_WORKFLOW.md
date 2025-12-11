@@ -42,3 +42,4 @@ pnpm db:seed      # Re-seed data
 - `db:push` is preferred over `db:migrate` for development
 - Test users: `alice@example.com`, `bob@example.com`, `carol@example.com` (password: `123456`)
 
+
