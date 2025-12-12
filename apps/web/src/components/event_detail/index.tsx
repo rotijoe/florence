@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useOptimistic, startTransition, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useFormStatus } from 'react-dom'
 import { toast } from 'sonner'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,7 +39,9 @@ import { EventAttachment } from '@/components/attachment_list'
 
 export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const isCreateMode = mode === 'create'
+  const returnTo = searchParams.get('returnTo')
   const [isEditing, setIsEditing] = useState(isCreateMode)
   const [error, setError] = useState<string | null>(null)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
@@ -136,8 +138,9 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
 
   const handleCancel = () => {
     if (isCreateMode) {
-      // In create mode, just navigate back to track page
-      router.push(`/${userId}/tracks/${trackSlug}`)
+      // In create mode, navigate back to where user came from (or track page as fallback)
+      const fallbackUrl = `/${userId}/tracks/${trackSlug}`
+      router.push(returnTo || fallbackUrl)
       return
     }
     // In edit mode, reset to original values

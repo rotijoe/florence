@@ -15,4 +15,5 @@ export interface HubQuickActionsProps {
   tracks: TrackOption[]
   userId: string
   onSelectOption?: (args: { kind: HubQuickActionKind; value: string }) => void
+  onTrackCreated?: () => void
 }

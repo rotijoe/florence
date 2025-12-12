@@ -17,8 +17,12 @@ jest.mock('@/lib/auth_client', () => ({
 
 jest.mock('../helpers', () => ({
   fetchUserData: jest.fn(),
-  createUserTrack: jest.fn(),
   formatTrackDate: jest.fn((date) => new Date(date).toLocaleDateString())
+}))
+
+// Mock the TrackCreateDialog helpers (for isolation)
+jest.mock('@/components/track_create_dialog/helpers', () => ({
+  createTrack: jest.fn().mockResolvedValue({})
 }))
 
 jest.mock('@/components/ui/dropdown-menu', () => ({
@@ -415,25 +419,7 @@ describe('DashboardPage', () => {
       })
     })
 
-    it('should create track and refresh list on successful submission', async () => {
-      const newTrack: UserWithTracks['tracks'][0] = {
-        id: 'track-new',
-        title: 'New Track',
-        slug: 'new-track',
-        description: 'Test description',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-        userId: 'user-123'
-      }
-
-      ;(helpers.createUserTrack as jest.Mock).mockResolvedValue(newTrack)
-      ;(helpers.fetchUserData as jest.Mock)
-        .mockResolvedValueOnce(mockUserData)
-        .mockResolvedValueOnce({
-          ...mockUserData,
-          tracks: [newTrack]
-        })
-
+    it('should render dialog with form fields when opened', async () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
@@ -445,47 +431,9 @@ describe('DashboardPage', () => {
 
       await waitFor(() => {
         expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()
-      })
-
-      const titleInput = screen.getByLabelText(/track name/i)
-      const descriptionInput = screen.getByLabelText(/description/i)
-      const submitButton = screen.getByRole('button', { name: /create/i })
-
-      await userEvent.type(titleInput, 'New Track')
-      await userEvent.type(descriptionInput, 'Test description')
-      await userEvent.click(submitButton)
-
-      await waitFor(() => {
-        expect(helpers.createUserTrack).toHaveBeenCalledWith('New Track', 'Test description')
-        expect(helpers.fetchUserData).toHaveBeenCalledTimes(2)
-        expect(screen.getByText('New Track')).toBeInTheDocument()
-      })
-    })
-
-    it('should display error message when track creation fails', async () => {
-      ;(helpers.createUserTrack as jest.Mock).mockRejectedValue(new Error('Failed to create track'))
-
-      render(<DashboardPage />)
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
-      })
-
-      const menuItem = screen.getByRole('button', { name: /create health track/i })
-      await userEvent.click(menuItem)
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()
-      })
-
-      const titleInput = screen.getByLabelText(/track name/i)
-      const submitButton = screen.getByRole('button', { name: /create/i })
-
-      await userEvent.type(titleInput, 'New Track')
-      await userEvent.click(submitButton)
-
-      await waitFor(() => {
-        expect(screen.getByText(/failed to create track/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/description/i)).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /^create$/i })).toBeInTheDocument()
       })
     })
 
@@ -508,48 +456,6 @@ describe('DashboardPage', () => {
 
       await waitFor(() => {
         expect(screen.queryByLabelText(/track name/i)).not.toBeInTheDocument()
-      })
-    })
-
-    it('should disable submit button while creating', async () => {
-      let resolveCreate: (value: UserWithTracks['tracks'][0]) => void
-      const createPromise = new Promise((resolve) => {
-        resolveCreate = resolve
-      })
-
-      ;(helpers.createUserTrack as jest.Mock).mockReturnValue(createPromise)
-
-      render(<DashboardPage />)
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
-      })
-
-      const menuItem = screen.getByRole('button', { name: /create health track/i })
-      await userEvent.click(menuItem)
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()
-      })
-
-      const titleInput = screen.getByLabelText(/track name/i)
-      const submitButton = screen.getByRole('button', { name: /create/i })
-
-      await userEvent.type(titleInput, 'New Track')
-      await userEvent.click(submitButton)
-
-      await waitFor(() => {
-        expect(submitButton).toBeDisabled()
-      })
-
-      resolveCreate!({
-        id: 'track-new',
-        title: 'New Track',
-        slug: 'new-track',
-        description: undefined,
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-        userId: 'user-123'
       })
     })
   })

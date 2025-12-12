@@ -6,6 +6,9 @@ import { EventType, type EventResponse } from '@packages/types'
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: jest.fn()
+  }),
+  useSearchParams: () => ({
+    get: jest.fn().mockReturnValue(null)
   })
 }))
 

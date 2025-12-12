@@ -16,7 +16,8 @@ export function TrackHeader({ track, userId, trackSlug }: TrackHeaderProps) {
   const router = useRouter()
 
   function handleCreateEvent() {
-    router.push(`/${userId}/tracks/${trackSlug}/new`)
+    const returnTo = encodeURIComponent(`/${userId}/tracks/${trackSlug}`)
+    router.push(`/${userId}/tracks/${trackSlug}/new?returnTo=${returnTo}`)
   }
 
   return (

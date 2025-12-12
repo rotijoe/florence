@@ -4,28 +4,18 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth_client'
-import { fetchUserData, createUserTrack } from './helpers'
+import { fetchUserData } from './helpers'
 import type { UserWithTracks } from './types'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
 import { MoreVertical } from 'lucide-react'
+import { TrackCreateDialog } from '@/components/track_create_dialog'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -34,10 +24,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [trackTitle, setTrackTitle] = useState('')
-  const [trackDescription, setTrackDescription] = useState('')
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -115,80 +101,13 @@ export default function DashboardPage() {
     )
   }
 
-  async function handleCreateTrack(e: React.FormEvent) {
-    e.preventDefault()
-    setIsCreating(true)
-    setCreateError(null)
-
-    try {
-      await createUserTrack(trackTitle.trim(), trackDescription.trim() || null)
-      setIsDialogOpen(false)
-      setTrackTitle('')
-      setTrackDescription('')
-      await loadUserData()
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Failed to create track')
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
   function renderCreateDialog() {
     return (
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create new health track</DialogTitle>
-            <DialogDescription>
-              Add a new health track to start tracking your health journey.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreateTrack}>
-            <div className='space-y-4 py-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='track-title'>Track name</Label>
-                <Input
-                  id='track-title'
-                  value={trackTitle}
-                  onChange={(e) => setTrackTitle(e.target.value)}
-                  placeholder='e.g., Sleep, Hydration, Medication'
-                  required
-                  disabled={isCreating}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='track-description'>Description</Label>
-                <Textarea
-                  id='track-description'
-                  value={trackDescription}
-                  onChange={(e) => setTrackDescription(e.target.value)}
-                  placeholder='Optional description for this track'
-                  disabled={isCreating}
-                />
-              </div>
-              {createError && <p className='text-sm text-destructive'>{createError}</p>}
-            </div>
-            <DialogFooter>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => {
-                  setIsDialogOpen(false)
-                  setCreateError(null)
-                  setTrackTitle('')
-                  setTrackDescription('')
-                }}
-                disabled={isCreating}
-              >
-                Cancel
-              </Button>
-              <Button type='submit' disabled={isCreating}>
-                {isCreating ? 'Creating...' : 'Create'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <TrackCreateDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSuccess={loadUserData}
+      />
     )
   }
 

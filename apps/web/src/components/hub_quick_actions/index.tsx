@@ -12,25 +12,34 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { SymptomDialogue } from './symptom_dialogue'
+import { TrackCreateDialog } from '@/components/track_create_dialog'
 import type { HubQuickActionsProps } from './types'
 
-export function HubQuickActions({ tracks, userId }: HubQuickActionsProps) {
+export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActionsProps) {
   const router = useRouter()
   const [isSymptomDialogOpen, setIsSymptomDialogOpen] = useState(false)
+  const [isTrackDialogOpen, setIsTrackDialogOpen] = useState(false)
   const hasTracks = tracks && tracks.length > 0
 
-  function handleTrackSelect(trackId: string) {
-    if (!trackId) {
+  function handleTrackSelect(trackSlug: string) {
+    if (!trackSlug) {
       return
     }
 
-    router.push(`/${userId}/tracks/${trackId}/new`)
+    const returnTo = encodeURIComponent(`/${userId}`)
+    router.push(`/${userId}/tracks/${trackSlug}/new?returnTo=${returnTo}`)
   }
 
   function handleSymptomSuccess() {
     setIsSymptomDialogOpen(false)
     // Optionally refresh data or show success message
   }
+
+  function handleTrackSuccess() {
+    setIsTrackDialogOpen(false)
+    onTrackCreated?.()
+  }
+
   function RenderQuickLogHeader() {
     return (
       <div>
@@ -60,7 +69,7 @@ export function HubQuickActions({ tracks, userId }: HubQuickActionsProps) {
     return tracks.map((track) => (
       <DropdownMenuItem
         key={track.id}
-        onSelect={() => handleTrackSelect(track.id)}
+        onSelect={() => handleTrackSelect(track.slug)}
         className='flex-col items-start'
       >
         <span className='text-sm font-medium'>{track.title}</span>
@@ -123,6 +132,7 @@ export function HubQuickActions({ tracks, userId }: HubQuickActionsProps) {
         variant='outline'
         className='justify-between rounded-full px-5 sm:w-auto'
         type='button'
+        onClick={() => setIsTrackDialogOpen(true)}
       >
         <span>track</span>
         <Plus className='size-4 text-muted-foreground' />
@@ -168,6 +178,11 @@ export function HubQuickActions({ tracks, userId }: HubQuickActionsProps) {
         tracks={tracks}
         userId={userId}
         onSuccess={handleSymptomSuccess}
+      />
+      <TrackCreateDialog
+        open={isTrackDialogOpen}
+        onOpenChange={setIsTrackDialogOpen}
+        onSuccess={handleTrackSuccess}
       />
     </>
   )

@@ -1,26 +1,31 @@
-import { createUserTrack } from '../helpers'
-import type { HealthTrack, ApiResponse } from '../types'
+import { createTrack } from '../helpers'
+import type { CreateTrackResponse } from '../types'
+
+interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+}
 
 // Mock the global fetch
 global.fetch = jest.fn()
 
-describe('createUserTrack', () => {
+describe('createTrack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it('should successfully create a track with title and description', async () => {
-    const mockTrack: HealthTrack = {
+    const mockTrack: CreateTrackResponse = {
       id: 'track-new',
       title: 'New Track',
       slug: 'new-track',
       description: 'Test description',
       createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
-      userId: 'user-123'
+      updatedAt: '2024-01-01T00:00:00Z'
     }
 
-    const mockResponse: ApiResponse<HealthTrack> = {
+    const mockResponse: ApiResponse<CreateTrackResponse> = {
       success: true,
       data: mockTrack
     }
@@ -31,7 +36,7 @@ describe('createUserTrack', () => {
       json: async () => mockResponse
     })
 
-    const result = await createUserTrack('New Track', 'Test description')
+    const result = await createTrack('New Track', 'Test description')
 
     expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/user/tracks', {
       method: 'POST',
@@ -48,17 +53,16 @@ describe('createUserTrack', () => {
   })
 
   it('should successfully create a track with only title', async () => {
-    const mockTrack: HealthTrack = {
+    const mockTrack: CreateTrackResponse = {
       id: 'track-new',
       title: 'New Track',
       slug: 'new-track',
-      description: undefined,
+      description: null,
       createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
-      userId: 'user-123'
+      updatedAt: '2024-01-01T00:00:00Z'
     }
 
-    const mockResponse: ApiResponse<HealthTrack> = {
+    const mockResponse: ApiResponse<CreateTrackResponse> = {
       success: true,
       data: mockTrack
     }
@@ -69,7 +73,7 @@ describe('createUserTrack', () => {
       json: async () => mockResponse
     })
 
-    const result = await createUserTrack('New Track')
+    const result = await createTrack('New Track')
 
     expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/user/tracks', {
       method: 'POST',
@@ -96,7 +100,7 @@ describe('createUserTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createUserTrack('New Track')).rejects.toThrow('Unauthorized')
+    await expect(createTrack('New Track')).rejects.toThrow('Unauthorized')
   })
 
   it('should handle 400 validation error', async () => {
@@ -111,7 +115,7 @@ describe('createUserTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createUserTrack('')).rejects.toThrow(
+    await expect(createTrack('')).rejects.toThrow(
       'Title is required and must be a non-empty string'
     )
   })
@@ -119,7 +123,7 @@ describe('createUserTrack', () => {
   it('should handle network errors', async () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
-    await expect(createUserTrack('New Track')).rejects.toThrow('Network error')
+    await expect(createTrack('New Track')).rejects.toThrow('Network error')
   })
 
   it('should handle API errors with custom error messages', async () => {
@@ -134,7 +138,7 @@ describe('createUserTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createUserTrack('New Track')).rejects.toThrow('Database connection failed')
+    await expect(createTrack('New Track')).rejects.toThrow('Database connection failed')
   })
 
   it('should handle response.ok true but data.success false', async () => {
@@ -149,7 +153,7 @@ describe('createUserTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createUserTrack('New Track')).rejects.toThrow('Server error')
+    await expect(createTrack('New Track')).rejects.toThrow('Server error')
   })
 
   it('should use default error message when data.success is false and no error message', async () => {
@@ -163,11 +167,11 @@ describe('createUserTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createUserTrack('New Track')).rejects.toThrow('Failed to create track')
+    await expect(createTrack('New Track')).rejects.toThrow('Failed to create track')
   })
 
   it('should throw error when response is ok but data.data is missing', async () => {
-    const mockResponse: ApiResponse<HealthTrack> = {
+    const mockResponse: ApiResponse<CreateTrackResponse> = {
       success: true,
       data: undefined
     }
@@ -178,24 +182,20 @@ describe('createUserTrack', () => {
       json: async () => mockResponse
     })
 
-    await expect(createUserTrack('New Track')).rejects.toThrow('No track data received')
+    await expect(createTrack('New Track')).rejects.toThrow('No track data received')
   })
 
-  it('should use custom API URL from environment variable', async () => {
-    const originalEnv = process.env.NEXT_PUBLIC_API_URL
-    process.env.NEXT_PUBLIC_API_URL = 'https://custom-api.example.com'
-
-    const mockTrack: HealthTrack = {
+  it('should include description as null when explicitly passed', async () => {
+    const mockTrack: CreateTrackResponse = {
       id: 'track-new',
       title: 'New Track',
       slug: 'new-track',
-      description: undefined,
+      description: null,
       createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
-      userId: 'user-123'
+      updatedAt: '2024-01-01T00:00:00Z'
     }
 
-    const mockResponse: ApiResponse<HealthTrack> = {
+    const mockResponse: ApiResponse<CreateTrackResponse> = {
       success: true,
       data: mockTrack
     }
@@ -206,24 +206,18 @@ describe('createUserTrack', () => {
       json: async () => mockResponse
     })
 
-    await createUserTrack('New Track')
+    await createTrack('New Track', null)
 
-    expect(global.fetch).toHaveBeenCalledWith('https://custom-api.example.com/api/user/tracks', {
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/user/tracks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       credentials: 'include',
       body: JSON.stringify({
-        title: 'New Track'
+        title: 'New Track',
+        description: null
       })
     })
-
-    // Restore original env
-    if (originalEnv) {
-      process.env.NEXT_PUBLIC_API_URL = originalEnv
-    } else {
-      delete process.env.NEXT_PUBLIC_API_URL
-    }
   })
 })

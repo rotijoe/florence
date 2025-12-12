@@ -116,7 +116,9 @@ describe('TrackHeader', () => {
     const createEventItem = screen.getByText('Create event')
     await user.click(createEventItem)
 
-    expect(mockPush).toHaveBeenCalledWith('/user-1/tracks/test-track/new')
+    expect(mockPush).toHaveBeenCalledWith(
+      `/user-1/tracks/test-track/new?returnTo=${encodeURIComponent('/user-1/tracks/test-track')}`
+    )
   })
 
   it('does not navigate when disabled items are clicked', async () => {
