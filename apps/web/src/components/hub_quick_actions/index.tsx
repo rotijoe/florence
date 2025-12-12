@@ -13,12 +13,18 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { SymptomDialogue } from './symptom_dialogue'
 import { TrackCreateDialog } from '@/components/track_create_dialog'
+import { DocumentUploadDialogue } from './document_upload_dialogue'
 import type { HubQuickActionsProps } from './types'
 
 export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActionsProps) {
   const router = useRouter()
   const [isSymptomDialogOpen, setIsSymptomDialogOpen] = useState(false)
   const [isTrackDialogOpen, setIsTrackDialogOpen] = useState(false)
+  const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false)
+  const [selectedDocumentTrack, setSelectedDocumentTrack] = useState<{
+    slug: string
+    title: string
+  } | null>(null)
   const hasTracks = tracks && tracks.length > 0
 
   function handleTrackSelect(trackSlug: string) {
@@ -38,6 +44,23 @@ export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActi
   function handleTrackSuccess() {
     setIsTrackDialogOpen(false)
     onTrackCreated?.()
+  }
+
+  function handleDocumentTrackSelect(trackSlug: string) {
+    if (!trackSlug) {
+      return
+    }
+
+    const track = tracks.find((t) => t.slug === trackSlug)
+    if (track) {
+      setSelectedDocumentTrack({ slug: track.slug, title: track.title })
+      setIsDocumentDialogOpen(true)
+    }
+  }
+
+  function handleDocumentSuccess() {
+    setIsDocumentDialogOpen(false)
+    setSelectedDocumentTrack(null)
   }
 
   function RenderQuickLogHeader() {
@@ -140,16 +163,64 @@ export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActi
     )
   }
 
-  function RenderDocumentButton() {
-    return (
-      <Button
-        variant='outline'
-        className='justify-between rounded-full px-5 sm:w-auto'
-        type='button'
+  function renderDocumentMenuItems() {
+    return tracks.map((track) => (
+      <DropdownMenuItem
+        key={track.id}
+        onSelect={() => handleDocumentTrackSelect(track.slug)}
+        className='flex-col items-start'
       >
-        <span>document</span>
-        <ArrowUpIcon className='size-4 text-muted-foreground' />
-      </Button>
+        <span className='text-sm font-medium'>{track.title}</span>
+        <span className='text-xs text-muted-foreground'>Upload document</span>
+      </DropdownMenuItem>
+    ))
+  }
+
+  function renderDisabledDocumentButton() {
+    return (
+      <TooltipProvider>
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <span className='inline-flex'>
+              <Button
+                variant='outline'
+                className='justify-between rounded-full px-5 sm:w-auto'
+                type='button'
+                disabled
+              >
+                <span>document</span>
+                <ArrowUpIcon className='size-4 text-muted-foreground' />
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Add a track before uploading documents</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
+  function RenderDocumentDropdown() {
+    if (!hasTracks) {
+      return renderDisabledDocumentButton()
+    }
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant='outline'
+            className='justify-between rounded-full px-5 sm:w-auto'
+            type='button'
+            aria-haspopup='listbox'
+          >
+            <span>document</span>
+            <ArrowUpIcon className='size-4 text-muted-foreground' />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='start' className='min-w-[12rem]'>
+          {renderDocumentMenuItems()}
+        </DropdownMenuContent>
+      </DropdownMenu>
     )
   }
 
@@ -160,7 +231,7 @@ export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActi
           <RenderLogSymptomButton />
           <RenderAddEventDropdown />
           <RenderTrackButton />
-          <RenderDocumentButton />
+          <RenderDocumentDropdown />
         </div>
       </div>
     )
@@ -184,6 +255,15 @@ export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActi
         onOpenChange={setIsTrackDialogOpen}
         onSuccess={handleTrackSuccess}
       />
+      {selectedDocumentTrack && (
+        <DocumentUploadDialogue
+          open={isDocumentDialogOpen}
+          onOpenChange={setIsDocumentDialogOpen}
+          selectedTrackTitle={selectedDocumentTrack.title}
+          selectedTrackSlug={selectedDocumentTrack.slug}
+          onSuccess={handleDocumentSuccess}
+        />
+      )}
     </>
   )
 }

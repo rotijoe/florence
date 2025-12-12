@@ -141,3 +141,129 @@ describe('HubQuickActions - track button', () => {
     expect(mockOnTrackCreated).toHaveBeenCalled()
   })
 })
+
+describe('HubQuickActions - document button', () => {
+  beforeEach(() => {
+    pushMock.mockReset()
+    ;(global.fetch as jest.Mock).mockReset()
+  })
+
+  it('disables the document button and shows tooltip guidance when there are no tracks', async () => {
+    renderComponent([])
+
+    const user = userEvent.setup()
+    const documentButton = screen.getByRole('button', { name: /document/i })
+
+    expect(documentButton).toBeDisabled()
+
+    await user.hover(documentButton)
+
+    const tooltips = await screen.findAllByRole('tooltip')
+
+    expect(tooltips[0]).toHaveTextContent('Add a track before uploading documents')
+  })
+
+  it('opens document upload dialog when a track is selected from dropdown', async () => {
+    const tracks: TrackOption[] = [
+      {
+        id: 'track-1',
+        slug: 'track-one',
+        title: 'Track One',
+        lastUpdatedAt: new Date().toISOString()
+      },
+      {
+        id: 'track-2',
+        slug: 'track-two',
+        title: 'Track Two',
+        lastUpdatedAt: new Date().toISOString()
+      }
+    ]
+
+    renderComponent(tracks)
+
+    const user = userEvent.setup()
+    const documentButton = screen.getByRole('button', { name: /document/i })
+
+    await user.click(documentButton)
+    const trackItem = await screen.findByText('Track One')
+    await user.click(trackItem)
+
+    expect(screen.getByRole('heading', { name: /upload document/i })).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Track One')).toBeInTheDocument()
+  })
+
+  it('shows all required fields in document upload dialog', async () => {
+    const tracks: TrackOption[] = [
+      {
+        id: 'track-1',
+        slug: 'track-one',
+        title: 'Track One',
+        lastUpdatedAt: new Date().toISOString()
+      }
+    ]
+
+    renderComponent(tracks)
+
+    const user = userEvent.setup()
+    const documentButton = screen.getByRole('button', { name: /document/i })
+
+    await user.click(documentButton)
+    const trackItem = await screen.findByText('Track One')
+    await user.click(trackItem)
+
+    expect(screen.getByLabelText(/track/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/file/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/title/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/notes/i)).toBeInTheDocument()
+  })
+
+  it('disables upload button until file and title are provided', async () => {
+    const tracks: TrackOption[] = [
+      {
+        id: 'track-1',
+        slug: 'track-one',
+        title: 'Track One',
+        lastUpdatedAt: new Date().toISOString()
+      }
+    ]
+
+    renderComponent(tracks)
+
+    const user = userEvent.setup()
+    const documentButton = screen.getByRole('button', { name: /document/i })
+
+    await user.click(documentButton)
+    const trackItem = await screen.findByText('Track One')
+    await user.click(trackItem)
+
+    const uploadButton = screen.getByRole('button', { name: /upload/i })
+    expect(uploadButton).toBeDisabled()
+  })
+
+  it('closes document upload dialog when cancel is clicked', async () => {
+    const tracks: TrackOption[] = [
+      {
+        id: 'track-1',
+        slug: 'track-one',
+        title: 'Track One',
+        lastUpdatedAt: new Date().toISOString()
+      }
+    ]
+
+    renderComponent(tracks)
+
+    const user = userEvent.setup()
+    const documentButton = screen.getByRole('button', { name: /document/i })
+
+    await user.click(documentButton)
+    const trackItem = await screen.findByText('Track One')
+    await user.click(trackItem)
+
+    expect(screen.getByRole('heading', { name: /upload document/i })).toBeInTheDocument()
+
+    const cancelButton = screen.getByRole('button', { name: /cancel/i })
+    await user.click(cancelButton)
+
+    expect(screen.queryByRole('heading', { name: /upload document/i })).not.toBeInTheDocument()
+  })
+})

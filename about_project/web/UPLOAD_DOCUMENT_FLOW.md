@@ -29,6 +29,17 @@ The goal is to keep event attachments private in S3 while still allowing seamles
       - Disabled actions while an upload is in progress
     - Calls `onUploadComplete(updatedEvent)` when the backend confirms the upload
 
+- **Quick document upload dialog**
+  - **Location:** `apps/web/src/components/hub_quick_actions/document_upload_dialogue/index.tsx`
+  - **Component:** `DocumentUploadDialogue`
+  - **Entry point:** Dashboard quick actions (`HubQuickActions` component)
+  - **Flow:**
+    1. User clicks "document" button in quick actions
+    2. Selects a track from dropdown
+    3. Dialog opens with track (read-only), file input, title input, and notes textarea
+  - **Status:** UI-only implementation (upload functionality to be wired in later)
+  - **Note:** This provides an alternative entry point for document uploads directly from the dashboard, separate from the event-specific upload flow
+
 - **Upload state hook**
   - **Location:** `apps/web/src/hooks/use_event_upload/index.ts`
   - **Hook:** `useEventUpload`
@@ -226,5 +237,3 @@ All event‑read endpoints now surface **presigned** `fileUrl` values:
     - `fileUrl` is non‑null and looks like a presigned URL when attachments exist.
 
 When extending this feature (e.g., multiple files per event, deletion, or file type icons), update this document and the relevant tests to keep the architecture description accurate.
-
-
