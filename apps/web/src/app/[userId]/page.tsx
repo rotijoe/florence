@@ -11,7 +11,8 @@ import {
   buildMockAccountOverviewData,
   getGreetingForUser,
   fetchUserMeWithCookies,
-  mapTracksToHealthTrackSummary
+  mapTracksToHealthTrackSummary,
+  fetchUpcomingAppointmentsForHub
 } from './helpers'
 import { WELCOME_SUBTITLE } from './constants'
 
@@ -30,14 +31,16 @@ export default async function Hub({ params }: UserHomePageProps) {
   // Fetch real tracks from API
   let trackSummaries = overview.healthTracks
   let actualUserId = userId
+  let appointments = overview.appointments
 
   try {
     const userMe = await fetchUserMeWithCookies()
     actualUserId = userMe.id
     trackSummaries = mapTracksToHealthTrackSummary(userMe.tracks)
+    appointments = await fetchUpcomingAppointmentsForHub(actualUserId)
   } catch (error) {
     // Fallback to mock data if API call fails
-    console.error('Failed to fetch user tracks:', error)
+    console.error('Failed to fetch user data:', error)
   }
 
   const quickActionTrackOptions = buildTrackOptions(trackSummaries)
@@ -53,7 +56,7 @@ export default async function Hub({ params }: UserHomePageProps) {
         <section className='grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]'>
           <div className='space-y-4'>
             <HubHealthTracks userId={actualUserId} tracks={trackSummaries} />
-            <HubUpcomingAppointments appointments={overview.appointments} />
+            <HubUpcomingAppointments appointments={appointments} />
           </div>
 
           <div className='space-y-4'>

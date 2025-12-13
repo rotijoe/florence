@@ -597,7 +597,7 @@ describe('EventDetail', () => {
 
     it('shows toast error when create fails', async () => {
       const user = userEvent.setup()
-      const { toast } = require('sonner')
+      const toast = (await import('sonner')).toast
       mockCreateEventAction.mockResolvedValue({ error: 'Failed to create event' })
 
       const placeholderEvent: EventResponse = {
@@ -619,6 +619,106 @@ describe('EventDetail', () => {
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith('Failed to create event')
+      })
+    })
+
+    it('shows type selector in create mode', async () => {
+      const placeholderEvent: EventResponse = {
+        ...mockEvent,
+        id: 'new',
+        title: '',
+        notes: null,
+        type: EventType.NOTE
+      }
+
+      render(
+        <EventDetail event={placeholderEvent} trackSlug={trackSlug} userId={userId} mode='create' />
+      )
+
+      expect(screen.getByLabelText(/type/i)).toBeInTheDocument()
+    })
+
+    it('shows appointment datetime field when type is APPOINTMENT in create mode', async () => {
+      const user = userEvent.setup()
+      const placeholderEvent: EventResponse = {
+        ...mockEvent,
+        id: 'new',
+        title: '',
+        notes: null,
+        type: EventType.NOTE
+      }
+
+      render(
+        <EventDetail event={placeholderEvent} trackSlug={trackSlug} userId={userId} mode='create' />
+      )
+
+      const typeSelect = screen.getByLabelText(/type/i)
+      await user.selectOptions(typeSelect, EventType.APPOINTMENT)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/appointment datetime/i)).toBeInTheDocument()
+      })
+    })
+
+    it('hides appointment datetime field when type is not APPOINTMENT in create mode', async () => {
+      const user = userEvent.setup()
+      const placeholderEvent: EventResponse = {
+        ...mockEvent,
+        id: 'new',
+        title: '',
+        notes: null,
+        type: EventType.APPOINTMENT
+      }
+
+      render(
+        <EventDetail event={placeholderEvent} trackSlug={trackSlug} userId={userId} mode='create' />
+      )
+
+      expect(screen.getByLabelText(/appointment datetime/i)).toBeInTheDocument()
+
+      const typeSelect = screen.getByLabelText(/type/i)
+      await user.selectOptions(typeSelect, EventType.NOTE)
+
+      await waitFor(() => {
+        expect(screen.queryByLabelText(/appointment datetime/i)).not.toBeInTheDocument()
+      })
+    })
+
+    it('sends type and date when creating appointment event', async () => {
+      const user = userEvent.setup()
+      const placeholderEvent: EventResponse = {
+        ...mockEvent,
+        id: 'new',
+        title: '',
+        notes: null,
+        type: EventType.NOTE
+      }
+
+      render(
+        <EventDetail event={placeholderEvent} trackSlug={trackSlug} userId={userId} mode='create' />
+      )
+
+      const titleInput = screen.getByLabelText(/title/i)
+      await user.type(titleInput, 'Doctor Appointment')
+
+      const typeSelect = screen.getByLabelText(/type/i)
+      await user.selectOptions(typeSelect, EventType.APPOINTMENT)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/appointment datetime/i)).toBeInTheDocument()
+      })
+
+      const datetimeInput = screen.getByLabelText(/appointment datetime/i)
+      await user.type(datetimeInput, '2025-12-25T10:00')
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(mockCreateEventAction).toHaveBeenCalled()
+        const formData = mockCreateEventAction.mock.calls[0][0]
+        expect(formData.get('type')).toBe(EventType.APPOINTMENT)
+        expect(formData.get('date')).toBeTruthy()
       })
     })
   })

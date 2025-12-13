@@ -68,3 +68,10 @@ export type EventResponse = {
   createdAt: string
   updatedAt: string
 }
+
+export type UpcomingAppointmentResponse = {
+  eventId: string
+  trackSlug: string
+  title: string
+  date: string
+}

@@ -33,7 +33,7 @@ import {
   deleteEventAction
 } from '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
 import { createEventOnSaveAction } from '@/app/[userId]/tracks/[trackSlug]/new/actions'
-import type { EventResponse } from '@packages/types'
+import { EventType, type EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
 import { EventAttachment } from '@/components/attachment_list'
 
@@ -53,6 +53,10 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
   const initialNotesRef = useRef(isCreateMode ? null : (event.notes ?? null))
   const [currentTitle, setCurrentTitle] = useState(initialTitleRef.current)
   const [currentNotes, setCurrentNotes] = useState(initialNotesRef.current)
+  const [currentType, setCurrentType] = useState<EventType>(event.type)
+  const [currentDate, setCurrentDate] = useState<string>(
+    isCreateMode ? '' : new Date(event.date).toISOString().slice(0, 16)
+  )
 
   // Calculate if form is dirty
   const isDirty =
@@ -77,9 +81,6 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
   async function formAction(formData: FormData) {
     setError(null)
 
-    const title = (formData.get('title') as string) ?? ''
-    const notes = (formData.get('notes') as string | null) ?? null
-
     if (isCreateMode) {
       // Create mode: use createEventOnSaveAction
       const result = await createEventOnSaveAction(formData)
@@ -95,6 +96,9 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
     }
 
     // Edit mode: use updateEventAction with optimistic updates
+    const title = (formData.get('title') as string) ?? ''
+    const notes = (formData.get('notes') as string | null) ?? null
+
     updateOptimisticEvent({
       title: title.trim(),
       notes: notes === '' ? null : notes,
@@ -255,7 +259,11 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
             currentTitle,
             currentNotes,
             setCurrentTitle,
-            setCurrentNotes
+            setCurrentNotes,
+            currentType,
+            setCurrentType,
+            currentDate,
+            setCurrentDate
           )}
           {renderFooter(optimisticEvent, isCreateMode)}
         </form>
@@ -414,10 +422,18 @@ function renderContent(
   currentTitle?: string,
   currentNotes?: string | null,
   setCurrentTitle?: (value: string) => void,
-  setCurrentNotes?: (value: string | null) => void
+  setCurrentNotes?: (value: string | null) => void,
+  currentType?: EventType,
+  setCurrentType?: (value: EventType) => void,
+  currentDate?: string,
+  setCurrentDate?: (value: string) => void
 ) {
   return (
     <CardContent className='space-y-6'>
+      {isCreateMode && renderTypeSelector(currentType, setCurrentType)}
+      {isCreateMode &&
+        currentType === EventType.APPOINTMENT &&
+        renderAppointmentDateTime(currentDate, setCurrentDate)}
       {renderNotes(
         event,
         isEditing,
@@ -471,6 +487,53 @@ const renderNotes = (
       <h3 className='text-sm font-semibold text-muted-foreground'>Notes</h3>
       <p className='text-sm leading-6'>{event.notes}</p>
     </div>
+  )
+}
+
+function renderTypeSelector(currentType?: EventType, setCurrentType?: (value: EventType) => void) {
+  if (!setCurrentType) return null
+
+  return (
+    <Field>
+      <FieldLabel htmlFor='type'>Type</FieldLabel>
+      <FieldContent>
+        <select
+          id='type'
+          name='type'
+          value={currentType || EventType.NOTE}
+          onChange={(e) => setCurrentType(e.target.value as EventType)}
+          className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+        >
+          <option value={EventType.NOTE}>Note</option>
+          <option value={EventType.APPOINTMENT}>Appointment</option>
+          <option value={EventType.RESULT}>Result</option>
+          <option value={EventType.LETTER}>Letter</option>
+          <option value={EventType.FEELING}>Feeling</option>
+          <option value={EventType.EXERCISE}>Exercise</option>
+          <option value={EventType.SYMPTOM}>Symptom</option>
+        </select>
+      </FieldContent>
+    </Field>
+  )
+}
+
+function renderAppointmentDateTime(currentDate?: string, setCurrentDate?: (value: string) => void) {
+  if (!setCurrentDate) return null
+
+  return (
+    <Field>
+      <FieldLabel htmlFor='date'>Appointment datetime</FieldLabel>
+      <FieldContent>
+        <Input
+          id='date'
+          name='date'
+          type='datetime-local'
+          value={currentDate || ''}
+          onChange={(e) => setCurrentDate(e.target.value)}
+          required
+        />
+      </FieldContent>
+    </Field>
   )
 }
 

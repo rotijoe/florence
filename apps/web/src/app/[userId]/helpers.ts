@@ -1,8 +1,9 @@
 import { cookies } from 'next/headers'
-import type { AccountOverviewData, HealthTrackSummary } from './types'
+import type { AccountOverviewData, HealthTrackSummary, AppointmentSummary } from './types'
 import type { UserWithTracks } from './tracks/types'
-import type { ApiResponse } from '@packages/types'
+import type { ApiResponse, UpcomingAppointmentResponse } from '@packages/types'
 import { SERVER_API_BASE_URL } from '@/constants/api'
+import { fetchUpcomingAppointments } from '@/lib/fetch_upcoming_appointments'
 
 export function getGreetingForUser(name: string | null | undefined): string {
   if (!name) {
@@ -96,6 +97,42 @@ export function mapTracksToHealthTrackSummary(
   }))
 }
 
+function formatAppointmentDateTime(isoString: string): string {
+  const date = new Date(isoString)
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+export function mapUpcomingAppointmentsToSummary(
+  appointments: UpcomingAppointmentResponse[],
+  userId: string
+): AppointmentSummary[] {
+  return appointments.map((appt) => ({
+    id: appt.eventId,
+    title: appt.title,
+    datetimeLabel: formatAppointmentDateTime(appt.date),
+    location: null,
+    href: `/${userId}/tracks/${appt.trackSlug}/${appt.eventId}`
+  }))
+}
+
+export async function fetchUpcomingAppointmentsForHub(
+  userId: string
+): Promise<AppointmentSummary[]> {
+  try {
+    const appointments = await fetchUpcomingAppointments(5)
+    return mapUpcomingAppointmentsToSummary(appointments, userId)
+  } catch (error) {
+    console.error('Failed to fetch upcoming appointments:', error)
+    return []
+  }
+}
+
 export function buildMockAccountOverviewData(name: string | null | undefined): AccountOverviewData {
   const displayName = name && name.trim().length > 0 ? name : 'there'
 
@@ -144,13 +181,15 @@ export function buildMockAccountOverviewData(name: string | null | undefined): A
         id: 'upcoming-appointment-1',
         title: 'GP follow‑up',
         datetimeLabel: 'Tue, 14 Jan · 10:30',
-        location: 'City Health Centre'
+        location: 'City Health Centre',
+        href: '/mock-user/tracks/sleep/upcoming-appointment-1'
       },
       {
         id: 'upcoming-appointment-2',
         title: 'Physio session',
         datetimeLabel: 'Fri, 17 Jan · 15:00',
-        location: 'Riverside Clinic'
+        location: 'Riverside Clinic',
+        href: '/mock-user/tracks/pain/upcoming-appointment-2'
       }
     ],
     recentActivity: []

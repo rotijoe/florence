@@ -16,6 +16,8 @@ export async function createEventOnSaveAction(
   const trackSlug = formData.get('trackSlug') as string
   const title = formData.get('title') as string
   const notes = formData.get('notes') as string | null
+  const type = formData.get('type') as string | null
+  const date = formData.get('date') as string | null
 
   if (!userId || !trackSlug) {
     return {
@@ -36,16 +38,26 @@ export async function createEventOnSaveAction(
       .map((cookie) => `${cookie.name}=${cookie.value}`)
       .join('; ')
 
+    const body: Record<string, unknown> = {
+      title: title.trim(),
+      notes: notes === '' ? null : notes
+    }
+
+    if (type) {
+      body.type = type
+    }
+
+    if (date) {
+      body.date = new Date(date).toISOString()
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(cookieHeader && { Cookie: cookieHeader })
       },
-      body: JSON.stringify({
-        title: title.trim(),
-        notes: notes === '' ? null : notes
-      })
+      body: JSON.stringify(body)
     })
 
     if (!response.ok) {

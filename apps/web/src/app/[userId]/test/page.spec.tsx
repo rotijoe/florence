@@ -12,7 +12,8 @@ jest.mock('../helpers', () => ({
   buildMockAccountOverviewData: jest.fn(),
   getGreetingForUser: jest.fn(),
   fetchUserMeWithCookies: jest.fn(),
-  mapTracksToHealthTrackSummary: jest.fn()
+  mapTracksToHealthTrackSummary: jest.fn(),
+  fetchUpcomingAppointmentsForHub: jest.fn()
 }))
 
 jest.mock('../constants', () => ({
@@ -77,6 +78,9 @@ describe('UserHomePage', () => {
   const mockGetGreetingForUser = helpers.getGreetingForUser as jest.Mock
   const mockFetchUserMeWithCookies = helpers.fetchUserMeWithCookies as jest.Mock
   const mockMapTracksToHealthTrackSummary = helpers.mapTracksToHealthTrackSummary as jest.Mock
+  const mockFetchUpcomingAppointmentsForHub = (
+    helpers as unknown as { fetchUpcomingAppointmentsForHub: jest.Mock }
+  ).fetchUpcomingAppointmentsForHub
 
   const mockOverviewData = {
     user: { id: 'user-123', name: 'John Doe' },
@@ -129,6 +133,7 @@ describe('UserHomePage', () => {
     mockGetGreetingForUser.mockReturnValue('Welcome back, John Doe')
     mockFetchUserMeWithCookies.mockResolvedValue(mockUserMeData)
     mockMapTracksToHealthTrackSummary.mockReturnValue(mockMappedTracks)
+    mockFetchUpcomingAppointmentsForHub.mockResolvedValue([])
   })
 
   it('should render all hub components', async () => {
@@ -296,15 +301,11 @@ describe('UserHomePage', () => {
   })
 
   it('should pass appointments to HubUpcomingAppointments', async () => {
-    const dataWithAppointments = {
-      ...mockOverviewData,
-      appointments: [
-        { id: 'a1', title: 'GP Visit' },
-        { id: 'a2', title: 'Physio' },
-        { id: 'a3', title: 'Dentist' }
-      ]
-    }
-    mockBuildMockAccountOverviewData.mockReturnValue(dataWithAppointments)
+    mockFetchUpcomingAppointmentsForHub.mockResolvedValue([
+      { id: 'a1', title: 'GP Visit', datetimeLabel: 'Mon, 10 Jan · 10:00', href: '/user-123/tracks/sleep/a1' },
+      { id: 'a2', title: 'Physio', datetimeLabel: 'Tue, 11 Jan · 14:00', href: '/user-123/tracks/pain/a2' },
+      { id: 'a3', title: 'Dentist', datetimeLabel: 'Wed, 12 Jan · 09:00', href: '/user-123/tracks/dental/a3' }
+    ])
 
     const params = Promise.resolve({ userId: 'user-123' })
     const result = await UserHomePage({ params })
@@ -376,7 +377,7 @@ describe('UserHomePage', () => {
 
     render(result)
 
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch user tracks:', expect.any(Error))
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch user data:', expect.any(Error))
 
     const healthTracks = screen.getByTestId('hub-health-tracks')
     expect(healthTracks).toHaveAttribute('data-tracks-count', '1')

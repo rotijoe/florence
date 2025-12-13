@@ -27,6 +27,7 @@ export interface AppointmentSummary {
   title: string
   datetimeLabel: string
   location?: string | null
+  href: string
 }
 
 export interface RecentActivityItem {

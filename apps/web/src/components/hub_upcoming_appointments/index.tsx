@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { HUB_SECTION_TITLES } from './constants'
 import type { HubUpcomingAppointmentsProps } from './types'
@@ -22,18 +23,17 @@ export function HubUpcomingAppointments({ appointments }: HubUpcomingAppointment
 
   function renderAppointmentItems() {
     return appointments.map((appointment) => (
-      <Card
-        key={appointment.id}
-        className='bg-background/80 border-muted-foreground/15 shadow-none'
-      >
-        <CardHeader>
-          <CardTitle className='text-sm font-semibold'>{appointment.title}</CardTitle>
-          <CardDescription className='text-xs sm:text-sm'>
-            {appointment.datetimeLabel}
-            {appointment.location ? ` · ${appointment.location}` : ''}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <Link key={appointment.id} href={appointment.href}>
+        <Card className='bg-background/80 border-muted-foreground/15 shadow-none transition-colors hover:bg-muted/50'>
+          <CardHeader>
+            <CardTitle className='text-sm font-semibold'>{appointment.title}</CardTitle>
+            <CardDescription className='text-xs sm:text-sm'>
+              {appointment.datetimeLabel}
+              {appointment.location ? ` · ${appointment.location}` : ''}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </Link>
     ))
   }
 

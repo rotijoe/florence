@@ -14,20 +14,33 @@ export const listEventsQuerySchema = z.object({
     })
 })
 
-export const createEventSchema = z.object({
-  title: z.string().min(1).trim().default('Untitled event'),
-  type: z.nativeEnum(EventType).default(EventType.NOTE),
-  date: z
-    .union([z.string().datetime(), z.date()])
-    .optional()
-    .transform((val) => {
-      if (!val) return new Date()
-      return val instanceof Date ? val : new Date(val)
-    }),
-  notes: z.string().nullable().optional(),
-  symptomType: z.string().nullable().optional(),
-  severity: z.number().int().min(1).max(5).nullable().optional()
-})
+export const createEventSchema = z
+  .object({
+    title: z.string().min(1).trim().default('Untitled event'),
+    type: z.nativeEnum(EventType).default(EventType.NOTE),
+    date: z
+      .union([z.string().datetime(), z.date()])
+      .optional()
+      .transform((val) => {
+        if (!val) return new Date()
+        return val instanceof Date ? val : new Date(val)
+      }),
+    notes: z.string().nullable().optional(),
+    symptomType: z.string().nullable().optional(),
+    severity: z.number().int().min(1).max(5).nullable().optional()
+  })
+  .refine(
+    (data) => {
+      if (data.type === EventType.APPOINTMENT) {
+        return data.date !== undefined && data.date !== null
+      }
+      return true
+    },
+    {
+      message: 'Date is required when type is APPOINTMENT',
+      path: ['date']
+    }
+  )
 
 export const updateEventSchema = z.object({
   title: z.string().min(1).trim().optional(),

@@ -18,7 +18,8 @@ describe('HubUpcomingAppointments', () => {
         id: '1',
         title: 'GP Appointment',
         datetimeLabel: 'Tomorrow at 2:00 PM',
-        location: 'Clinic A'
+        location: 'Clinic A',
+        href: '/user-1/tracks/sleep/event-1'
       }
     ]
 
@@ -26,6 +27,9 @@ describe('HubUpcomingAppointments', () => {
 
     expect(screen.getByText('GP Appointment')).toBeInTheDocument()
     expect(screen.getByText('Tomorrow at 2:00 PM · Clinic A')).toBeInTheDocument()
+
+    const link = screen.getByRole('link', { name: /GP Appointment/i })
+    expect(link).toHaveAttribute('href', '/user-1/tracks/sleep/event-1')
   })
 
   it('renders appointment without location suffix when location is missing', () => {
@@ -34,7 +38,8 @@ describe('HubUpcomingAppointments', () => {
         id: '1',
         title: 'GP Appointment',
         datetimeLabel: 'Tomorrow at 2:00 PM',
-        location: undefined
+        location: undefined,
+        href: '/user-1/tracks/pain/event-2'
       }
     ]
 
@@ -43,5 +48,33 @@ describe('HubUpcomingAppointments', () => {
     expect(screen.getByText('GP Appointment')).toBeInTheDocument()
     expect(screen.getByText('Tomorrow at 2:00 PM')).toBeInTheDocument()
     expect(screen.queryByText(/ · /)).not.toBeInTheDocument()
+
+    const link = screen.getByRole('link', { name: /GP Appointment/i })
+    expect(link).toHaveAttribute('href', '/user-1/tracks/pain/event-2')
+  })
+
+  it('renders each appointment as a link to the event detail page', () => {
+    const appointments: AppointmentSummary[] = [
+      {
+        id: 'event-1',
+        title: 'First Appointment',
+        datetimeLabel: 'Mon, 1 Jan · 10:00',
+        href: '/user-1/tracks/sleep/event-1'
+      },
+      {
+        id: 'event-2',
+        title: 'Second Appointment',
+        datetimeLabel: 'Tue, 2 Jan · 14:00',
+        href: '/user-1/tracks/pain/event-2'
+      }
+    ]
+
+    render(<HubUpcomingAppointments appointments={appointments} />)
+
+    const firstLink = screen.getByRole('link', { name: /First Appointment/i })
+    expect(firstLink).toHaveAttribute('href', '/user-1/tracks/sleep/event-1')
+
+    const secondLink = screen.getByRole('link', { name: /Second Appointment/i })
+    expect(secondLink).toHaveAttribute('href', '/user-1/tracks/pain/event-2')
   })
 })
