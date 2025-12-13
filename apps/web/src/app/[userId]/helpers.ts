@@ -1,4 +1,8 @@
-import type { AccountOverviewData } from './types'
+import { cookies } from 'next/headers'
+import type { AccountOverviewData, HealthTrackSummary } from './types'
+import type { UserWithTracks } from './tracks/types'
+import type { ApiResponse } from '@packages/types'
+import { SERVER_API_BASE_URL } from '@/constants/api'
 
 export function getGreetingForUser(name: string | null | undefined): string {
   if (!name) {
@@ -11,6 +15,85 @@ export function getGreetingForUser(name: string | null | undefined): string {
   }
 
   return `Welcome back, ${trimmedName}`
+}
+
+export async function fetchUserMeWithCookies(): Promise<UserWithTracks> {
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore
+    .getAll()
+    .map((cookie) => `${cookie.name}=${cookie.value}`)
+    .join('; ')
+
+  const response = await fetch(`${SERVER_API_BASE_URL}/api/user/me`, {
+    cache: 'no-store',
+    headers: {
+      ...(cookieHeader && { Cookie: cookieHeader })
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user data: ${response.statusText}`)
+  }
+
+  const data: ApiResponse<UserWithTracks> = await response.json()
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error || 'Failed to fetch user data')
+  }
+
+  return data.data
+}
+
+export function computeLastUpdatedLabel(updatedAt: string | Date): string {
+  const now = new Date()
+  const updated = typeof updatedAt === 'string' ? new Date(updatedAt) : updatedAt
+
+  const diffMs = now.getTime() - updated.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) {
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    if (diffHours === 0) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60))
+      if (diffMinutes < 1) {
+        return 'Updated just now'
+      }
+      return `Updated ${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`
+    }
+    const currentHour = now.getHours()
+    const updatedHour = updated.getHours()
+    if (updatedHour >= 0 && updatedHour < 12 && currentHour >= 12) {
+      return 'Updated this morning'
+    }
+    return 'Updated today'
+  }
+
+  if (diffDays === 1) {
+    return 'Updated yesterday'
+  }
+
+  if (diffDays < 7) {
+    return `Updated ${diffDays} days ago`
+  }
+
+  return updated.toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+export function mapTracksToHealthTrackSummary(
+  tracks: UserWithTracks['tracks']
+): HealthTrackSummary[] {
+  return tracks.map((track: UserWithTracks['tracks'][number]) => ({
+    id: track.id,
+    title: track.title,
+    description: track.description,
+    slug: track.slug,
+    lastUpdatedAt: track.updatedAt,
+    lastUpdatedLabel: computeLastUpdatedLabel(track.updatedAt)
+  }))
 }
 
 export function buildMockAccountOverviewData(name: string | null | undefined): AccountOverviewData {

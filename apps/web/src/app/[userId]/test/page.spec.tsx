@@ -10,7 +10,9 @@ jest.mock('@/lib/auth_server', () => ({
 
 jest.mock('../helpers', () => ({
   buildMockAccountOverviewData: jest.fn(),
-  getGreetingForUser: jest.fn()
+  getGreetingForUser: jest.fn(),
+  fetchUserMeWithCookies: jest.fn(),
+  mapTracksToHealthTrackSummary: jest.fn()
 }))
 
 jest.mock('../constants', () => ({
@@ -22,8 +24,8 @@ jest.mock('@/components/hub_footer', () => ({
 }))
 
 jest.mock('@/components/hub_health_tracks', () => ({
-  HubHealthTracks: ({ tracks }: { tracks: unknown[] }) => (
-    <div data-testid='hub-health-tracks' data-tracks-count={tracks.length}>
+  HubHealthTracks: ({ tracks, userId }: { tracks: unknown[]; userId: string }) => (
+    <div data-testid='hub-health-tracks' data-tracks-count={tracks.length} data-user-id={userId}>
       Health Tracks
     </div>
   )
@@ -73,6 +75,8 @@ describe('UserHomePage', () => {
   const mockGetServerSession = getServerSession as jest.Mock
   const mockBuildMockAccountOverviewData = helpers.buildMockAccountOverviewData as jest.Mock
   const mockGetGreetingForUser = helpers.getGreetingForUser as jest.Mock
+  const mockFetchUserMeWithCookies = helpers.fetchUserMeWithCookies as jest.Mock
+  const mockMapTracksToHealthTrackSummary = helpers.mapTracksToHealthTrackSummary as jest.Mock
 
   const mockOverviewData = {
     user: { id: 'user-123', name: 'John Doe' },
@@ -89,6 +93,33 @@ describe('UserHomePage', () => {
     recentActivity: []
   }
 
+  const mockUserMeData = {
+    id: 'user-api-456',
+    name: 'API User',
+    email: 'api@example.com',
+    tracks: [
+      {
+        id: 'api-track-1',
+        title: 'API Sleep Track',
+        description: 'API description',
+        slug: 'api-sleep',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-15T10:00:00Z'
+      }
+    ]
+  }
+
+  const mockMappedTracks = [
+    {
+      id: 'api-track-1',
+      title: 'API Sleep Track',
+      description: 'API description',
+      slug: 'api-sleep',
+      lastUpdatedAt: '2024-01-15T10:00:00Z',
+      lastUpdatedLabel: 'Updated today'
+    }
+  ]
+
   beforeEach(() => {
     jest.clearAllMocks()
     mockGetServerSession.mockResolvedValue({
@@ -96,6 +127,8 @@ describe('UserHomePage', () => {
     })
     mockBuildMockAccountOverviewData.mockReturnValue(mockOverviewData)
     mockGetGreetingForUser.mockReturnValue('Welcome back, John Doe')
+    mockFetchUserMeWithCookies.mockResolvedValue(mockUserMeData)
+    mockMapTracksToHealthTrackSummary.mockReturnValue(mockMappedTracks)
   })
 
   it('should render all hub components', async () => {
@@ -167,6 +200,9 @@ describe('UserHomePage', () => {
   })
 
   it('should pass userId to HubQuickActions', async () => {
+    // Mock API to fail so it falls back to params userId
+    mockFetchUserMeWithCookies.mockRejectedValue(new Error('API Error'))
+
     const params = Promise.resolve({ userId: 'user-456' })
     const result = await UserHomePage({ params })
 
@@ -177,24 +213,49 @@ describe('UserHomePage', () => {
   })
 
   it('should pass health tracks to HubQuickActions with correct shape', async () => {
-    const tracksWithDates = {
-      ...mockOverviewData,
-      healthTracks: [
+    // Mock API to return multiple tracks
+    const apiTracksWithMultiple = {
+      ...mockUserMeData,
+      tracks: [
         {
-          id: 'track-1',
-          title: 'Sleep',
-          slug: 'sleep',
-          lastUpdatedAt: new Date('2024-01-01')
+          id: 'api-track-1',
+          title: 'API Sleep Track',
+          description: 'API description',
+          slug: 'api-sleep',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-15T10:00:00Z'
         },
         {
-          id: 'track-2',
-          title: 'Pain',
-          slug: 'pain',
-          lastUpdatedAt: new Date('2024-01-02')
+          id: 'api-track-2',
+          title: 'API Pain Track',
+          description: null,
+          slug: 'api-pain',
+          createdAt: '2024-01-02T00:00:00Z',
+          updatedAt: '2024-01-16T10:00:00Z'
         }
       ]
     }
-    mockBuildMockAccountOverviewData.mockReturnValue(tracksWithDates)
+    const mappedTracksMultiple = [
+      {
+        id: 'api-track-1',
+        title: 'API Sleep Track',
+        description: 'API description',
+        slug: 'api-sleep',
+        lastUpdatedAt: '2024-01-15T10:00:00Z',
+        lastUpdatedLabel: 'Updated today'
+      },
+      {
+        id: 'api-track-2',
+        title: 'API Pain Track',
+        description: null,
+        slug: 'api-pain',
+        lastUpdatedAt: '2024-01-16T10:00:00Z',
+        lastUpdatedLabel: 'Updated today'
+      }
+    ]
+
+    mockFetchUserMeWithCookies.mockResolvedValue(apiTracksWithMultiple)
+    mockMapTracksToHealthTrackSummary.mockReturnValue(mappedTracksMultiple)
 
     const params = Promise.resolve({ userId: 'user-123' })
     const result = await UserHomePage({ params })
@@ -280,5 +341,60 @@ describe('UserHomePage', () => {
     await UserHomePage({ params })
 
     expect(mockGetGreetingForUser).toHaveBeenCalledWith('Alice')
+  })
+
+  it('should fetch tracks from API and pass to HubHealthTracks', async () => {
+    const params = Promise.resolve({ userId: 'user-123' })
+    const result = await UserHomePage({ params })
+
+    render(result)
+
+    expect(mockFetchUserMeWithCookies).toHaveBeenCalled()
+    expect(mockMapTracksToHealthTrackSummary).toHaveBeenCalledWith(mockUserMeData.tracks)
+
+    const healthTracks = screen.getByTestId('hub-health-tracks')
+    expect(healthTracks).toHaveAttribute('data-tracks-count', '1')
+    expect(healthTracks).toHaveAttribute('data-user-id', 'user-api-456')
+  })
+
+  it('should use API userId for HubQuickActions when API succeeds', async () => {
+    const params = Promise.resolve({ userId: 'user-123' })
+    const result = await UserHomePage({ params })
+
+    render(result)
+
+    const quickActions = screen.getByTestId('hub-quick-actions')
+    expect(quickActions).toHaveAttribute('data-user-id', 'user-api-456')
+  })
+
+  it('should fallback to mock tracks when API fails', async () => {
+    mockFetchUserMeWithCookies.mockRejectedValue(new Error('API Error'))
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const params = Promise.resolve({ userId: 'user-123' })
+    const result = await UserHomePage({ params })
+
+    render(result)
+
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch user tracks:', expect.any(Error))
+
+    const healthTracks = screen.getByTestId('hub-health-tracks')
+    expect(healthTracks).toHaveAttribute('data-tracks-count', '1')
+    expect(healthTracks).toHaveAttribute('data-user-id', 'user-123')
+
+    consoleSpy.mockRestore()
+  })
+
+  it('should use API userId when API succeeds, even if different from params userId', async () => {
+    const params = Promise.resolve({ userId: 'param-user-789' })
+    const result = await UserHomePage({ params })
+
+    render(result)
+
+    const healthTracks = screen.getByTestId('hub-health-tracks')
+    expect(healthTracks).toHaveAttribute('data-user-id', 'user-api-456')
+
+    const quickActions = screen.getByTestId('hub-quick-actions')
+    expect(quickActions).toHaveAttribute('data-user-id', 'user-api-456')
   })
 })

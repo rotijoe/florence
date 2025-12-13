@@ -21,10 +21,14 @@ shell provided by `[userId]/layout.tsx`. It is implemented as a server component
 
 ### Data flow
 
-- The page reads the current session via `getServerSession` only to derive a friendly
+- The page reads the current session via `getServerSession` to derive a friendly
   display name for the welcome header.
-- All other content is mocked via `buildMockAccountOverviewData` in
-  `apps/web/src/app/[userId]/helpers.ts`. No API calls or backend changes are performed.
+- **Health tracks** are fetched from the API via `GET /api/user/me` (server-side with cookies)
+  using `fetchUserMeWithCookies` in `apps/web/src/app/[userId]/helpers.ts`. Tracks are mapped
+  to `HealthTrackSummary` format with computed `lastUpdatedLabel` values. If the API call fails,
+  the page falls back to mock tracks from `buildMockAccountOverviewData`.
+- Other content (notifications, appointments, recent activity) remains mocked via
+  `buildMockAccountOverviewData` in `apps/web/src/app/[userId]/helpers.ts`.
 - Core data types (tracks, appointments, notifications, recent activity) live in
   `apps/web/src/app/[userId]/types.ts` under the `AccountOverviewData` container type.
 
@@ -41,8 +45,10 @@ shell provided by `[userId]/layout.tsx`. It is implemented as a server component
   handler (ready for future navigation or modals).
 - `AccountNotifications` – card listing appointment-detail and symptom-log reminders, with
   an empty state when there are no notifications.
-- `AccountHealthTracks` – grid of small track summary cards with an empty state CTA to
-  create a health track.
+- `AccountHealthTracks` (`HubHealthTracks`) – grid of small track summary cards that link to
+  their respective track detail pages (`/${userId}/tracks/${trackSlug}`). Each card shows title,
+  description (if present), and last updated label. Includes a plus button (when tracks exist)
+  and empty state CTA button that both open the `TrackCreateDialog` for creating new tracks.
 - `AccountUpcomingAppointments` – vertical list of upcoming appointment cards with an
   empty state when none are present.
 - `AccountRecentActivity` – placeholder card describing where the future activity feed
