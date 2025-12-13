@@ -201,6 +201,25 @@ describe('TrackCreateDialog', () => {
     })
   })
 
+  it('displays fallback error message when error is not an Error instance', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValue('Network error string')
+
+    const user = userEvent.setup()
+    render(
+      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+    )
+
+    const titleInput = screen.getByLabelText(/track name/i)
+    setInputValue(titleInput, 'Sleep Tracker')
+
+    const submitButton = screen.getByRole('button', { name: /^create$/i })
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to create track')).toBeInTheDocument()
+    })
+  })
+
   it('shows creating text when submitting', async () => {
     let resolveSubmit: (value: unknown) => void
     ;(global.fetch as jest.Mock).mockImplementation(

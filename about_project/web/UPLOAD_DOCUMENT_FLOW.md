@@ -36,15 +36,24 @@ The goal is to keep event attachments private in S3 while still allowing seamles
   - **Flow:**
     1. User clicks "document" button in quick actions
     2. Selects a track from dropdown
-    3. Dialog opens with track (read-only), file input, title input, and notes textarea
-  - **Status:** UI-only implementation (upload functionality to be wired in later)
-  - **Note:** This provides an alternative entry point for document uploads directly from the dashboard, separate from the event-specific upload flow
+    3. Dialog opens with:
+       - Track (read-only)
+       - Event type selector (dropdown with all EventType options, defaults to NOTE)
+       - File input
+       - Title input (required)
+       - Notes textarea (optional)
+    4. On upload:
+       - Creates a new event in the selected track using `createEventAction` server action
+       - Uploads the selected file to the created event using `useEventUpload` hook
+       - On success: closes dialog, refreshes page, and shows success toast with link to event page
+  - **Implementation:** Fully functional, uses the same presigned S3 upload pipeline as `UploadDocument`
+  - **Note:** This provides an alternative entry point for document uploads directly from the dashboard, creating a new event automatically
 
 - **Upload state hook**
   - **Location:** `apps/web/src/hooks/use_event_upload/index.ts`
   - **Hook:** `useEventUpload`
   - **Inputs:**
-    - `eventId: string`
+    - `userId: string`
     - `trackSlug: string`
     - `onComplete?: (event: EventResponse) => void`
   - **State:**
@@ -52,13 +61,16 @@ The goal is to keep event attachments private in S3 while still allowing seamles
     - `error: string | null`
     - `isUploading: boolean` (derived from `status`)
   - **API:**
-    - `upload(file: File): Promise<void>`
+    - `upload({ eventId: string, file: File }): Promise<void>` - Accepts `eventId` at upload time for flexibility
     - `reset(): void`
   - **Responsibilities:**
-    1. **Create upload intent** via server action
+    1. **Create upload intent** via server action (requires `eventId` provided at upload time)
     2. **Upload file directly to S3** using the presigned `uploadUrl`
     3. **Confirm upload** with the API so the event is updated with the file URL
     4. Surface progress (`status`) and errors to the UI
+  - **Note:** The `eventId` is provided at upload time (not hook initialization) to support both:
+    - Existing event uploads (`UploadDocument` component)
+    - New event creation + upload flows (`DocumentUploadDialogue` component)
 
 - **Document viewer**
   - **Location:** `apps/web/src/components/document_viewer/index.tsx`

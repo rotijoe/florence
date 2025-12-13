@@ -3,5 +3,6 @@ export interface DocumentUploadDialogueProps {
   onOpenChange: (open: boolean) => void
   selectedTrackTitle: string
   selectedTrackSlug: string
-  onSuccess?: () => void
+  userId: string
+  onSuccess?: (params: { eventId: string; trackSlug: string }) => void
 }

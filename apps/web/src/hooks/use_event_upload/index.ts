@@ -4,11 +4,10 @@ import {
   confirmEventUploadAction
 } from '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
 import { UploadStatus } from './constants'
-import { UseEventUploadProps, UseEventUploadReturn } from './types'
+import { UseEventUploadProps, UseEventUploadReturn, UploadParams } from './types'
 
 export function useEventUpload({
   userId,
-  eventId,
   trackSlug,
   onComplete
 }: UseEventUploadProps): UseEventUploadReturn {
@@ -21,7 +20,7 @@ export function useEventUpload({
   }, [])
 
   const upload = useCallback(
-    async (file: File) => {
+    async ({ eventId, file }: UploadParams) => {
       setStatus('getting-url')
       setError(null)
 
@@ -83,7 +82,7 @@ export function useEventUpload({
         setStatus('error')
       }
     },
-    [userId, eventId, trackSlug, onComplete]
+    [userId, trackSlug, onComplete]
   )
 
   const isUploading = status === 'getting-url' || status === 'uploading' || status === 'confirming'

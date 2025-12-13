@@ -27,4 +27,21 @@ describe('HubUpcomingAppointments', () => {
     expect(screen.getByText('GP Appointment')).toBeInTheDocument()
     expect(screen.getByText('Tomorrow at 2:00 PM · Clinic A')).toBeInTheDocument()
   })
+
+  it('renders appointment without location suffix when location is missing', () => {
+    const appointments: AppointmentSummary[] = [
+      {
+        id: '1',
+        title: 'GP Appointment',
+        datetimeLabel: 'Tomorrow at 2:00 PM',
+        location: undefined
+      }
+    ]
+
+    render(<HubUpcomingAppointments appointments={appointments} />)
+
+    expect(screen.getByText('GP Appointment')).toBeInTheDocument()
+    expect(screen.getByText('Tomorrow at 2:00 PM')).toBeInTheDocument()
+    expect(screen.queryByText(/ · /)).not.toBeInTheDocument()
+  })
 })

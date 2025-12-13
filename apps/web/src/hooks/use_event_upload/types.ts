@@ -3,15 +3,19 @@ import { UploadStatus } from './constants'
 
 export type UseEventUploadProps = {
   userId: string
-  eventId: string
   trackSlug: string
   onComplete?: (event: EventResponse) => void
+}
+
+export type UploadParams = {
+  eventId: string
+  file: File
 }
 
 export type UseEventUploadReturn = {
   status: UploadStatus
   error: string | null
   isUploading: boolean
-  upload: (file: File) => Promise<void>
+  upload: (params: UploadParams) => Promise<void>
   reset: () => void
 }

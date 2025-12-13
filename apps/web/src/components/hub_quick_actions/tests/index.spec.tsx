@@ -1,16 +1,73 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { HubQuickActions } from '../index'
 import type { TrackOption } from '../types'
 
 const pushMock = jest.fn()
+const refreshMock = jest.fn()
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: pushMock
+    push: pushMock,
+    refresh: refreshMock
   })
 }))
+
+jest.mock('sonner', () => ({
+  toast: {
+    success: jest.fn()
+  }
+}))
+
+// Prevent Next `use server` modules from being imported in jsdom/Jest
+jest.mock('@/app/[userId]/tracks/[trackSlug]/actions', () => ({
+  createEventAction: jest.fn()
+}))
+
+jest.mock('@/hooks/use_event_upload', () => ({
+  useEventUpload: jest.fn(() => ({
+    status: 'idle',
+    error: null,
+    isUploading: false,
+    upload: jest.fn(),
+    reset: jest.fn()
+  }))
+}))
+
+// Mock child components
+jest.mock('../symptom_dialogue', () => ({
+  SymptomDialogue: ({ open, onOpenChange, onSuccess }: any) => {
+    if (!open) return null
+    return (
+      <div data-testid='symptom-dialogue'>
+        <button onClick={() => onSuccess?.()}>Trigger Success</button>
+        <button onClick={() => onOpenChange(false)}>Close</button>
+      </div>
+    )
+  }
+}))
+
+jest.mock('../document_upload_dialogue', () => ({
+  DocumentUploadDialogue: ({ open, onOpenChange, onSuccess }: any) => {
+    if (!open) return null
+    return (
+      <div data-testid='document-upload-dialogue'>
+        <button
+          onClick={() => onSuccess?.({ eventId: 'event-123', trackSlug: 'test-track' })}
+        >
+          Trigger Success
+        </button>
+        <button onClick={() => onOpenChange(false)}>Close</button>
+      </div>
+    )
+  }
+}))
+
+import { toast } from 'sonner'
+
+const { HubQuickActions } = require('../index')
+
+const mockToastSuccess = toast.success as jest.MockedFunction<typeof toast.success>
 
 global.fetch = jest.fn()
 
@@ -145,6 +202,8 @@ describe('HubQuickActions - track button', () => {
 describe('HubQuickActions - document button', () => {
   beforeEach(() => {
     pushMock.mockReset()
+    refreshMock.mockReset()
+    mockToastSuccess.mockReset()
     ;(global.fetch as jest.Mock).mockReset()
   })
 
@@ -188,11 +247,10 @@ describe('HubQuickActions - document button', () => {
     const trackItem = await screen.findByText('Track One')
     await user.click(trackItem)
 
-    expect(screen.getByRole('heading', { name: /upload document/i })).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Track One')).toBeInTheDocument()
+    expect(screen.getByTestId('document-upload-dialogue')).toBeInTheDocument()
   })
 
-  it('shows all required fields in document upload dialog', async () => {
+  it('closes document upload dialog when close is clicked', async () => {
     const tracks: TrackOption[] = [
       {
         id: 'track-1',
@@ -211,13 +269,15 @@ describe('HubQuickActions - document button', () => {
     const trackItem = await screen.findByText('Track One')
     await user.click(trackItem)
 
-    expect(screen.getByLabelText(/track/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/file/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/title/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/notes/i)).toBeInTheDocument()
+    expect(screen.getByTestId('document-upload-dialogue')).toBeInTheDocument()
+
+    const closeButton = screen.getByRole('button', { name: /close/i })
+    await user.click(closeButton)
+
+    expect(screen.queryByTestId('document-upload-dialogue')).not.toBeInTheDocument()
   })
 
-  it('disables upload button until file and title are provided', async () => {
+  it('refreshes page and shows toast with link when document upload succeeds', async () => {
     const tracks: TrackOption[] = [
       {
         id: 'track-1',
@@ -236,15 +296,58 @@ describe('HubQuickActions - document button', () => {
     const trackItem = await screen.findByText('Track One')
     await user.click(trackItem)
 
-    const uploadButton = screen.getByRole('button', { name: /upload/i })
-    expect(uploadButton).toBeDisabled()
+    expect(screen.getByTestId('document-upload-dialogue')).toBeInTheDocument()
+
+    const triggerSuccessButton = screen.getByRole('button', { name: /trigger success/i })
+    await user.click(triggerSuccessButton)
+
+    await waitFor(() => {
+      expect(refreshMock).toHaveBeenCalled()
+      expect(mockToastSuccess).toHaveBeenCalledWith('Document uploaded successfully', {
+        action: expect.objectContaining({
+          label: 'View event',
+          onClick: expect.any(Function)
+        })
+      })
+    })
+
+    // Test toast action onClick navigates to event detail
+    const toastCall = mockToastSuccess.mock.calls[0]
+    const toastOptions = toastCall[1] as { action?: { label: string; onClick: () => void } }
+    if (toastOptions?.action?.onClick) {
+      toastOptions.action.onClick()
+    }
+
+    expect(pushMock).toHaveBeenCalledWith('/user-123/tracks/test-track/event-123')
   })
 
-  it('closes document upload dialog when cancel is clicked', async () => {
+  it('does not navigate when event track has empty slug', async () => {
     const tracks: TrackOption[] = [
       {
         id: 'track-1',
-        slug: 'track-one',
+        slug: '',
+        title: 'Track One',
+        lastUpdatedAt: new Date().toISOString()
+      }
+    ]
+
+    renderComponent(tracks)
+
+    const user = userEvent.setup()
+    const eventButton = screen.getByRole('button', { name: /event/i })
+
+    await user.click(eventButton)
+    const trackItem = await screen.findByText('Track One')
+    await user.click(trackItem)
+
+    expect(pushMock).not.toHaveBeenCalled()
+  })
+
+  it('does not open document dialog when track has empty slug', async () => {
+    const tracks: TrackOption[] = [
+      {
+        id: 'track-1',
+        slug: '',
         title: 'Track One',
         lastUpdatedAt: new Date().toISOString()
       }
@@ -259,11 +362,43 @@ describe('HubQuickActions - document button', () => {
     const trackItem = await screen.findByText('Track One')
     await user.click(trackItem)
 
-    expect(screen.getByRole('heading', { name: /upload document/i })).toBeInTheDocument()
+    expect(screen.queryByTestId('document-upload-dialogue')).not.toBeInTheDocument()
+  })
+})
 
-    const cancelButton = screen.getByRole('button', { name: /cancel/i })
-    await user.click(cancelButton)
+describe('HubQuickActions - symptom button', () => {
+  beforeEach(() => {
+    pushMock.mockReset()
+    refreshMock.mockReset()
+    mockToastSuccess.mockReset()
+    ;(global.fetch as jest.Mock).mockReset()
+  })
 
-    expect(screen.queryByRole('heading', { name: /upload document/i })).not.toBeInTheDocument()
+  it('opens symptom dialog when Log symptom button is clicked', async () => {
+    renderComponent([])
+
+    const user = userEvent.setup()
+    const symptomButton = screen.getByRole('button', { name: /log symptom/i })
+
+    await user.click(symptomButton)
+
+    expect(screen.getByTestId('symptom-dialogue')).toBeInTheDocument()
+  })
+
+  it('closes symptom dialog when success is triggered', async () => {
+    renderComponent([])
+
+    const user = userEvent.setup()
+    const symptomButton = screen.getByRole('button', { name: /log symptom/i })
+
+    await user.click(symptomButton)
+    expect(screen.getByTestId('symptom-dialogue')).toBeInTheDocument()
+
+    const triggerSuccessButton = screen.getByRole('button', { name: /trigger success/i })
+    await user.click(triggerSuccessButton)
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('symptom-dialogue')).not.toBeInTheDocument()
+    })
   })
 })

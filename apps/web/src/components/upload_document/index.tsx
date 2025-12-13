@@ -42,7 +42,6 @@ export function UploadDocument({
     upload
   } = useEventUpload({
     userId,
-    eventId: event.id,
     trackSlug,
     onComplete: (updatedEvent) => {
       setTimeout(() => {
@@ -66,7 +65,7 @@ export function UploadDocument({
       return
     }
     setValidationError(null)
-    await upload(selectedFile)
+    await upload({ eventId: event.id, file: selectedFile })
   }
 
   const handleClose = () => {

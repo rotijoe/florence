@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { ArrowUpIcon, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -58,9 +59,18 @@ export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActi
     }
   }
 
-  function handleDocumentSuccess() {
+  function handleDocumentSuccess({ eventId, trackSlug }: { eventId: string; trackSlug: string }) {
     setIsDocumentDialogOpen(false)
     setSelectedDocumentTrack(null)
+    router.refresh()
+    toast.success('Document uploaded successfully', {
+      action: {
+        label: 'View event',
+        onClick: () => {
+          router.push(`/${userId}/tracks/${trackSlug}/${eventId}`)
+        }
+      }
+    })
   }
 
   function RenderQuickLogHeader() {
@@ -261,6 +271,7 @@ export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActi
           onOpenChange={setIsDocumentDialogOpen}
           selectedTrackTitle={selectedDocumentTrack.title}
           selectedTrackSlug={selectedDocumentTrack.slug}
+          userId={userId}
           onSuccess={handleDocumentSuccess}
         />
       )}

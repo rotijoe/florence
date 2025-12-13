@@ -120,7 +120,7 @@ describe('UploadDocument', () => {
     const uploadButton = screen.getByRole('button', { name: /upload/i })
     await user.click(uploadButton)
 
-    expect(mockUpload).toHaveBeenCalledWith(file)
+    expect(mockUpload).toHaveBeenCalledWith({ eventId: mockEvent.id, file })
   })
 
   it('displays default status text for unknown status', async () => {

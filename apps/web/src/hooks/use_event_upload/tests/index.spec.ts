@@ -31,7 +31,7 @@ describe('useEventUpload', () => {
 
   it('should initialize with idle status', () => {
     const { result } = renderHook(() =>
-      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, trackSlug: mockTrackSlug })
     )
     expect(result.current.status).toBe('idle')
     expect(result.current.error).toBeNull()
@@ -50,14 +50,13 @@ describe('useEventUpload', () => {
     const { result } = renderHook(() =>
       useEventUpload({
         userId: mockUserId,
-        eventId: mockEventId,
         trackSlug: mockTrackSlug,
         onComplete: mockOnComplete
       })
     )
 
     await act(async () => {
-      await result.current.upload(mockFile)
+      await result.current.upload({ eventId: mockEventId, file: mockFile })
     })
 
     expect(result.current.status).toBe('success')
@@ -73,11 +72,11 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, trackSlug: mockTrackSlug })
     )
 
     await act(async () => {
-      await result.current.upload(mockFile)
+      await result.current.upload({ eventId: mockEventId, file: mockFile })
     })
 
     expect(result.current.status).toBe('error')
@@ -96,11 +95,11 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, trackSlug: mockTrackSlug })
     )
 
     await act(async () => {
-      await result.current.upload(mockFile)
+      await result.current.upload({ eventId: mockEventId, file: mockFile })
     })
 
     expect(result.current.status).toBe('error')
@@ -109,12 +108,12 @@ describe('useEventUpload', () => {
 
   it('should reset status and error', () => {
     const { result } = renderHook(() =>
-      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, trackSlug: mockTrackSlug })
     )
 
     // Set an error state first
     act(() => {
-      result.current.upload(mockFile).catch(() => {})
+      result.current.upload({ eventId: mockEventId, file: mockFile }).catch(() => {})
     })
 
     // Reset the hook
@@ -137,11 +136,11 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, trackSlug: mockTrackSlug })
     )
 
     await act(async () => {
-      await result.current.upload(mockFile)
+      await result.current.upload({ eventId: mockEventId, file: mockFile })
     })
 
     expect(result.current.status).toBe('error')
@@ -159,11 +158,11 @@ describe('useEventUpload', () => {
     })
 
     const { result } = renderHook(() =>
-      useEventUpload({ userId: mockUserId, eventId: mockEventId, trackSlug: mockTrackSlug })
+      useEventUpload({ userId: mockUserId, trackSlug: mockTrackSlug })
     )
 
     await act(async () => {
-      await result.current.upload(mockFile)
+      await result.current.upload({ eventId: mockEventId, file: mockFile })
     })
 
     expect(result.current.status).toBe('error')
