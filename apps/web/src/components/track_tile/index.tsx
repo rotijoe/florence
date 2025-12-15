@@ -16,12 +16,22 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 
-import { buildAddEventHref, formatTrackDate, getLastEventPlaceholder, getTrackDescriptionFallback } from '@/app/[userId]/tracks/helpers'
+import {
+  buildAddEventHref,
+  formatTrackDate,
+  getLastEventPlaceholder,
+  getTrackDescriptionFallback
+} from '@/app/[userId]/tracks/helpers'
 import { TRACK_TILE_COPY } from './constants'
 import { createInitialNotificationState } from './helpers'
 import type { TrackTileProps, TrackTilesProps } from './types'
 
-function TrackTile({ userId, track, isNotificationsEnabled, onNotificationsEnabledChange }: TrackTileProps) {
+function TrackTile({
+  userId,
+  track,
+  isNotificationsEnabled,
+  onNotificationsEnabledChange
+}: TrackTileProps) {
   const startDateLabel = formatTrackDate(track.createdAt)
   const lastUpdatedLabel = formatTrackDate(track.updatedAt)
   const addEventHref = buildAddEventHref(userId, track.slug)
@@ -43,7 +53,12 @@ function TrackTile({ userId, track, isNotificationsEnabled, onNotificationsEnabl
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost' size='icon-sm' className='rounded-full' aria-label='Track actions'>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            className='rounded-full'
+            aria-label='Track actions'
+          >
             <MoreVertical className='size-4' />
           </Button>
         </DropdownMenuTrigger>
@@ -182,7 +197,8 @@ function TrackTile({ userId, track, isNotificationsEnabled, onNotificationsEnabl
 
 export function TrackTiles({ userId, tracks }: TrackTilesProps) {
   const initialState = useMemo(() => createInitialNotificationState(tracks), [tracks])
-  const [notificationsEnabledById, setNotificationsEnabledById] = useState<Record<string, boolean>>(initialState)
+  const [notificationsEnabledById, setNotificationsEnabledById] =
+    useState<Record<string, boolean>>(initialState)
 
   function handleNotificationsChange(trackId: string, next: boolean) {
     setNotificationsEnabledById((prev) => ({ ...prev, [trackId]: next }))
@@ -204,5 +220,3 @@ export function TrackTiles({ userId, tracks }: TrackTilesProps) {
 }
 
 export { TrackTile }
-
-
