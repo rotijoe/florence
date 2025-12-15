@@ -6,6 +6,12 @@ import { useSession } from '@/lib/auth_client'
 import * as helpers from '../helpers'
 import type { UserWithTracks } from '../types'
 
+jest.mock('next/link', () => {
+  return function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
+    return <a href={href}>{children}</a>
+  }
+})
+
 // Mock dependencies
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn()
@@ -17,46 +23,24 @@ jest.mock('@/lib/auth_client', () => ({
 
 jest.mock('../helpers', () => ({
   fetchUserData: jest.fn(),
-  formatTrackDate: jest.fn((date) => new Date(date).toLocaleDateString())
+  formatTrackDate: jest.fn((date) => new Date(date).toLocaleDateString()),
+  buildAddEventHref: jest.fn((userId: string, trackSlug: string) => {
+    return `/${userId}/tracks/${trackSlug}/new?returnTo=${encodeURIComponent(`/${userId}/tracks`)}`
+  }),
+  getTrackDescriptionFallback: jest.fn((description?: string | null) => {
+    if (typeof description === 'string' && description.trim().length > 0) return description
+    return 'Add a short description to make this track easier to scan.'
+  }),
+  getLastEventPlaceholder: jest.fn(() => ({
+    label: 'Last event',
+    detail: '—',
+    hint: 'Event summaries are coming soon.'
+  }))
 }))
 
 // Mock the TrackCreateDialog helpers (for isolation)
 jest.mock('@/components/track_create_dialog/helpers', () => ({
   createTrack: jest.fn().mockResolvedValue({})
-}))
-
-jest.mock('@/components/ui/dropdown-menu', () => ({
-  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid='dropdown-menu'>{children}</div>
-  ),
-  DropdownMenuTrigger: ({
-    asChild,
-    children
-  }: {
-    asChild?: boolean
-    children: React.ReactNode
-  }) => {
-    if (asChild) {
-      return <>{children}</>
-    }
-    return <button>{children}</button>
-  },
-  DropdownMenuContent: ({ children, align }: { children: React.ReactNode; align?: string }) => (
-    <div data-testid='dropdown-content' data-align={align}>
-      {children}
-    </div>
-  ),
-  DropdownMenuItem: ({
-    children,
-    onSelect
-  }: {
-    children: React.ReactNode
-    onSelect?: () => void
-  }) => (
-    <button onClick={onSelect} data-testid='dropdown-menu-item'>
-      {children}
-    </button>
-  )
 }))
 
 describe('DashboardPage', () => {
@@ -97,7 +81,7 @@ describe('DashboardPage', () => {
 
     render(<DashboardPage />)
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    expect(document.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(0)
   })
 
   it('should display user name when authenticated and data is loaded', async () => {
@@ -120,7 +104,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Welcome, John Doe')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /your tracks/i })).toBeInTheDocument()
     })
   })
 
@@ -190,7 +174,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText(/no health tracks yet/i)).toBeInTheDocument()
+      expect(screen.getByText(/no tracks yet/i)).toBeInTheDocument()
     })
   })
 
@@ -207,7 +191,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load your health tracks/i)).toBeInTheDocument()
+      expect(screen.getByText(/couldn’t load your tracks/i)).toBeInTheDocument()
     })
   })
 
@@ -246,7 +230,7 @@ describe('DashboardPage', () => {
     })
   })
 
-  it('should display "User" when user name is null', async () => {
+  it('should render page header when user name is null', async () => {
     const mockUserData: UserWithTracks = {
       id: 'user-123',
       name: null,
@@ -266,11 +250,11 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Welcome, User')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /your tracks/i })).toBeInTheDocument()
     })
   })
 
-  it('should display "User" when user name is undefined', async () => {
+  it('should render page header when user name is undefined', async () => {
     const mockUserData: UserWithTracks = {
       id: 'user-123',
       name: undefined as unknown as null,
@@ -290,7 +274,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Welcome, User')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /your tracks/i })).toBeInTheDocument()
     })
   })
 
@@ -307,7 +291,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load your health tracks/i)).toBeInTheDocument()
+      expect(screen.getByText(/couldn’t load your tracks/i)).toBeInTheDocument()
       expect(screen.getByText('An error occurred')).toBeInTheDocument()
     })
   })
@@ -369,7 +353,9 @@ describe('DashboardPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Diabetes Management')).toBeInTheDocument()
-      expect(screen.queryByText(/tracking/i)).not.toBeInTheDocument()
+      expect(
+        screen.getByText('Add a short description to make this track easier to scan.')
+      ).toBeInTheDocument()
     })
   })
 
@@ -392,25 +378,24 @@ describe('DashboardPage', () => {
       ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
     })
 
-    it('should render dropdown menu with "Create health track" option when authenticated', async () => {
+    it('should render create track button when authenticated', async () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
-        expect(screen.getByText(/create health track/i)).toBeInTheDocument()
+        expect(screen.getAllByRole('button', { name: /create track/i }).length).toBeGreaterThan(0)
       })
     })
 
-    it('should open dialog when "Create health track" menu item is clicked', async () => {
+    it('should open dialog when "Create track" button is clicked', async () => {
       const user = userEvent.setup()
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
+        expect(screen.getAllByRole('button', { name: /create track/i }).length).toBeGreaterThan(0)
       })
 
-      const menuItem = screen.getByRole('button', { name: /create health track/i })
-      await user.click(menuItem)
+      const createButtons = screen.getAllByRole('button', { name: /create track/i })
+      await user.click(createButtons[0])
 
       await waitFor(() => {
         expect(screen.getByText(/create new health track/i)).toBeInTheDocument()
@@ -423,11 +408,11 @@ describe('DashboardPage', () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
+        expect(screen.getAllByRole('button', { name: /create track/i }).length).toBeGreaterThan(0)
       })
 
-      const menuItem = screen.getByRole('button', { name: /create health track/i })
-      await userEvent.click(menuItem)
+      const createButtons = screen.getAllByRole('button', { name: /create track/i })
+      await userEvent.click(createButtons[0])
 
       await waitFor(() => {
         expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()
@@ -441,11 +426,11 @@ describe('DashboardPage', () => {
       render(<DashboardPage />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('dropdown-menu')).toBeInTheDocument()
+        expect(screen.getAllByRole('button', { name: /create track/i }).length).toBeGreaterThan(0)
       })
 
-      const menuItem = screen.getByRole('button', { name: /create health track/i })
-      await userEvent.click(menuItem)
+      const createButtons = screen.getAllByRole('button', { name: /create track/i })
+      await userEvent.click(createButtons[0])
 
       await waitFor(() => {
         expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()

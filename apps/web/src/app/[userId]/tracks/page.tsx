@@ -2,20 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { useSession } from '@/lib/auth_client'
 import { fetchUserData } from './helpers'
 import type { UserWithTracks } from './types'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
-import { MoreVertical } from 'lucide-react'
 import { TrackCreateDialog } from '@/components/track_create_dialog'
+import { TrackTiles } from '@/components/track_tile'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -51,28 +46,47 @@ export default function DashboardPage() {
 
   function renderLoading() {
     return (
-      <div className='flex items-center justify-center min-h-[400px]'>
-        <p className='text-lg text-muted-foreground'>Loading...</p>
+      <div className='space-y-6'>
+        <div className='space-y-2'>
+          <Skeleton className='h-9 w-40' />
+          <Skeleton className='h-4 w-72' />
+        </div>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3'>
+          <Skeleton className='h-64 rounded-2xl' />
+          <Skeleton className='h-64 rounded-2xl' />
+          <Skeleton className='h-64 rounded-2xl' />
+        </div>
       </div>
     )
   }
 
   function renderError() {
     return (
-      <div className='flex flex-col items-center justify-center min-h-[400px] gap-4'>
-        <p className='text-lg text-destructive'>Failed to load your health tracks</p>
-        <p className='text-sm text-muted-foreground'>{error}</p>
-      </div>
+      <Card className='rounded-2xl border-muted/40 bg-muted/20 py-0 shadow-sm'>
+        <CardHeader className='px-4 py-4 sm:px-6 sm:py-5'>
+          <CardTitle className='text-base font-semibold'>Couldn’t load your tracks</CardTitle>
+          <CardDescription className='text-sm'>{error}</CardDescription>
+        </CardHeader>
+      </Card>
     )
   }
 
   function renderEmptyState() {
     return (
-      <div className='flex flex-col items-center justify-center min-h-[400px] gap-4'>
-        <p className='text-lg text-muted-foreground'>
-          No health tracks yet. Start tracking your health journey!
-        </p>
-      </div>
+      <Card className='rounded-2xl border-muted/40 bg-muted/20 py-0 shadow-sm'>
+        <CardHeader className='px-4 py-4 sm:px-6 sm:py-5'>
+          <CardTitle className='text-base font-semibold'>No tracks yet</CardTitle>
+          <CardDescription className='text-sm'>
+            Create your first track to keep notes, uploads, and events in one place.
+          </CardDescription>
+        </CardHeader>
+        <CardFooter className='border-t border-muted/40 px-4 py-4 sm:px-6 sm:py-5'>
+          <Button className='gap-2' onClick={() => setIsDialogOpen(true)}>
+            <Plus className='size-4' />
+            Create track
+          </Button>
+        </CardFooter>
+      </Card>
     )
   }
 
@@ -81,24 +95,7 @@ export default function DashboardPage() {
       return renderEmptyState()
     }
 
-    return (
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {userData.tracks.map((track) => (
-          <Link
-            key={track.id}
-            href={`/${userData.id}/tracks/${track.slug}`}
-            className='transition-transform hover:scale-105'
-          >
-            <Card className='h-full cursor-pointer hover:shadow-lg'>
-              <CardHeader>
-                <CardTitle>{track.title}</CardTitle>
-                {track.description && <CardDescription>{track.description}</CardDescription>}
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    )
+    return <TrackTiles userId={userData.id} tracks={userData.tracks} />
   }
 
   function renderCreateDialog() {
@@ -113,24 +110,17 @@ export default function DashboardPage() {
 
   function renderHeader() {
     return (
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-4xl font-bold tracking-tight'>Welcome, {userData?.name || 'User'}</h1>
-          <p className='text-muted-foreground mt-2'>View and manage your health tracks</p>
+      <div className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
+        <div className='space-y-1'>
+          <h1 className='text-3xl font-semibold tracking-tight sm:text-4xl'>Your tracks</h1>
+          <p className='text-sm text-muted-foreground sm:text-base'>
+            A simple place to keep health notes and uploads.
+          </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='outline' size='sm'>
-              <MoreVertical className='size-4' />
-              <span className='sr-only'>Page actions</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-48'>
-            <DropdownMenuItem onSelect={() => setIsDialogOpen(true)}>
-              Create health track
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button className='gap-2 sm:w-auto' onClick={() => setIsDialogOpen(true)}>
+          <Plus className='size-4' />
+          Create track
+        </Button>
       </div>
     )
   }
