@@ -1,5 +1,10 @@
 import { cookies } from 'next/headers'
-import type { AccountOverviewData, HealthTrackSummary, AppointmentSummary } from './types'
+import type {
+  AccountOverviewData,
+  HealthTrackSummary,
+  AppointmentSummary,
+  Notification
+} from './types'
 import type { UserWithTracks } from './tracks/types'
 import type { ApiResponse, UpcomingAppointmentResponse } from '@packages/types'
 import { SERVER_API_BASE_URL } from '@/constants/api'
@@ -133,6 +138,38 @@ export async function fetchUpcomingAppointmentsForHub(
   }
 }
 
+export async function fetchHubNotifications(): Promise<Notification[]> {
+  try {
+    const cookieStore = await cookies()
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((cookie) => `${cookie.name}=${cookie.value}`)
+      .join('; ')
+
+    const response = await fetch(`${SERVER_API_BASE_URL}/api/user/hub/notifications`, {
+      cache: 'no-store',
+      headers: {
+        ...(cookieHeader && { Cookie: cookieHeader })
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch notifications: ${response.statusText}`)
+    }
+
+    const data: ApiResponse<Notification[]> = await response.json()
+
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to fetch notifications')
+    }
+
+    return data.data
+  } catch (error) {
+    console.error('Failed to fetch hub notifications:', error)
+    return []
+  }
+}
+
 export function buildMockAccountOverviewData(name: string | null | undefined): AccountOverviewData {
   const displayName = name && name.trim().length > 0 ? name : 'there'
 
@@ -145,17 +182,18 @@ export function buildMockAccountOverviewData(name: string | null | undefined): A
       {
         id: 'appointment-details-reminder',
         type: 'appointmentDetails',
-        title: 'Add details from your recent appointment',
+        title: 'Add details to "GP check-up"',
         message:
-          'Capture key points and any follow‑up actions from your last visit while they are still fresh.',
+          'Capture key points from this event in your Sleep track while they are still fresh.',
         ctaLabel: 'Add details'
       },
       {
         id: 'symptom-reminder',
         type: 'symptomReminder',
-        title: 'Log how you are feeling today',
+        title: 'Log a symptom in Pain',
         message: 'A quick check‑in helps you and your care team see patterns over time.',
-        ctaLabel: 'Log symptom'
+        ctaLabel: 'Log symptom',
+        trackSlug: 'pain'
       }
     ],
     healthTracks: [

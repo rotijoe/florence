@@ -13,7 +13,8 @@ jest.mock('../helpers', () => ({
   getGreetingForUser: jest.fn(),
   fetchUserMeWithCookies: jest.fn(),
   mapTracksToHealthTrackSummary: jest.fn(),
-  fetchUpcomingAppointmentsForHub: jest.fn()
+  fetchUpcomingAppointmentsForHub: jest.fn(),
+  fetchHubNotifications: jest.fn()
 }))
 
 jest.mock('../constants', () => ({
@@ -81,6 +82,9 @@ describe('UserHomePage', () => {
   const mockFetchUpcomingAppointmentsForHub = (
     helpers as unknown as { fetchUpcomingAppointmentsForHub: jest.Mock }
   ).fetchUpcomingAppointmentsForHub
+  const mockFetchHubNotifications = (
+    helpers as unknown as { fetchHubNotifications: jest.Mock }
+  ).fetchHubNotifications
 
   const mockOverviewData = {
     user: { id: 'user-123', name: 'John Doe' },
@@ -134,6 +138,7 @@ describe('UserHomePage', () => {
     mockFetchUserMeWithCookies.mockResolvedValue(mockUserMeData)
     mockMapTracksToHealthTrackSummary.mockReturnValue(mockMappedTracks)
     mockFetchUpcomingAppointmentsForHub.mockResolvedValue([])
+    mockFetchHubNotifications.mockResolvedValue([])
   })
 
   it('should render all hub components', async () => {
@@ -272,14 +277,10 @@ describe('UserHomePage', () => {
   })
 
   it('should pass notifications to HubNotifications', async () => {
-    const dataWithNotifications = {
-      ...mockOverviewData,
-      notifications: [
-        { id: 'n1', type: 'symptomReminder', title: 'Test 1' },
-        { id: 'n2', type: 'appointmentDetails', title: 'Test 2' }
-      ]
-    }
-    mockBuildMockAccountOverviewData.mockReturnValue(dataWithNotifications)
+    mockFetchHubNotifications.mockResolvedValue([
+      { id: 'n1', type: 'symptomReminder', title: 'Test 1' },
+      { id: 'n2', type: 'appointmentDetails', title: 'Test 2' }
+    ])
 
     const params = Promise.resolve({ userId: 'user-123' })
     const result = await UserHomePage({ params })
@@ -368,7 +369,7 @@ describe('UserHomePage', () => {
     expect(quickActions).toHaveAttribute('data-user-id', 'user-api-456')
   })
 
-  it('should fallback to mock tracks when API fails', async () => {
+  it('should handle API failure gracefully with empty tracks', async () => {
     mockFetchUserMeWithCookies.mockRejectedValue(new Error('API Error'))
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -380,7 +381,7 @@ describe('UserHomePage', () => {
     expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch user data:', expect.any(Error))
 
     const healthTracks = screen.getByTestId('hub-health-tracks')
-    expect(healthTracks).toHaveAttribute('data-tracks-count', '1')
+    expect(healthTracks).toHaveAttribute('data-tracks-count', '0')
     expect(healthTracks).toHaveAttribute('data-user-id', 'user-123')
 
     consoleSpy.mockRestore()

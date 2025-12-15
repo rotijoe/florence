@@ -15,6 +15,11 @@ export const mockPrisma = {
     createMany: jest.fn(),
     findMany: jest.fn().mockResolvedValue([]), // Default to empty array
     deleteMany: jest.fn()
+  },
+  hubDismissal: {
+    findMany: jest.fn().mockResolvedValue([]), // Default to empty array
+    upsert: jest.fn(),
+    deleteMany: jest.fn()
   }
 }
 

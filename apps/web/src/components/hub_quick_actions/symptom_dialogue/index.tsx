@@ -30,7 +30,8 @@ export function SymptomDialogue({
   onOpenChange,
   tracks,
   userId,
-  onSuccess
+  onSuccess,
+  initialTrackSlug
 }: SymptomDialogueProps) {
   const [selectedTrack, setSelectedTrack] = useState<string>('')
   const [selectedSymptomType, setSelectedSymptomType] = useState<string>('')
@@ -41,14 +42,14 @@ export function SymptomDialogue({
 
   useEffect(() => {
     if (open) {
-      const defaultTrack = getDefaultTrack(tracks)
-      setSelectedTrack(defaultTrack || tracks[0]?.slug || '')
+      const defaultTrack = initialTrackSlug || getDefaultTrack(tracks) || tracks[0]?.slug || ''
+      setSelectedTrack(defaultTrack)
       setSelectedSymptomType('')
       setSelectedSeverity(null)
       setNotes('')
       setError(null)
     }
-  }, [open, tracks])
+  }, [open, tracks, initialTrackSlug])
 
   const selectedTrackData = tracks.find((t) => t.slug === selectedTrack)
   const selectedSymptomTypeData = SYMPTOM_TYPES.find((st) => st.value === selectedSymptomType)

@@ -296,3 +296,4 @@ describe('TrackCreateDialog', () => {
     expect(newTitleInput).toHaveValue('')
   })
 })
+

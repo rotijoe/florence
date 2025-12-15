@@ -33,8 +33,12 @@ shell provided by `[userId]/layout.tsx`. It is implemented as a server component
   sorted soonest-first. Each appointment is mapped to `AppointmentSummary` with a formatted `datetimeLabel`
   and an `href` linking to `/${userId}/tracks/${trackSlug}/${eventId}`. If the API call fails,
   the page falls back to an empty array.
-- Other content (notifications, recent activity) remains mocked via `buildMockAccountOverviewData`
-  in `apps/web/src/app/[userId]/helpers.ts`.
+- **Notifications** are fetched from the API via `GET /api/user/hub/notifications` using
+  `fetchHubNotifications` in `apps/web/src/app/[userId]/helpers.ts`. Notifications include
+  appointment detail reminders and symptom log prompts. Users can dismiss notifications via
+  an optimistic UI pattern using React 19's `useOptimistic` hook. See `HUB_NOTIFICATIONS.md`
+  for full architecture details.
+- Recent activity remains mocked via `buildMockAccountOverviewData` in `apps/web/src/app/[userId]/helpers.ts`.
 - Core data types (tracks, appointments, notifications, recent activity) live in
   `apps/web/src/app/[userId]/types.ts` under the `AccountOverviewData` container type.
 
@@ -49,8 +53,10 @@ shell provided by `[userId]/layout.tsx`. It is implemented as a server component
   - adding an appointment
     The dropdown options use static lists from `constants.ts` and currently call a no-op
     handler (ready for future navigation or modals).
-- `AccountNotifications` – card listing appointment-detail and symptom-log reminders, with
-  an empty state when there are no notifications.
+- `HubNotifications` – card listing appointment-detail and symptom-log reminders with
+  dismissible items. Uses `useOptimistic` for instant UI feedback when dismissing.
+  Opens `SymptomDialogue` for symptom reminders. Empty state when no notifications.
+  See `HUB_NOTIFICATIONS.md` for architecture details.
 - `AccountHealthTracks` (`HubHealthTracks`) – grid of small track summary cards that link to
   their respective track detail pages (`/${userId}/tracks/${trackSlug}`). Each card shows title,
   description (if present), and last updated label. Includes a plus button (when tracks exist)

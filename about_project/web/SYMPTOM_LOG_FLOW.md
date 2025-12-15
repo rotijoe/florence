@@ -67,6 +67,8 @@ The symptom logging flow allows users to quickly log symptoms from the home page
   - Calls `onSuccess` callback (if provided)
   - Closes the dialog
   - Form state is reset
+  - If opened from a notification, the symptom reminder notification is dismissed
+    via optimistic update (see `HUB_NOTIFICATIONS.md`)
 - On error:
   - Displays error message in dialog
   - Keeps dialog open for retry
@@ -215,3 +217,4 @@ Located in `apps/web/src/components/hub_quick_actions/symptom_dialogue/tests/`:
 
 - **Event Creation Flow:** See `EVENT_CREATE_FLOW.md` for general event creation
 - **Quick Actions:** See `DASHBOARD.md` for Quick Actions section overview
+- **Hub Notifications:** See `HUB_NOTIFICATIONS.md` for notification dismiss integration

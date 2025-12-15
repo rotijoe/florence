@@ -8,4 +8,5 @@ export interface SymptomDialogueProps {
   tracks: TrackOption[]
   userId: string
   onSuccess?: () => void
+  initialTrackSlug?: string
 }

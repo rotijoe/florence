@@ -13,5 +13,21 @@ describe('User API - Route Composition', () => {
     expect(res.status).toBeGreaterThanOrEqual(200)
     expect(res.status).toBeLessThan(500)
   })
+
+  it('mounts GET /api/user/hub/notifications route', async () => {
+    const res = await app.request('/api/user/hub/notifications')
+    // Route exists (will return 401, but route is mounted)
+    expect(res.status).toBeGreaterThanOrEqual(200)
+    expect(res.status).toBeLessThan(500)
+  })
+
+  it('mounts POST /api/user/hub/notifications/dismiss route', async () => {
+    const res = await app.request('/api/user/hub/notifications/dismiss', {
+      method: 'POST'
+    })
+    // Route exists (will return 401, but route is mounted)
+    expect(res.status).toBeGreaterThanOrEqual(200)
+    expect(res.status).toBeLessThan(500)
+  })
 })
 

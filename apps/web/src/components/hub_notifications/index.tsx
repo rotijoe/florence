@@ -1,15 +1,65 @@
 'use client'
 
+import { useState, useOptimistic, startTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { SymptomDialogue } from '@/components/hub_quick_actions/symptom_dialogue'
 import { HUB_SECTION_TITLES } from './constants'
-import { hubHasNotifications } from './helpers'
+import { hubHasNotifications, notificationsOptimisticReducer } from './helpers'
 import type { HubNotificationsProps } from './types'
+import { API_BASE_URL } from '@/constants/api'
 
-export function HubNotifications({ notifications }: HubNotificationsProps) {
-  if (!hubHasNotifications(notifications)) {
+export function HubNotifications({
+  notifications: initialNotifications,
+  tracks,
+  userId
+}: HubNotificationsProps) {
+  const router = useRouter()
+  const [optimisticNotifications, updateOptimisticNotifications] = useOptimistic(
+    initialNotifications,
+    notificationsOptimisticReducer
+  )
+  const [isSymptomDialogOpen, setIsSymptomDialogOpen] = useState(false)
+  const [selectedSymptomTrackSlug, setSelectedSymptomTrackSlug] = useState<string | undefined>(
+    undefined
+  )
+
+  function handleDismiss(notification: (typeof initialNotifications)[0]) {
+    if (!notification.entityId || !notification.notificationType) {
+      return
+    }
+
+    startTransition(async () => {
+      updateOptimisticNotifications({ type: 'REMOVE_BY_ID', id: notification.id })
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/user/hub/notifications/dismiss`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            type: notification.notificationType,
+            entityId: notification.entityId
+          })
+        })
+
+        if (!response.ok) {
+          updateOptimisticNotifications({ type: 'RESTORE', notification })
+        } else {
+          router.refresh()
+        }
+      } catch (error) {
+        updateOptimisticNotifications({ type: 'RESTORE', notification })
+        console.error('Failed to dismiss notification:', error)
+      }
+    })
+  }
+  if (!hubHasNotifications(optimisticNotifications)) {
     return (
       <Card className='border-muted/40 bg-muted/40 shadow-none'>
         <CardHeader>
@@ -25,8 +75,8 @@ export function HubNotifications({ notifications }: HubNotificationsProps) {
   }
 
   function renderItems() {
-    return notifications.map((notification, index) => {
-      const showSeparator = index < notifications.length - 1
+    return optimisticNotifications.map((notification, index) => {
+      const showSeparator = index < optimisticNotifications.length - 1
 
       return (
         <div key={notification.id} className='space-y-2'>
@@ -41,13 +91,26 @@ export function HubNotifications({ notifications }: HubNotificationsProps) {
                 className='rounded-full bg-transparent p-0 shadow-none'
                 type='button'
                 aria-label='Dismiss notification'
+                onClick={() => handleDismiss(notification)}
               >
                 <X className='size-3.5' />
               </Button>
             </div>
             <div className='flex justify-between w-full gap-1.5'>
               {notification.ctaLabel ? (
-                <Button variant='outline' size='sm' type='button'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  type='button'
+                  onClick={() => {
+                    if (notification.type === 'symptomReminder' && notification.trackSlug) {
+                      setSelectedSymptomTrackSlug(notification.trackSlug)
+                      setIsSymptomDialogOpen(true)
+                    } else if (notification.href) {
+                      window.location.href = notification.href
+                    }
+                  }}
+                >
                   {notification.ctaLabel}
                 </Button>
               ) : null}
@@ -59,17 +122,42 @@ export function HubNotifications({ notifications }: HubNotificationsProps) {
     })
   }
 
+  function handleSymptomSuccess() {
+    setIsSymptomDialogOpen(false)
+    // Remove the notification for the track that was just logged
+    if (selectedSymptomTrackSlug) {
+      startTransition(() => {
+        updateOptimisticNotifications({
+          type: 'REMOVE_BY_TRACK_SLUG',
+          trackSlug: selectedSymptomTrackSlug
+        })
+        router.refresh()
+      })
+    }
+    setSelectedSymptomTrackSlug(undefined)
+  }
+
   return (
-    <Card className='border-muted/40 bg-muted/40 shadow-none'>
-      <CardHeader>
-        <CardTitle className='text-base font-semibold'>
-          {HUB_SECTION_TITLES.notifications}
-        </CardTitle>
-        <CardDescription className='text-sm'>
-          Gentle reminders to keep your health record up to date.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className='space-y-4'>{renderItems()}</CardContent>
-    </Card>
+    <>
+      <Card className='border-muted/40 bg-muted/40 shadow-none'>
+        <CardHeader>
+          <CardTitle className='text-base font-semibold'>
+            {HUB_SECTION_TITLES.notifications}
+          </CardTitle>
+          <CardDescription className='text-sm'>
+            Gentle reminders to keep your health record up to date.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>{renderItems()}</CardContent>
+      </Card>
+      <SymptomDialogue
+        open={isSymptomDialogOpen}
+        onOpenChange={setIsSymptomDialogOpen}
+        tracks={tracks}
+        userId={userId}
+        onSuccess={handleSymptomSuccess}
+        initialTrackSlug={selectedSymptomTrackSlug}
+      />
+    </>
   )
 }

@@ -23,6 +23,7 @@ model User {
   tracks       HealthTrack[]
   sessions     Session[]
   accounts     Account[]
+  hubDismissals HubDismissal[]
   
   @@map("users")
 }
@@ -119,5 +120,26 @@ enum EventType {
   FEELING
   EXERCISE
   SYMPTOM
+}
+
+enum HubNotificationType {
+  EVENT_MISSING_DETAILS
+  TRACK_MISSING_SYMPTOM
+}
+
+model HubDismissal {
+  id          String              @id @default(cuid())
+  userId      String
+  type        HubNotificationType
+  entityId    String
+  dismissedAt DateTime            @default(now())
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, entityId])
+  @@index([userId, type])
+  @@map("hub_dismissals")
 }
 

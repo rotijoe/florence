@@ -12,9 +12,11 @@ import {
   getGreetingForUser,
   fetchUserMeWithCookies,
   mapTracksToHealthTrackSummary,
-  fetchUpcomingAppointmentsForHub
+  fetchUpcomingAppointmentsForHub,
+  fetchHubNotifications
 } from './helpers'
 import { WELCOME_SUBTITLE } from './constants'
+import { AppointmentSummary, HealthTrackSummary, Notification } from './types'
 
 interface UserHomePageProps {
   params: Promise<{ userId: string }>
@@ -29,21 +31,22 @@ export default async function Hub({ params }: UserHomePageProps) {
   const greeting = getGreetingForUser(overview.user.name)
 
   // Fetch real tracks from API
-  let trackSummaries = overview.healthTracks
+  let tracks: HealthTrackSummary[] = []
   let actualUserId = userId
-  let appointments = overview.appointments
+  let appointments: AppointmentSummary[] = []
+  let notifications: Notification[] = []
 
   try {
     const userMe = await fetchUserMeWithCookies()
     actualUserId = userMe.id
-    trackSummaries = mapTracksToHealthTrackSummary(userMe.tracks)
+    tracks = mapTracksToHealthTrackSummary(userMe.tracks)
     appointments = await fetchUpcomingAppointmentsForHub(actualUserId)
+    notifications = await fetchHubNotifications()
   } catch (error) {
-    // Fallback to mock data if API call fails
     console.error('Failed to fetch user data:', error)
   }
 
-  const quickActionTrackOptions = buildTrackOptions(trackSummaries)
+  const quickActionTrackOptions = buildTrackOptions(tracks)
 
   return (
     <div className='bg-background'>
@@ -55,12 +58,16 @@ export default async function Hub({ params }: UserHomePageProps) {
 
         <section className='grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]'>
           <div className='space-y-4'>
-            <HubHealthTracks userId={actualUserId} tracks={trackSummaries} />
+            <HubHealthTracks userId={actualUserId} tracks={tracks} />
             <HubUpcomingAppointments appointments={appointments} />
           </div>
 
           <div className='space-y-4'>
-            <HubNotifications notifications={overview.notifications} />
+            <HubNotifications
+              notifications={notifications}
+              tracks={quickActionTrackOptions}
+              userId={actualUserId}
+            />
             <HubRecentActivity items={overview.recentActivity} />
           </div>
         </section>

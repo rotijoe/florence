@@ -39,13 +39,21 @@ const tracksForUser = [
         date: daysAgo(2),
         notes: 'Calm'
       },
+      // Symptom from 10 days ago - outside 7-day window so track triggers TRACK_MISSING_SYMPTOM
       {
         type: EventType.SYMPTOM,
         title: 'Headache',
-        date: daysAgo(3),
+        date: daysAgo(10),
         notes: 'Mild headache in the afternoon',
         symptomType: 'headache',
         severity: 2
+      },
+      // Event with no notes - triggers EVENT_MISSING_DETAILS notification
+      {
+        type: EventType.APPOINTMENT,
+        title: 'Cardiology consultation',
+        date: daysAgo(2),
+        notes: null
       },
       {
         type: EventType.APPOINTMENT,
@@ -137,10 +145,11 @@ const additionalTracksForUser = [
         date: daysAgo(3),
         notes: 'Average sleep quality'
       },
+      // Symptom from 14 days ago - outside 7-day window so track triggers TRACK_MISSING_SYMPTOM
       {
         type: EventType.SYMPTOM,
         title: 'Fatigue',
-        date: daysAgo(4),
+        date: daysAgo(14),
         notes: 'Feeling very tired throughout the day',
         symptomType: 'fatigue',
         severity: 4
@@ -182,10 +191,11 @@ const additionalTracksForUser = [
         date: daysAgo(2),
         notes: 'Excellent hydration, exceeded goal'
       },
+      // Symptom from 12 days ago - outside 7-day window
       {
         type: EventType.SYMPTOM,
         title: 'Thirst',
-        date: daysAgo(5),
+        date: daysAgo(12),
         notes: 'Experienced excessive thirst',
         symptomType: 'thirst',
         severity: 3
@@ -262,6 +272,10 @@ async function main() {
   console.log('   - alice@example.com')
   console.log('   - bob@example.com')
   console.log('   - carol@example.com')
+  console.log('')
+  console.log('🔔 Hub notifications seeded:')
+  console.log('   - EVENT_MISSING_DETAILS: "Cardiology consultation" (no notes)')
+  console.log('   - TRACK_MISSING_SYMPTOM: All tracks have symptoms > 7 days ago')
   console.log('')
   console.log('📅 Upcoming appointments seeded:')
   console.log('   - Pharmacy visit (in 7 days)')

@@ -11,6 +11,10 @@ export interface Notification {
   title: string
   message: string
   ctaLabel?: string
+  href?: string
+  entityId?: string
+  notificationType?: 'EVENT_MISSING_DETAILS' | 'TRACK_MISSING_SYMPTOM'
+  trackSlug?: string
 }
 
 export interface HealthTrackSummary {
