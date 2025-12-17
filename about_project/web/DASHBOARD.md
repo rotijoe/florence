@@ -156,9 +156,9 @@ The dashboard page follows component-structure rules:
 
 ### Health Track Detail Page
 
-- **Route:** `/tracks/[trackSlug]`
+- **Route:** `/[userId]/tracks/[trackSlug]`
 - **Purpose:** Display a specific health track and its events
-- **Page Component:** `apps/web/src/app/tracks/[trackSlug]/page.tsx`
+- **Page Component:** `apps/web/src/app/[userId]/tracks/[trackSlug]/page.tsx`
 - **Features:**
   - Displays track name and description
   - Lists all health events for the track (newest to oldest)

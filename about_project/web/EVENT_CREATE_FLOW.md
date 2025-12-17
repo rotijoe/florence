@@ -6,20 +6,28 @@ The event creation flow allows users to create new events within a health track.
 
 ## Location
 
-- **Track Page:** `apps/web/src/app/tracks/[trackSlug]/page.tsx`
-- **Event Page:** `apps/web/src/app/tracks/[trackSlug]/[eventId]/page.tsx`
+- **Track Page:** `apps/web/src/app/[userId]/tracks/[trackSlug]/page.tsx`
+- **Event Page:** `apps/web/src/app/[userId]/tracks/[trackSlug]/[eventId]/page.tsx`
 - **Event Detail Component:** `apps/web/src/components/event_detail/index.tsx`
-- **Server Action:** `apps/web/src/app/tracks/[trackSlug]/[eventId]/actions.ts`
+- **Server Action:** `apps/web/src/app/[userId]/tracks/[trackSlug]/[eventId]/actions.ts`
 - **API Endpoint:** `apps/api/src/routes/events/index.ts`
 
 ## Flow Description
 
 ### 1. Create Event Button
 
-- **Location:** Track page (`/tracks/[trackSlug]`)
+- **Location:** Track page (`/[userId]/tracks/[trackSlug]`)
 - **Component:** Button in the header next to the track title
 - **Action:** Submits a form with `createEventAction` server action
 - **Form Data:** Contains `trackSlug` as a hidden input
+
+### 1b. Quick-add event buttons (type prefill)
+
+The track page also provides a **quick add bar** that can preselect the event type:
+
+- **Component:** `apps/web/src/components/track_quick_add_bar/index.tsx`
+- **Link format:** `/${userId}/tracks/${trackSlug}/new?returnTo=/${userId}/tracks/${trackSlug}&type=<EVENT_TYPE>`
+- **Behavior:** `apps/web/src/app/[userId]/tracks/[trackSlug]/new/page.tsx` reads `searchParams.type` and uses it as the initial event type (fallback to `NOTE` if invalid).
 
 ### 2. Server Action: `createEventAction`
 

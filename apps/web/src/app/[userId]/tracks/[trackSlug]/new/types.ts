@@ -3,6 +3,10 @@ export type NewEventPageProps = {
     userId: string
     trackSlug: string
   }>
+  searchParams?: {
+    type?: string
+    returnTo?: string
+  }
 }
 
 export type NewEventLayoutProps = {

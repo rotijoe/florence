@@ -4,6 +4,13 @@ import { HubNotifications } from '../index'
 import type { Notification } from '@/app/[userId]/types'
 import type { TrackOption } from '@/components/hub_quick_actions/types'
 
+jest.mock('@/components/hub_quick_actions/symptom_dialogue', () => ({
+  SymptomDialogue: ({ open, initialTrackSlug }: { open: boolean; initialTrackSlug?: string }) => {
+    if (!open) return null
+    return <div data-testid='symptom-dialogue' data-track-slug={initialTrackSlug} />
+  }
+}))
+
 const mockRefresh = jest.fn()
 
 jest.mock('next/navigation', () => ({
@@ -283,5 +290,68 @@ describe('HubNotifications', () => {
     expect(screen.getByText('Test notification')).toBeInTheDocument()
     // router.refresh should NOT be called on failure
     expect(mockRefresh).not.toHaveBeenCalled()
+  })
+
+  it('does not attempt to dismiss when notification is missing required fields', async () => {
+    const user = userEvent.setup()
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'appointmentDetails',
+        title: 'Missing fields',
+        message: 'Test message',
+        ctaLabel: undefined
+      }
+    ]
+
+    global.fetch = jest.fn()
+
+    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+
+    await user.click(screen.getByLabelText('Dismiss notification'))
+
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockRefresh).not.toHaveBeenCalled()
+    expect(screen.getByText('Missing fields')).toBeInTheDocument()
+  })
+
+  it('opens SymptomDialogue when clicking symptomReminder CTA', async () => {
+    const user = userEvent.setup()
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'symptomReminder',
+        title: 'Log a symptom in Pain',
+        message: 'Test message',
+        ctaLabel: 'Log symptom',
+        trackSlug: 'pain'
+      }
+    ]
+
+    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+
+    await user.click(screen.getByRole('button', { name: 'Log symptom' }))
+
+    expect(screen.getByTestId('symptom-dialogue')).toHaveAttribute('data-track-slug', 'pain')
+  })
+
+  it('navigates to href when clicking appointmentDetails CTA', async () => {
+    const user = userEvent.setup()
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'appointmentDetails',
+        title: 'Add details',
+        message: 'Test message',
+        ctaLabel: 'Add details',
+        href: '#details'
+      }
+    ]
+
+    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+
+    await user.click(screen.getByRole('button', { name: 'Add details' }))
+
+    expect(window.location.hash).toBe('#details')
   })
 })

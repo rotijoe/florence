@@ -3,31 +3,46 @@ import TrackPage from '../page'
 import { fetchTrack, fetchTrackEvents } from '../helpers'
 import { EventType, type TrackResponse, type EventResponse } from '@packages/types'
 
-// Mock the helpers
-jest.mock('../helpers', () => ({
-  fetchTrack: jest.fn(),
-  fetchTrackEvents: jest.fn()
+jest.mock('@/app/[userId]/helpers', () => ({
+  fetchHubNotifications: jest.fn(async () => [])
 }))
 
-// Mock TrackEventList component
-jest.mock('@/components/track_event_list', () => ({
-  TrackEventList: ({
-    events,
-    trackSlug
-  }: {
-    events: EventResponse[]
-    trackSlug: string
-    userId: string
-  }) => (
-    <div data-testid='track-event-list'>
-      <div data-testid='track-slug'>{trackSlug}</div>
-      {events.map((event) => (
-        <div key={event.id} data-testid={`event-${event.id}`}>
-          {event.title}
-        </div>
-      ))}
-    </div>
+// Mock the helpers
+jest.mock('../helpers', () => {
+  const actual = jest.requireActual('../helpers')
+  return {
+    ...actual,
+    fetchTrack: jest.fn(),
+    fetchTrackEvents: jest.fn()
+  }
+})
+
+jest.mock('@/components/track_quick_add_bar', () => ({
+  TrackQuickAddBar: ({ userId, trackSlug }: { userId: string; trackSlug: string }) => (
+    <div data-testid='track-quick-add-bar' data-user-id={userId} data-track-slug={trackSlug} />
   )
+}))
+
+jest.mock('@/components/track_timeline', () => ({
+  TrackTimeline: ({
+    futureAppointments,
+    pastEvents
+  }: {
+    futureAppointments: EventResponse[]
+    pastEvents: EventResponse[]
+    userId: string
+    trackSlug: string
+  }) => (
+    <div
+      data-testid='track-timeline'
+      data-future-count={futureAppointments.length}
+      data-past-count={pastEvents.length}
+    />
+  )
+}))
+
+jest.mock('@/components/track_reminders_panel', () => ({
+  TrackRemindersPanel: () => <div data-testid='track-reminders-panel' />
 }))
 
 // Mock TrackHeader component
@@ -77,6 +92,12 @@ describe('TrackPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2025-01-01T00:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   it('renders track name as heading', async () => {
@@ -99,10 +120,11 @@ describe('TrackPage', () => {
     const result = await TrackPage({ params })
     render(result)
 
-    expect(screen.getByTestId('track-event-list')).toBeInTheDocument()
-    expect(screen.getByTestId('track-slug')).toHaveTextContent('test-track')
-    expect(screen.getByTestId('event-event-1')).toBeInTheDocument()
-    expect(screen.getByTestId('event-event-2')).toBeInTheDocument()
+    expect(screen.getByTestId('track-quick-add-bar')).toBeInTheDocument()
+    expect(screen.getByTestId('track-reminders-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('track-timeline')).toBeInTheDocument()
+    expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-future-count', '0')
+    expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-past-count', '2')
   })
 
   it('calls fetchTrack and fetchTrackEvents with correct slug', async () => {
@@ -124,7 +146,8 @@ describe('TrackPage', () => {
     const result = await TrackPage({ params })
     render(result)
 
-    expect(screen.getByTestId('track-event-list')).toBeInTheDocument()
-    expect(screen.queryByTestId(/^event-/)).not.toBeInTheDocument()
+    expect(screen.getByTestId('track-timeline')).toBeInTheDocument()
+    expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-future-count', '0')
+    expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-past-count', '0')
   })
 })
