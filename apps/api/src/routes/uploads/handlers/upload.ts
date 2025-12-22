@@ -4,7 +4,12 @@ import { prisma } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
 import { PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { s3Client, getEventDocumentKey, getEventDocumentUrl, getStorageConfig } from '@/lib/s3.js'
+import {
+  s3Client,
+  getEventDocumentKey,
+  getEventDocumentUrl,
+  getStorageConfig
+} from '@/lib/s3/index.js'
 import { badRequestFromZod } from '../helpers.js'
 import { verifyEventInTrack, formatEvent } from '@/helpers/index.js'
 import { uploadUrlSchema, uploadConfirmSchema } from '../validators.js'

@@ -4,7 +4,7 @@
 
 - Node.js 18+
 - pnpm
-- PostgreSQL database (Neon recommended)
+- PostgreSQL database (Neon)
 
 ## Initial Setup
 
@@ -18,11 +18,11 @@ pnpm install
 
 ```bash
 # API
-cp apps/api/.env.example apps/api/.env
+cp apps/api/.env
 # Edit apps/api/.env with your DATABASE_URL
 
 # Database
-cp packages/database/.env.example packages/database/.env
+cp packages/database/.env
 # Edit packages/database/.env with your DATABASE_URL
 ```
 
@@ -34,6 +34,12 @@ pnpm db:sync  # Push schema, generate client, seed data
 ```
 
 ## Running Development Servers
+
+**Terminal: ALL**
+
+```bash
+pnpm dev  # Runs on http://localhost:8787
+```
 
 **Terminal 1: API server**
 
@@ -49,6 +55,14 @@ cd apps/web
 pnpm dev  # Runs on http://localhost:3000
 ```
 
+## Easy Reset Development Servers
+
+**Terminal**
+
+```bash
+pnpm dev:reset  # Runs on http://localhost:8787
+```
+
 ## Database Operations
 
 From `packages/database/`:
@@ -59,6 +73,7 @@ pnpm db:push      # Push schema changes only
 pnpm db:generate  # Regenerate Prisma client
 pnpm db:seed      # Seed test data
 pnpm studio       # Open Prisma Studio (GUI)
+pnpm reset       # Easy, BUT only LOCAL)
 ```
 
 ## Test Users
@@ -94,4 +109,3 @@ pkill -f "tsx watch"
 
 - [Prisma Workflow](./packages/PRISMA_WORKFLOW.md)
 - [Root README](../../README.md)
-

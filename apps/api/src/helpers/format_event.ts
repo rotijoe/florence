@@ -1,5 +1,5 @@
 import { EventType, type EventResponse } from '@packages/types'
-import { getPresignedDownloadUrl, getObjectKeyFromUrl } from '@/lib/s3.js'
+import { getPresignedDownloadUrl, getObjectKeyFromUrl } from '@/lib/s3/index.js'
 
 export type EventSelectResult = {
   id: string
@@ -42,4 +42,3 @@ export async function formatEvent(event: EventSelectResult): Promise<EventRespon
     updatedAt: event.updatedAt.toISOString()
   }
 }
-

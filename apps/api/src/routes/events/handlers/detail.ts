@@ -127,7 +127,7 @@ export async function remove(c: Context<{ Variables: AppVariables }>) {
     }
 
     if (existingEvent.fileUrl) {
-      const { getObjectKeyFromUrl, deleteFile } = await import('@/lib/s3.js')
+      const { getObjectKeyFromUrl, deleteFile } = await import('@/lib/s3/index.js')
       const key = getObjectKeyFromUrl(existingEvent.fileUrl)
       if (key) {
         try {

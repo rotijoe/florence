@@ -2,7 +2,7 @@ import { createTestApp } from '@/test-setup'
 import { prisma } from '@packages/database'
 import { EventType } from '@packages/types'
 import { auth } from '@/auth'
-import { s3Client } from '@/lib/s3.js'
+import { s3Client } from '@/lib/s3/index.js'
 
 let mockS3Send: jest.Mock
 

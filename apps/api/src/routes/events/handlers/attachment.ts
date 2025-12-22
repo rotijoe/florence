@@ -2,12 +2,9 @@ import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
 import { prisma } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
-import {
-  trackNotFoundResponse,
-  eventNotFoundResponse
-} from '../helpers.js'
+import { trackNotFoundResponse, eventNotFoundResponse } from '../helpers.js'
 import { verifyEventInTrack, formatEvent } from '@/helpers/index.js'
-import { getObjectKeyFromUrl, deleteFile } from '@/lib/s3.js'
+import { getObjectKeyFromUrl, deleteFile } from '@/lib/s3/index.js'
 import { EVENT_SELECT } from '../constants.js'
 
 export async function remove(c: Context<{ Variables: AppVariables }>) {
