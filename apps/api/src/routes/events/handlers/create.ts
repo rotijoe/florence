@@ -2,7 +2,11 @@ import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
 import { prisma } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
-import { verifyTrackExists, formatEvent, badRequestFromZod } from '../helpers.js'
+import {
+  badRequestFromZod,
+  trackNotFoundResponse
+} from '../helpers.js'
+import { verifyTrackExists, formatEvent } from '@/helpers/index.js'
 import { createEventSchema } from '../validators.js'
 import { EVENT_SELECT } from '../constants.js'
 
@@ -14,13 +18,7 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     const track = await verifyTrackExists(userId, slug)
     if (!track) {
-      return c.json(
-        {
-          success: false,
-          error: 'Track not found'
-        },
-        404
-      )
+      return trackNotFoundResponse(c)
     }
 
     const body = await c.req.json().catch(() => ({}))

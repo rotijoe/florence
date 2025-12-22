@@ -28,15 +28,18 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: 'test.pdf',
-          contentType: 'application/pdf',
-          size: 1024
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: 'test.pdf',
+            contentType: 'application/pdf',
+            size: 1024
+          })
+        }
+      )
       expect(res.status).toBe(401)
 
       const json = await res.json()
@@ -71,15 +74,18 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: 'test.pdf',
-          contentType: 'application/pdf',
-          size: 1024
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: 'test.pdf',
+            contentType: 'application/pdf',
+            size: 1024
+          })
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -114,15 +120,18 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: '',
-          contentType: 'application/pdf',
-          size: 1024
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: '',
+            contentType: 'application/pdf',
+            size: 1024
+          })
+        }
+      )
       expect(res.status).toBe(400)
 
       const json = await res.json()
@@ -157,15 +166,18 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: 'test.pdf',
-          contentType: 'invalid/type',
-          size: 1024
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: 'test.pdf',
+            contentType: 'invalid/type',
+            size: 1024
+          })
+        }
+      )
       expect(res.status).toBe(400)
 
       const json = await res.json()
@@ -200,15 +212,18 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: 'test.pdf',
-          contentType: 'application/pdf',
-          size: 11 * 1024 * 1024 // 11MB, exceeds 10MB limit
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: 'test.pdf',
+            contentType: 'application/pdf',
+            size: 11 * 1024 * 1024 // 11MB, exceeds 10MB limit
+          })
+        }
+      )
       expect(res.status).toBe(400)
 
       const json = await res.json()
@@ -248,15 +263,18 @@ describe('Uploads API - Upload Handler', () => {
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: 'test.pdf',
-          contentType: 'application/pdf',
-          size: 1024
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/nonexistent-slug/events/event-1/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: 'test.pdf',
+            contentType: 'application/pdf',
+            size: 1024
+          })
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -300,15 +318,18 @@ describe('Uploads API - Upload Handler', () => {
         ReturnType<typeof prisma.healthTrack.findFirst>
       >)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/nonexistent-event/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: 'test.pdf',
-          contentType: 'application/pdf',
-          size: 1024
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/nonexistent-event/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: 'test.pdf',
+            contentType: 'application/pdf',
+            size: 1024
+          })
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -358,15 +379,18 @@ describe('Uploads API - Upload Handler', () => {
       // Mock S3 send to simulate successful presigned URL generation
       // The actual getSignedUrl will be called internally
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: 'test.pdf',
-          contentType: 'application/pdf',
-          size: 1024
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: 'test.pdf',
+            contentType: 'application/pdf',
+            size: 1024
+          })
+        }
+      )
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -388,14 +412,17 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
-          key: 'events/event-1/file.pdf'
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
+            key: 'events/event-1/file.pdf'
+          })
+        }
+      )
       expect(res.status).toBe(401)
 
       const json = await res.json()
@@ -430,14 +457,17 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileUrl: 'https://test-bucket.s3.amazonaws.com/file.pdf',
-          key: 'events/event-1/file.pdf'
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: 'https://test-bucket.s3.amazonaws.com/file.pdf',
+            key: 'events/event-1/file.pdf'
+          })
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -472,14 +502,17 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileUrl: 'not-a-valid-url',
-          key: 'events/event-1/file.pdf'
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: 'not-a-valid-url',
+            key: 'events/event-1/file.pdf'
+          })
+        }
+      )
       expect(res.status).toBe(400)
 
       const json = await res.json()
@@ -514,14 +547,17 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
-          key: ''
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
+            key: ''
+          })
+        }
+      )
       expect(res.status).toBe(400)
 
       const json = await res.json()
@@ -567,14 +603,17 @@ describe('Uploads API - Upload Handler', () => {
       )
       mockS3Send.mockRejectedValueOnce(new Error('Not found'))
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
-          key: 'events/event-1/file.pdf'
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
+            key: 'events/event-1/file.pdf'
+          })
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -638,14 +677,17 @@ describe('Uploads API - Upload Handler', () => {
         updatedEvent as unknown as Awaited<ReturnType<typeof prisma.event.update>>
       )
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileUrl: 'https://bucket.s3.amazonaws.com/events/event-1/file.pdf',
-          key: 'events/event-1/file.pdf'
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: 'https://bucket.s3.amazonaws.com/events/event-1/file.pdf',
+            key: 'events/event-1/file.pdf'
+          })
+        }
+      )
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -687,14 +729,17 @@ describe('Uploads API - Upload Handler', () => {
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1/upload-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
-          key: 'events/event-1/file.pdf'
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/nonexistent-slug/events/event-1/upload-confirm',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
+            key: 'events/event-1/file.pdf'
+          })
+        }
+      )
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -788,14 +833,17 @@ describe('Uploads API - Upload Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
-          key: 'events/event-1/file.pdf'
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: 'https://bucket.s3.amazonaws.com/file.pdf',
+            key: 'events/event-1/file.pdf'
+          })
+        }
+      )
       expect(res.status).toBe(500)
 
       const json = await res.json()
@@ -834,15 +882,18 @@ describe('Uploads API - Upload Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: 'test.pdf',
-          contentType: 'application/pdf',
-          size: 1024
-        })
-      })
+      const res = await app.request(
+        '/api/users/user-1/tracks/test-slug/events/event-1/upload-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: 'test.pdf',
+            contentType: 'application/pdf',
+            size: 1024
+          })
+        }
+      )
       expect(res.status).toBe(500)
 
       const json = await res.json()

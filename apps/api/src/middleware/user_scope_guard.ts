@@ -42,4 +42,3 @@ export async function userScopeGuard(
   // User is authenticated and owns the resource, proceed
   return next()
 }
-

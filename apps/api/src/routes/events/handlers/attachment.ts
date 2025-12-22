@@ -2,7 +2,11 @@ import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
 import { prisma } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
-import { verifyEventInTrack, formatEvent } from '../helpers.js'
+import {
+  trackNotFoundResponse,
+  eventNotFoundResponse
+} from '../helpers.js'
+import { verifyEventInTrack, formatEvent } from '@/helpers/index.js'
 import { getObjectKeyFromUrl, deleteFile } from '@/lib/s3.js'
 import { EVENT_SELECT } from '../constants.js'
 
@@ -15,23 +19,11 @@ export async function remove(c: Context<{ Variables: AppVariables }>) {
     const { event: existingEvent, trackExists } = await verifyEventInTrack(userId, slug, eventId)
 
     if (!trackExists) {
-      return c.json(
-        {
-          success: false,
-          error: 'Track not found'
-        },
-        404
-      )
+      return trackNotFoundResponse(c)
     }
 
     if (!existingEvent) {
-      return c.json(
-        {
-          success: false,
-          error: 'Event not found'
-        },
-        404
-      )
+      return eventNotFoundResponse(c)
     }
 
     if (!existingEvent.fileUrl) {

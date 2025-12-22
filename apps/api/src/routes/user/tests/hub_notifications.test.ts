@@ -1,30 +1,12 @@
 import { createTestApp } from '@/test-setup'
 import { prisma } from '@packages/database'
 import { auth } from '@/auth'
+import { createMockSession } from '@/test-helpers'
 
 describe('User API - Hub Notifications', () => {
   let app: ReturnType<typeof createTestApp>
 
-  const mockSession = {
-    user: {
-      id: 'user-1',
-      email: 'test@example.com',
-      emailVerified: false,
-      name: 'Test User',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    session: {
-      id: 'session-1',
-      userId: 'user-1',
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      token: 'test-token',
-      ipAddress: null,
-      userAgent: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-  }
+  const mockSession = createMockSession('user-1')
 
   beforeAll(async () => {
     app = createTestApp()
@@ -94,7 +76,8 @@ describe('User API - Hub Notifications', () => {
         date: threeDaysAgo,
         title: 'Test Appointment',
         track: {
-          slug: 'test-track'
+          slug: 'test-track',
+          title: 'Test Track'
         }
       } as {
         id: string
@@ -103,17 +86,33 @@ describe('User API - Hub Notifications', () => {
         title: string
         track: {
           slug: string
+          title: string
         }
+      }
+
+      const mockTrack = {
+        id: 'track-1',
+        userId: 'user-1',
+        title: 'Test Track',
+        slug: 'test-track',
+        description: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
       const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       findManyEventsSpy.mockResolvedValue([mockEvent as any])
       findManyDismissalsSpy.mockResolvedValue([])
+      findManyTracksSpy.mockResolvedValue([mockTrack])
+      // Handler calls findFirst twice per track (main loop + cleanup), return null for no recent symptom
+      findFirstEventSpy.mockResolvedValue(null)
 
       const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
@@ -136,6 +135,8 @@ describe('User API - Hub Notifications', () => {
       getSessionSpy.mockRestore()
       findManyEventsSpy.mockRestore()
       findManyDismissalsSpy.mockRestore()
+      findManyTracksSpy.mockRestore()
+      findFirstEventSpy.mockRestore()
     })
 
     it('returns TrackMissingSymptom notification for track with no symptom logged in last 7 days', async () => {
@@ -153,11 +154,14 @@ describe('User API - Hub Notifications', () => {
       const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
       const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
       const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
+      const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManyTracksSpy.mockResolvedValue([mockTrack])
-      findFirstEventSpy.mockResolvedValue(null) // No symptom events
       findManyDismissalsSpy.mockResolvedValue([])
+      findManyEventsSpy.mockResolvedValue([]) // No events missing details
+      // Handler calls findFirst twice per track (main loop + cleanup), return null for no symptom
+      findFirstEventSpy.mockResolvedValue(null)
 
       const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
@@ -180,6 +184,7 @@ describe('User API - Hub Notifications', () => {
       findManyTracksSpy.mockRestore()
       findFirstEventSpy.mockRestore()
       findManyDismissalsSpy.mockRestore()
+      findManyEventsSpy.mockRestore()
     })
 
     it('respects dismissals and excludes dismissed notifications', async () => {
@@ -192,7 +197,8 @@ describe('User API - Hub Notifications', () => {
         date: threeDaysAgo,
         title: 'Test Appointment',
         track: {
-          slug: 'test-track'
+          slug: 'test-track',
+          title: 'Test Track'
         }
       } as {
         id: string
@@ -201,7 +207,18 @@ describe('User API - Hub Notifications', () => {
         title: string
         track: {
           slug: string
+          title: string
         }
+      }
+
+      const mockTrack = {
+        id: 'track-1',
+        userId: 'user-1',
+        title: 'Test Track',
+        slug: 'test-track',
+        description: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
       const mockDismissal = {
@@ -217,11 +234,16 @@ describe('User API - Hub Notifications', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
       const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       findManyEventsSpy.mockResolvedValue([mockEvent as any])
       findManyDismissalsSpy.mockResolvedValue([mockDismissal])
+      findManyTracksSpy.mockResolvedValue([mockTrack])
+      // Handler calls findFirst twice per track (main loop + cleanup), return null for no recent symptom
+      findFirstEventSpy.mockResolvedValue(null)
 
       const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
@@ -239,16 +261,33 @@ describe('User API - Hub Notifications', () => {
       getSessionSpy.mockRestore()
       findManyEventsSpy.mockRestore()
       findManyDismissalsSpy.mockRestore()
+      findManyTracksSpy.mockRestore()
+      findFirstEventSpy.mockRestore()
     })
 
     it('does not return EventMissingDetails for event with note', async () => {
+      const mockTrack = {
+        id: 'track-1',
+        userId: 'user-1',
+        title: 'Test Track',
+        slug: 'test-track',
+        description: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
+      }
+
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
       const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManyEventsSpy.mockResolvedValue([]) // Event has notes, so not returned
       findManyDismissalsSpy.mockResolvedValue([])
+      findManyTracksSpy.mockResolvedValue([mockTrack])
+      // Handler calls findFirst twice per track (main loop + cleanup), return null for no recent symptom
+      findFirstEventSpy.mockResolvedValue(null)
 
       const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
@@ -265,16 +304,33 @@ describe('User API - Hub Notifications', () => {
       getSessionSpy.mockRestore()
       findManyEventsSpy.mockRestore()
       findManyDismissalsSpy.mockRestore()
+      findManyTracksSpy.mockRestore()
+      findFirstEventSpy.mockRestore()
     })
 
     it('does not return EventMissingDetails for event with upload', async () => {
+      const mockTrack = {
+        id: 'track-1',
+        userId: 'user-1',
+        title: 'Test Track',
+        slug: 'test-track',
+        description: null,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z')
+      }
+
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
       const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManyEventsSpy.mockResolvedValue([]) // Event has upload, so not returned
       findManyDismissalsSpy.mockResolvedValue([])
+      findManyTracksSpy.mockResolvedValue([mockTrack])
+      // Handler calls findFirst twice per track (main loop + cleanup), return null for no recent symptom
+      findFirstEventSpy.mockResolvedValue(null)
 
       const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
@@ -291,6 +347,8 @@ describe('User API - Hub Notifications', () => {
       getSessionSpy.mockRestore()
       findManyEventsSpy.mockRestore()
       findManyDismissalsSpy.mockRestore()
+      findManyTracksSpy.mockRestore()
+      findFirstEventSpy.mockRestore()
     })
 
     it('does not return TrackMissingSymptom for track with recent symptom', async () => {
@@ -325,11 +383,14 @@ describe('User API - Hub Notifications', () => {
       const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
       const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
       const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
+      const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManyTracksSpy.mockResolvedValue([mockTrack])
-      findFirstEventSpy.mockResolvedValue(mockSymptomEvent) // Recent symptom exists
       findManyDismissalsSpy.mockResolvedValue([])
+      findManyEventsSpy.mockResolvedValue([]) // No events missing details
+      // Handler calls findFirst twice per track (main loop + cleanup), return symptom event for both
+      findFirstEventSpy.mockResolvedValue(mockSymptomEvent)
 
       const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
@@ -347,6 +408,7 @@ describe('User API - Hub Notifications', () => {
       findManyTracksSpy.mockRestore()
       findFirstEventSpy.mockRestore()
       findManyDismissalsSpy.mockRestore()
+      findManyEventsSpy.mockRestore()
     })
   })
 

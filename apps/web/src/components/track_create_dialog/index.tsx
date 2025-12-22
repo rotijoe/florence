@@ -16,7 +16,12 @@ import { Label } from '@/components/ui/label'
 import { createTrack } from './helpers'
 import type { TrackCreateDialogProps } from './types'
 
-export function TrackCreateDialog({ userId, open, onOpenChange, onSuccess }: TrackCreateDialogProps) {
+export function TrackCreateDialog({
+  userId,
+  open,
+  onOpenChange,
+  onSuccess
+}: TrackCreateDialogProps) {
   const [trackTitle, setTrackTitle] = useState('')
   const [trackDescription, setTrackDescription] = useState('')
   const [isCreating, setIsCreating] = useState(false)
@@ -118,4 +123,3 @@ export function TrackCreateDialog({ userId, open, onOpenChange, onSuccess }: Tra
     </Dialog>
   )
 }
-

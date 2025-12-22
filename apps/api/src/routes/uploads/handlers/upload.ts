@@ -5,7 +5,8 @@ import type { ApiResponse, EventResponse } from '@packages/types'
 import { PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { s3Client, getEventDocumentKey, getEventDocumentUrl, getStorageConfig } from '@/lib/s3.js'
-import { verifyEventAndTrack, formatEventResponse, badRequestFromZod } from '../helpers.js'
+import { badRequestFromZod } from '../helpers.js'
+import { verifyEventInTrack, formatEvent } from '@/helpers/index.js'
 import { uploadUrlSchema, uploadConfirmSchema } from '../validators.js'
 import {
   MAX_FILE_SIZE_BYTES,
@@ -30,7 +31,7 @@ export async function uploadUrl(c: Context<{ Variables: AppVariables }>) {
 
     const { fileName, contentType } = parseResult.data
 
-    const { event, trackExists } = await verifyEventAndTrack(userId, eventId, slug)
+    const { event, trackExists } = await verifyEventInTrack(userId, slug, eventId)
 
     if (!trackExists) {
       return c.json(
@@ -113,7 +114,7 @@ export async function uploadConfirm(c: Context<{ Variables: AppVariables }>) {
 
     const { fileUrl, key } = parseResult.data
 
-    const { event, trackExists } = await verifyEventAndTrack(userId, eventId, slug)
+    const { event, trackExists } = await verifyEventInTrack(userId, slug, eventId)
 
     if (!trackExists) {
       return c.json(
@@ -163,7 +164,7 @@ export async function uploadConfirm(c: Context<{ Variables: AppVariables }>) {
       select: EVENT_SELECT
     })
 
-    const formattedEvent = await formatEventResponse(updatedEvent)
+    const formattedEvent = await formatEvent(updatedEvent)
 
     const response: ApiResponse<EventResponse> = {
       success: true,
@@ -182,4 +183,3 @@ export async function uploadConfirm(c: Context<{ Variables: AppVariables }>) {
     )
   }
 }
-

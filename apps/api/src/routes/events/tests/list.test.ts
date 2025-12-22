@@ -406,4 +406,3 @@ describe('Events API - List Handler', () => {
     })
   })
 })
-

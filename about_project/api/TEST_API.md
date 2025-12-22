@@ -284,6 +284,57 @@ cd apps/api
 pnpm test
 ```
 
+### Fail-Fast Test Guards
+
+The API test suite includes **fail-fast guards** that prevent accidental real database or S3 calls during unit tests. These guards are automatically enabled in `apps/api/jest.setup.js`.
+
+#### How It Works
+
+1. **Prisma Guard**: A Prisma middleware (`$use`) intercepts all database queries and throws an error if the query method hasn't been mocked with `jest.spyOn()`.
+
+2. **S3 Guard**: The `s3Client.send()` method is overridden to throw an error by default. Tests that need S3 functionality must mock it explicitly.
+
+#### Why This Exists
+
+- **Prevents accidental real DB calls**: Ensures tests never hit the actual database, avoiding data corruption and test interdependencies
+- **Prevents accidental S3 calls**: Avoids unnecessary AWS API calls and potential costs
+- **Enforces proper mocking**: Makes it immediately obvious when a test is missing required mocks
+- **Fast feedback**: Tests fail fast with clear error messages pointing to the unmocked call
+
+#### Example Error
+
+If a test calls `prisma.user.findUnique()` without mocking it:
+
+```
+Error: Unexpected Prisma query: user.findUnique.
+This query was not mocked. Use jest.spyOn(prisma.user, 'findUnique') to mock it.
+If this is an integration test, set ALLOW_EXTERNAL_IO=true.
+```
+
+#### Mocking Required Calls
+
+All Prisma and S3 calls must be mocked in tests:
+
+```typescript
+// Mock Prisma calls
+const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique')
+findUniqueSpy.mockResolvedValue(mockUser)
+
+// Mock S3 calls
+const sendSpy = jest.spyOn(s3Client, 'send')
+sendSpy.mockResolvedValue(undefined)
+```
+
+#### Opting Out for Integration Tests
+
+For integration tests that need real database/S3 access, set the environment variable:
+
+```bash
+ALLOW_EXTERNAL_IO=true pnpm test
+```
+
+**Note**: Integration tests should be separate from unit tests and use a dedicated test database.
+
 ## See Also
 
 - [API Endpoints Reference](./ENDPOINTS.md)

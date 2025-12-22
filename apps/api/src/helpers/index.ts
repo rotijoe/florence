@@ -1,3 +1,6 @@
 export { generateSlug } from './generate_slug'
 export { generateUniqueSlug } from './generate_unique_slug'
+export { formatEvent, type EventSelectResult } from './format_event'
+export { verifyTrackExists } from './verify_track_exists'
+export { verifyEventInTrack } from './verify_event_in_track'
 
