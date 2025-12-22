@@ -1,251 +1,160 @@
-# Event Document Upload & View Flow
+# Document Upload Flow
 
 ## Overview
 
-This document describes the end‑to‑end architecture for uploading and viewing event documents.  
-It covers:
+Event documents are uploaded directly to S3 using presigned URLs. The flow ensures secure, private storage with no public access.
 
-- **Frontend:** `UploadDocument` dialog, `useEventUpload` hook, and `DocumentViewer`
-- **Server actions:** upload intent + confirm actions
-- **API:** upload endpoints and event endpoints that now return **presigned S3 URLs**
-- **Storage:** private S3 bucket configuration and object key strategy
+## Upload Sequence
 
-The goal is to keep event attachments private in S3 while still allowing seamless upload and viewing from the web app.
+```mermaid
+sequenceDiagram
+  participant Browser
+  participant API
+  participant S3
+  
+  Browser->>API: POST /api/users/:userId/tracks/:slug/events/:eventId/upload-url
+  API->>S3: Generate presigned PUT URL
+  S3-->>API: Presigned URL (15 min expiry)
+  API-->>Browser: uploadUrl + fileUrl + key
+  
+  Browser->>S3: PUT file (direct upload)
+  S3-->>Browser: Success
+  
+  Browser->>API: POST /api/users/:userId/tracks/:slug/events/:eventId/upload-confirm
+  API->>S3: Verify file exists (HeadObject)
+  API->>API: Update event.fileUrl
+  API-->>Browser: Event with presigned GET URL (1 hour expiry)
+```
 
----
+## Components
 
-## Frontend Architecture
+### UploadDocument Component
 
-### Components & Hooks
+**Location:** `apps/web/src/components/upload_document/index.tsx`
 
-- **Upload dialog**
-  - **Location:** `apps/web/src/components/upload_document/index.tsx`
-  - **Component:** `UploadDocument`
-  - **Responsibilities:**
-    - Presents a modal dialog for selecting a single file
-    - Delegates upload orchestration to `useEventUpload`
-    - Enforces:
-      - Required file selection
-      - Disabled actions while an upload is in progress
-    - Calls `onUploadComplete(updatedEvent)` when the backend confirms the upload
+- Modal dialog for file selection
+- Uses `useEventUpload` hook for upload orchestration
+- Enforces file validation (type, size)
 
-- **Quick document upload dialog**
-  - **Location:** `apps/web/src/components/hub_quick_actions/document_upload_dialogue/index.tsx`
-  - **Component:** `DocumentUploadDialogue`
-  - **Entry point:** Dashboard quick actions (`HubQuickActions` component)
-  - **Flow:**
-    1. User clicks "document" button in quick actions
-    2. Selects a track from dropdown
-    3. Dialog opens with:
-       - Track (read-only)
-       - Event type selector (dropdown with all EventType options, defaults to NOTE)
-       - File input
-       - Title input (required)
-       - Notes textarea (optional)
-    4. On upload:
-       - Creates a new event in the selected track using `createEventAction` server action
-       - Uploads the selected file to the created event using `useEventUpload` hook
-       - On success: closes dialog, refreshes page, and shows success toast with link to event page
-  - **Implementation:** Fully functional, uses the same presigned S3 upload pipeline as `UploadDocument`
-  - **Note:** This provides an alternative entry point for document uploads directly from the dashboard, creating a new event automatically
+### useEventUpload Hook
 
-- **Upload state hook**
-  - **Location:** `apps/web/src/hooks/use_event_upload/index.ts`
-  - **Hook:** `useEventUpload`
-  - **Inputs:**
-    - `userId: string`
-    - `trackSlug: string`
-    - `onComplete?: (event: EventResponse) => void`
-  - **State:**
-    - `status: UploadStatus` (`idle | getting-url | uploading | confirming | success | error`)
-    - `error: string | null`
-    - `isUploading: boolean` (derived from `status`)
-  - **API:**
-    - `upload({ eventId: string, file: File }): Promise<void>` - Accepts `eventId` at upload time for flexibility
-    - `reset(): void`
-  - **Responsibilities:**
-    1. **Create upload intent** via server action (requires `eventId` provided at upload time)
-    2. **Upload file directly to S3** using the presigned `uploadUrl`
-    3. **Confirm upload** with the API so the event is updated with the file URL
-    4. Surface progress (`status`) and errors to the UI
-  - **Note:** The `eventId` is provided at upload time (not hook initialization) to support both:
-    - Existing event uploads (`UploadDocument` component)
-    - New event creation + upload flows (`DocumentUploadDialogue` component)
+**Location:** `apps/web/src/hooks/use_event_upload/index.ts`
 
-- **Document viewer**
-  - **Location:** `apps/web/src/components/document_viewer/index.tsx`
-  - **Component:** `DocumentViewer`
-  - **Inputs:**
-    - `url: string` (presigned S3 URL)
-    - `fileType: 'image' | 'pdf' | 'text' | 'other'`
-  - **Behavior:**
-    - `image` → Renders `<img>` with `object-contain` inside a bordered container
-    - `pdf` / `text` → Renders `<iframe>` in a fixed‑height container
-    - Other types → Shows “cannot be previewed” message with a **Download** link to the `url`
+**State:**
+- `status`: `idle | getting-url | uploading | confirming | success | error`
+- `error`: Error message
 
----
+**API:**
+- `upload({ eventId, file })` - Orchestrates upload flow
+
+**Flow:**
+1. Get presigned URL from server action
+2. Upload file directly to S3
+3. Confirm upload with API
 
 ## Server Actions
 
-**Location:** `apps/web/src/app/tracks/[trackSlug]/[eventId]/actions.ts`
+**Location:** `apps/web/src/app/[userId]/tracks/[trackSlug]/[eventId]/actions.ts`
 
-- **`createEventUploadIntentAction(formData)`**
-  - Extracts: `eventId`, `trackSlug`, `fileName`, `contentType`, `size`
-  - Sends `POST` to:
-    - `/api/tracks/:slug/events/:eventId/upload-url`
-  - Returns:
-    - `uploadUrl` – presigned S3 `PUT` URL for direct browser upload
-    - `fileUrl` – canonical S3 object URL (not presigned)
-    - `key` – S3 object key
-    - `expiresAt` – timestamp for upload URL expiration
+### createEventUploadIntentAction
 
-- **`confirmEventUploadAction(formData)`**
-  - Extracts: `eventId`, `trackSlug`, `fileUrl`, `key`
-  - Sends `POST` to:
-    - `/api/tracks/:slug/events/:eventId/upload-confirm`
-  - On success:
-    - Returns `event: EventResponse` with the stored `fileUrl`
-    - Calls `revalidatePath` for:
-      - `/tracks/:trackSlug/:eventId`
-      - `/tracks/:trackSlug`
+Gets presigned S3 PUT URL for direct upload.
 
----
+**API:** `POST /api/users/:userId/tracks/:slug/events/:eventId/upload-url`
 
-## API & Storage Architecture
+**Body:**
+```json
+{
+  "fileName": "report.pdf",
+  "contentType": "application/pdf",
+  "size": 123456
+}
+```
 
-### S3 Client & Helpers
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "uploadUrl": "https://s3...", // Presigned PUT (15 min)
+    "fileUrl": "https://s3...", // Canonical URL
+    "key": "events/event-id/...",
+    "expiresAt": "...",
+    "maxSize": 10485760,
+    "allowedContentTypes": [...]
+  }
+}
+```
 
-- **Location:** `apps/api/src/lib/s3.ts`
-- **Key pieces:**
-  - `getStorageConfig()` – reads:
-    - `AWS_REGION`
-    - `S3_BUCKET_APP_DOCUMENTS`
-  - `s3Client` – configured `S3Client` with:
-    - `AWS_ACCESS_KEY_ID`
-    - `AWS_SECRET_ACCESS_KEY`
-  - `getEventDocumentKey(eventId, fileName)` – generates safe, unique keys:
-    - Pattern: `events/{eventId}/{timestamp}-{random}-{normalizedName}.{ext}`
-  - `getEventDocumentUrl(key)` – canonical S3 object URL (non‑presigned)
-  - `getPresignedDownloadUrl(key, expiresInSeconds)` – presigned `GET` URL for viewing/downloading
-  - `getObjectKeyFromUrl(url)` – extracts S3 key from the stored canonical URL
+### confirmEventUploadAction
 
-### Upload Endpoints
+Confirms upload and attaches document to event.
 
-- **Location:** `apps/api/src/routes/uploads/index.ts`
+**API:** `POST /api/users/:userId/tracks/:slug/events/:eventId/upload-confirm`
 
-1. **Create upload intent**
-   - **Route:** `POST /api/tracks/:slug/events/:eventId/upload-url`
-   - **Auth:** Required (Better Auth session)
-   - **Request body:**
-     - `fileName: string`
-     - `contentType: string`
-     - `size: number`
-   - **Validations:**
-     - Event exists **and** belongs to the track
-     - `contentType` is in `ALLOWED_CONTENT_TYPES` (PDF, images, DOC/DOCX, text)
-     - `size` > 0 and ≤ 10MB (`MAX_FILE_SIZE_BYTES`)
-   - **Behavior:**
-     - Generates S3 key via `getEventDocumentKey`
-     - Creates a `PutObjectCommand` and presigned `uploadUrl` (15‑minute expiry)
-     - Generates canonical `fileUrl` via `getEventDocumentUrl`
-   - **Response:**
-     - `uploadUrl` – presigned S3 upload URL
-     - `fileUrl` – canonical S3 object URL to be stored on the event
-     - `key` – S3 object key
-     - `expiresAt` – upload URL expiration time
-     - `maxSize`, `allowedContentTypes`
+**Body:**
+```json
+{
+  "fileUrl": "https://s3...",
+  "key": "events/event-id/..."
+}
+```
 
-2. **Confirm upload**
-   - **Route:** `POST /api/tracks/:slug/events/:eventId/upload-confirm`
-   - **Auth:** Required
-   - **Request body:**
-     - `fileUrl: string` (canonical S3 URL)
-     - `key: string` (S3 object key)
-   - **Behavior:**
-     - Verifies event + track membership
-     - Performs `HeadObject` on S3 to ensure object exists
-     - Updates the event `fileUrl` and `updatedAt`
-     - Before returning, converts stored `fileUrl` to a **presigned GET URL**:
-       - Uses `getObjectKeyFromUrl` + `getPresignedDownloadUrl`
-   - **Response:**
-     - `EventResponse` with `fileUrl` set to a presigned S3 URL (time‑limited)
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "event-id",
+    "fileUrl": "https://s3...", // Presigned GET (1 hour)
+    ...
+  }
+}
+```
 
-### Event Retrieval Endpoints (Presigned View URLs)
+## API Endpoints
 
-- **Location:** `apps/api/src/routes/events/index.ts`
+### POST /api/users/:userId/tracks/:slug/events/:eventId/upload-url
 
-All event‑read endpoints now surface **presigned** `fileUrl` values:
+**Auth:** Required (middleware enforces `userId` match)
 
-1. `GET /api/tracks/:slug/events`
-   - For each event with a stored `fileUrl`:
-     - Extracts the S3 key from the canonical URL
-     - Generates a presigned `GET` URL via `getPresignedDownloadUrl`
-   - Response `fileUrl` is **always presigned**, never the raw bucket URL.
+**Validation:**
+- `fileName`: Required, non-empty string
+- `contentType`: Must be in allowed list
+- `size`: Must be positive, max 10 MB
 
-2. `GET /api/tracks/:slug/events/:eventId`
-   - Same behavior as above for a single event.
+**Allowed Content Types:**
+- `application/pdf`
+- `image/jpeg`, `image/png`, `image/gif`, `image/webp`
+- `application/msword`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+- `text/plain`
 
-3. `PATCH /api/tracks/:slug/events/:eventId`
-   - After updating the event, if `fileUrl` is present:
-     - Rewrites it to a presigned `GET` URL before returning the response.
+### POST /api/users/:userId/tracks/:slug/events/:eventId/upload-confirm
 
-**Result:** The database only stores **canonical S3 URLs**, while all **API responses** expose **time‑limited presigned URLs** safe for direct use in `DocumentViewer` or download links.
+**Auth:** Required
 
----
+**Behavior:**
+- Verifies file exists in S3 (`HeadObject`)
+- Updates `event.fileUrl` with canonical S3 URL
+- Returns event with presigned GET URL (1 hour expiry)
 
-## End‑to‑End Upload Flow
+## Document Viewing
 
-1. **User opens upload dialog**
-   - `EventDetail` (or parent) renders `UploadDocument` with `event` + `trackSlug`.
+When events are read, `fileUrl` is automatically converted to a presigned GET URL:
 
-2. **User selects a file**
-   - `UploadDocument` stores the selected `File` in local state.
+- **Expiry:** 1 hour
+- **Access:** Private (no public bucket access)
+- **Viewer:** `DocumentViewer` component handles preview/download
 
-3. **Create upload intent (server action)**
-   - `useEventUpload.upload(file)` calls `createEventUploadIntentAction`:
-     - Backend validates input and event/track
-     - Returns `uploadUrl`, `fileUrl`, `key`.
+## Security
 
-4. **Direct S3 upload**
-   - Browser issues `PUT` to `uploadUrl` with the file body.
-   - No app server involvement in the file stream; the API only issues the presigned URL.
+- **Private S3 bucket:** No public access
+- **Presigned URLs:** Time-limited access
+- **Ownership enforced:** Middleware ensures user owns event
+- **Direct upload:** Browser uploads directly to S3 (no server proxy)
 
-5. **Confirm upload (server action)**
-   - `useEventUpload` calls `confirmEventUploadAction` with `fileUrl` + `key`.
-   - API verifies the object exists, updates the event, and returns `EventResponse` with:
-     - `fileUrl` → **presigned GET URL** for viewing/downloading.
+## See Also
 
-6. **UI update**
-   - `onComplete(updatedEvent)` is called from `useEventUpload`.
-   - The calling component updates its local state / optimistic event and closes the dialog.
-   - Subsequent fetches of the event or events list will return **fresh presigned URLs**.
-
----
-
-## Security & Permissions
-
-- S3 bucket is assumed to be **private**:
-  - No public read on bucket or objects.
-  - All access for uploads and downloads uses **presigned URLs**.
-- Upload endpoints require an authenticated user:
-  - Requests are authorized via Better Auth session cookies.
-- Presigned GET URLs:
-  - Are time‑limited (default 1 hour in `getPresignedDownloadUrl`)
-  - Are regenerated whenever events are read via the events endpoints.
-
----
-
-## Testing Notes
-
-- **Frontend:**
-  - `useEventUpload` has unit tests under:
-    - `apps/web/src/hooks/use_event_upload/tests/index.spec.ts`
-  - `UploadDocument` is tested in:
-    - `apps/web/src/components/upload_document/tests/index.spec.tsx` (if added)
-- **Backend:**
-  - Upload endpoints are covered in:
-    - `apps/api/src/routes/uploads/index.test.ts` (if present)
-  - Events endpoints tests should assert:
-    - `fileUrl` is non‑null and looks like a presigned URL when attachments exist.
-
-When extending this feature (e.g., multiple files per event, deletion, or file type icons), update this document and the relevant tests to keep the architecture description accurate.
+- [API Endpoints](../api/ENDPOINTS.md#document-upload)
+- [Event Lifecycle](./EVENT_LIFECYCLE.md)
+- [Data Compliance](../compliance/document_data_compliance.md)
