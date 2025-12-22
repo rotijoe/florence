@@ -33,6 +33,45 @@ describe('Events API - Create Handler', () => {
       getSessionSpy.mockRestore()
     })
 
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const mockSession = {
+        user: {
+          id: 'user-2',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-2',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(mockSession)
+
+      const res = await app.request('/api/users/user-1/tracks/test-track/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
+
+      getSessionSpy.mockRestore()
+    })
+
     it('returns 404 when track does not exist', async () => {
       const mockSession = {
         user: {

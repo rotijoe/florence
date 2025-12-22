@@ -16,17 +16,8 @@ import { EVENT_SELECT } from '../../events/constants.js'
 
 export async function uploadUrl(c: Context<{ Variables: AppVariables }>) {
   try {
-    const user = c.get('user')
-    if (!user) {
-      return c.json(
-        {
-          success: false,
-          error: 'Unauthorized'
-        },
-        401
-      )
-    }
-
+    // Auth and ownership are enforced by userScopeGuard middleware
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
@@ -39,7 +30,7 @@ export async function uploadUrl(c: Context<{ Variables: AppVariables }>) {
 
     const { fileName, contentType } = parseResult.data
 
-    const { event, trackExists } = await verifyEventAndTrack(eventId, slug)
+    const { event, trackExists } = await verifyEventAndTrack(userId, eventId, slug)
 
     if (!trackExists) {
       return c.json(
@@ -108,17 +99,8 @@ export async function uploadUrl(c: Context<{ Variables: AppVariables }>) {
 
 export async function uploadConfirm(c: Context<{ Variables: AppVariables }>) {
   try {
-    const user = c.get('user')
-    if (!user) {
-      return c.json(
-        {
-          success: false,
-          error: 'Unauthorized'
-        },
-        401
-      )
-    }
-
+    // Auth and ownership are enforced by userScopeGuard middleware
+    const userId = c.req.param('userId')
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
@@ -131,7 +113,7 @@ export async function uploadConfirm(c: Context<{ Variables: AppVariables }>) {
 
     const { fileUrl, key } = parseResult.data
 
-    const { event, trackExists } = await verifyEventAndTrack(eventId, slug)
+    const { event, trackExists } = await verifyEventAndTrack(userId, eventId, slug)
 
     if (!trackExists) {
       return c.json(

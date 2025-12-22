@@ -319,7 +319,7 @@ describe('createEventUploadIntentAction', () => {
     const result = await createEventUploadIntentAction(formData)
 
     expect(global.fetch).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/tracks/track-slug/events/event-1/upload-url`,
+      `${API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1/upload-url`,
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
@@ -634,7 +634,7 @@ describe('confirmEventUploadAction', () => {
     const result = await confirmEventUploadAction(formData)
 
     expect(global.fetch).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/tracks/track-slug/events/event-1/upload-confirm`,
+      `${API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1/upload-confirm`,
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({

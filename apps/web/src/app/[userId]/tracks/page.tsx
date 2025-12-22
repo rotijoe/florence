@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { useSession } from '@/lib/auth_client'
@@ -20,6 +20,20 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
+  const loadUserData = useCallback(async () => {
+    if (!session?.user?.id) return
+    try {
+      setIsLoading(true)
+      setError(null)
+      const data = await fetchUserData(session.user.id)
+      setUserData(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [session?.user?.id])
+
   useEffect(() => {
     if (!isPending && !session) {
       router.push('/')
@@ -29,20 +43,7 @@ export default function DashboardPage() {
     if (session) {
       loadUserData()
     }
-  }, [session, isPending, router])
-
-  async function loadUserData() {
-    try {
-      setIsLoading(true)
-      setError(null)
-      const data = await fetchUserData()
-      setUserData(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  }, [session, isPending, router, loadUserData])
 
   function renderLoading() {
     return (
@@ -99,8 +100,10 @@ export default function DashboardPage() {
   }
 
   function renderCreateDialog() {
+    if (!session?.user?.id) return null
     return (
       <TrackCreateDialog
+        userId={session.user.id}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onSuccess={loadUserData}

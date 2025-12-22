@@ -6,9 +6,9 @@ import * as hubNotifications from './handlers/hub_notifications.js'
 
 const app = new Hono<{ Variables: AppVariables }>()
 
-app.get('/user/me', me.handler)
-app.get('/user/appointments/upcoming', upcomingAppointments.handler)
-app.get('/user/hub/notifications', hubNotifications.getHubNotifications)
-app.post('/user/hub/notifications/dismiss', hubNotifications.dismissHubNotification)
+app.get('/users/:userId', me.handler)
+app.get('/users/:userId/appointments/upcoming', upcomingAppointments.handler)
+app.get('/users/:userId/hub/notifications', hubNotifications.getHubNotifications)
+app.post('/users/:userId/hub/notifications/dismiss', hubNotifications.dismissHubNotification)
 
 export default app

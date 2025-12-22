@@ -23,12 +23,12 @@ describe('Uploads API - Upload Handler', () => {
     mockS3Send.mockRestore()
   })
 
-  describe('POST /api/tracks/:slug/events/:eventId/upload-url', () => {
+  describe('POST /api/users/:userId/tracks/:slug/events/:eventId/upload-url', () => {
     it('returns 401 when user is not authenticated', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-url', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -42,6 +42,49 @@ describe('Uploads API - Upload Handler', () => {
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Unauthorized')
+
+      getSessionSpy.mockRestore()
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const mockSession = {
+        user: {
+          id: 'user-2',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-2',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(mockSession)
+
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: 'test.pdf',
+          contentType: 'application/pdf',
+          size: 1024
+        })
+      })
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
 
       getSessionSpy.mockRestore()
     })
@@ -71,7 +114,7 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-url', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -114,7 +157,7 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-url', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -157,7 +200,7 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-url', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -205,7 +248,7 @@ describe('Uploads API - Upload Handler', () => {
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/nonexistent-slug/events/event-1/upload-url', {
+      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -257,7 +300,7 @@ describe('Uploads API - Upload Handler', () => {
         ReturnType<typeof prisma.healthTrack.findFirst>
       >)
 
-      const res = await app.request('/api/tracks/test-slug/events/nonexistent-event/upload-url', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/nonexistent-event/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -315,7 +358,7 @@ describe('Uploads API - Upload Handler', () => {
       // Mock S3 send to simulate successful presigned URL generation
       // The actual getSignedUrl will be called internally
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-url', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -340,12 +383,12 @@ describe('Uploads API - Upload Handler', () => {
     })
   })
 
-  describe('POST /api/tracks/:slug/events/:eventId/upload-confirm', () => {
+  describe('POST /api/users/:userId/tracks/:slug/events/:eventId/upload-confirm', () => {
     it('returns 401 when user is not authenticated', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -358,6 +401,48 @@ describe('Uploads API - Upload Handler', () => {
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Unauthorized')
+
+      getSessionSpy.mockRestore()
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const mockSession = {
+        user: {
+          id: 'user-2',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-2',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(mockSession)
+
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileUrl: 'https://test-bucket.s3.amazonaws.com/file.pdf',
+          key: 'events/event-1/file.pdf'
+        })
+      })
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
 
       getSessionSpy.mockRestore()
     })
@@ -387,7 +472,7 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -429,7 +514,7 @@ describe('Uploads API - Upload Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -482,7 +567,7 @@ describe('Uploads API - Upload Handler', () => {
       )
       mockS3Send.mockRejectedValueOnce(new Error('Not found'))
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -553,7 +638,7 @@ describe('Uploads API - Upload Handler', () => {
         updatedEvent as unknown as Awaited<ReturnType<typeof prisma.event.update>>
       )
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -602,7 +687,7 @@ describe('Uploads API - Upload Handler', () => {
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/tracks/nonexistent-slug/events/event-1/upload-confirm', {
+      const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1/upload-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -654,7 +739,7 @@ describe('Uploads API - Upload Handler', () => {
       >)
 
       const res = await app.request(
-        '/api/tracks/test-slug/events/nonexistent-event/upload-confirm',
+        '/api/users/user-1/tracks/test-slug/events/nonexistent-event/upload-confirm',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -703,7 +788,7 @@ describe('Uploads API - Upload Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -749,7 +834,7 @@ describe('Uploads API - Upload Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/tracks/test-slug/events/event-1/upload-url', {
+      const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

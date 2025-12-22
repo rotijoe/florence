@@ -1,9 +1,9 @@
 import type { UserWithTracks, ApiResponse } from './types'
 
-export async function fetchUserData(): Promise<UserWithTracks> {
+export async function fetchUserData(userId: string): Promise<UserWithTracks> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
 
-  const response = await fetch(`${apiUrl}/api/user/me`, {
+  const response = await fetch(`${apiUrl}/api/users/${userId}`, {
     credentials: 'include'
   })
 

@@ -1,4 +1,5 @@
 export interface TrackCreateDialogProps {
+  userId: string
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void

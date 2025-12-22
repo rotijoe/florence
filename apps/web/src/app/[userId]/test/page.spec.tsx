@@ -351,7 +351,7 @@ describe('UserHomePage', () => {
 
     render(result)
 
-    expect(mockFetchUserMeWithCookies).toHaveBeenCalled()
+    expect(mockFetchUserMeWithCookies).toHaveBeenCalledWith('user-123')
     expect(mockMapTracksToHealthTrackSummary).toHaveBeenCalledWith(mockUserMeData.tracks)
 
     const healthTracks = screen.getByTestId('hub-health-tracks')

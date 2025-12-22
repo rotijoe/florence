@@ -37,11 +37,13 @@ export default async function Hub({ params }: UserHomePageProps) {
   let notifications: Notification[] = []
 
   try {
-    const userMe = await fetchUserMeWithCookies()
-    actualUserId = userMe.id
-    tracks = mapTracksToHealthTrackSummary(userMe.tracks)
-    appointments = await fetchUpcomingAppointmentsForHub(actualUserId)
-    notifications = await fetchHubNotifications()
+    if (session?.user?.id) {
+      const userMe = await fetchUserMeWithCookies(session.user.id)
+      actualUserId = userMe.id
+      tracks = mapTracksToHealthTrackSummary(userMe.tracks)
+      appointments = await fetchUpcomingAppointmentsForHub(actualUserId)
+      notifications = await fetchHubNotifications(actualUserId)
+    }
   } catch (error) {
     console.error('Failed to fetch user data:', error)
   }

@@ -17,3 +17,4 @@ export const EVENT_TYPE_PASTEL_STYLES: Record<EventType, string> = {
 }
 
 
+

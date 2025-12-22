@@ -34,17 +34,52 @@ describe('User API - Hub Notifications', () => {
     jest.clearAllMocks()
   })
 
-  describe('GET /api/user/hub/notifications', () => {
+  describe('GET /api/users/:userId/hub/notifications', () => {
     it('returns 401 when user is not authenticated', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/user/hub/notifications')
+      const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(401)
 
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Unauthorized')
+
+      getSessionSpy.mockRestore()
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const mockSession = {
+        user: {
+          id: 'user-2',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-2',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(mockSession)
+
+      const res = await app.request('/api/users/user-1/hub/notifications')
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
 
       getSessionSpy.mockRestore()
     })
@@ -80,7 +115,7 @@ describe('User API - Hub Notifications', () => {
       findManyEventsSpy.mockResolvedValue([mockEvent as any])
       findManyDismissalsSpy.mockResolvedValue([])
 
-      const res = await app.request('/api/user/hub/notifications')
+      const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -124,7 +159,7 @@ describe('User API - Hub Notifications', () => {
       findFirstEventSpy.mockResolvedValue(null) // No symptom events
       findManyDismissalsSpy.mockResolvedValue([])
 
-      const res = await app.request('/api/user/hub/notifications')
+      const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -188,7 +223,7 @@ describe('User API - Hub Notifications', () => {
       findManyEventsSpy.mockResolvedValue([mockEvent as any])
       findManyDismissalsSpy.mockResolvedValue([mockDismissal])
 
-      const res = await app.request('/api/user/hub/notifications')
+      const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -215,7 +250,7 @@ describe('User API - Hub Notifications', () => {
       findManyEventsSpy.mockResolvedValue([]) // Event has notes, so not returned
       findManyDismissalsSpy.mockResolvedValue([])
 
-      const res = await app.request('/api/user/hub/notifications')
+      const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -241,7 +276,7 @@ describe('User API - Hub Notifications', () => {
       findManyEventsSpy.mockResolvedValue([]) // Event has upload, so not returned
       findManyDismissalsSpy.mockResolvedValue([])
 
-      const res = await app.request('/api/user/hub/notifications')
+      const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -296,7 +331,7 @@ describe('User API - Hub Notifications', () => {
       findFirstEventSpy.mockResolvedValue(mockSymptomEvent) // Recent symptom exists
       findManyDismissalsSpy.mockResolvedValue([])
 
-      const res = await app.request('/api/user/hub/notifications')
+      const res = await app.request('/api/users/user-1/hub/notifications')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -315,12 +350,12 @@ describe('User API - Hub Notifications', () => {
     })
   })
 
-  describe('POST /api/user/hub/notifications/dismiss', () => {
+  describe('POST /api/users/:userId/hub/notifications/dismiss', () => {
     it('returns 401 when user is not authenticated', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/user/hub/notifications/dismiss', {
+      const res = await app.request('/api/users/user-1/hub/notifications/dismiss', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'EVENT_MISSING_DETAILS', entityId: 'event-1' })
@@ -351,7 +386,7 @@ describe('User API - Hub Notifications', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       upsertSpy.mockResolvedValue(mockDismissal)
 
-      const res = await app.request('/api/user/hub/notifications/dismiss', {
+      const res = await app.request('/api/users/user-1/hub/notifications/dismiss', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'EVENT_MISSING_DETAILS', entityId: 'event-1' })
@@ -410,7 +445,7 @@ describe('User API - Hub Notifications', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       upsertSpy.mockResolvedValue(updatedDismissal)
 
-      const res = await app.request('/api/user/hub/notifications/dismiss', {
+      const res = await app.request('/api/users/user-1/hub/notifications/dismiss', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'EVENT_MISSING_DETAILS', entityId: 'event-1' })
@@ -430,7 +465,7 @@ describe('User API - Hub Notifications', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/user/hub/notifications/dismiss', {
+      const res = await app.request('/api/users/user-1/hub/notifications/dismiss', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'INVALID_TYPE', entityId: 'event-1' })
@@ -448,7 +483,7 @@ describe('User API - Hub Notifications', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/user/hub/notifications/dismiss', {
+      const res = await app.request('/api/users/user-1/hub/notifications/dismiss', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'EVENT_MISSING_DETAILS' })
@@ -458,6 +493,45 @@ describe('User API - Hub Notifications', () => {
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBeDefined()
+
+      getSessionSpy.mockRestore()
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const mockSession = {
+        user: {
+          id: 'user-2',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-2',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(mockSession)
+
+      const res = await app.request('/api/users/user-1/hub/notifications/dismiss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'EVENT_MISSING_DETAILS', entityId: 'event-1' })
+      })
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
 
       getSessionSpy.mockRestore()
     })

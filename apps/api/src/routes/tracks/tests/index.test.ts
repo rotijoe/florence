@@ -14,8 +14,8 @@ describe('Tracks API - Route Composition', () => {
     expect(res.status).toBeLessThan(500)
   })
 
-  it('mounts POST /api/user/tracks route', async () => {
-    const res = await app.request('/api/user/tracks', {
+  it('mounts POST /api/users/:userId/tracks route', async () => {
+    const res = await app.request('/api/users/user-1/tracks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({})

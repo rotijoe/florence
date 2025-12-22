@@ -13,14 +13,49 @@ describe('User API - Me Handler', () => {
     jest.clearAllMocks()
   })
 
-  describe('GET /api/user/me', () => {
+  describe('GET /api/users/:userId', () => {
     it('returns 401 when user is not authenticated', async () => {
-      const res = await app.request('/api/user/me')
+      const res = await app.request('/api/users/user-1')
       expect(res.status).toBe(401)
 
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Unauthorized')
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const mockSession = {
+        user: {
+          id: 'user-2',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-2',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(mockSession)
+
+      const res = await app.request('/api/users/user-1')
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
+
+      getSessionSpy.mockRestore()
     })
 
     it('returns user data when authenticated', async () => {
@@ -71,7 +106,7 @@ describe('User API - Me Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findUniqueSpy.mockResolvedValue(mockUser)
 
-      const res = await app.request('/api/user/me')
+      const res = await app.request('/api/users/user-1')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -125,7 +160,7 @@ describe('User API - Me Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findUniqueSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/user/me')
+      const res = await app.request('/api/users/user-1')
       expect(res.status).toBe(404)
 
       const json = await res.json()
@@ -174,7 +209,7 @@ describe('User API - Me Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findUniqueSpy.mockResolvedValue(mockUser)
 
-      const res = await app.request('/api/user/me')
+      const res = await app.request('/api/users/user-1')
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -213,7 +248,7 @@ describe('User API - Me Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findUniqueSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/user/me')
+      const res = await app.request('/api/users/user-1')
       expect(res.status).toBe(500)
 
       const json = await res.json()

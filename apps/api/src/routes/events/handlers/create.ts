@@ -8,29 +8,9 @@ import { EVENT_SELECT } from '../constants.js'
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
-    const user = c.get('user')
-    if (!user) {
-      return c.json(
-        {
-          success: false,
-          error: 'Unauthorized'
-        },
-        401
-      )
-    }
-
+    // Auth and ownership are enforced by userScopeGuard middleware
     const userId = c.req.param('userId')
     const slug = c.req.param('slug')
-
-    if (userId !== user.id) {
-      return c.json(
-        {
-          success: false,
-          error: 'Forbidden'
-        },
-        403
-      )
-    }
 
     const track = await verifyTrackExists(userId, slug)
     if (!track) {

@@ -165,11 +165,14 @@ Get all users with their health tracks.
 }
 ```
 
-#### GET /api/user/me
+#### GET /api/users/:userId
 
-Get current user's information with their health tracks.
+Get user's information with their health tracks.
 
 **Authentication:** Required
+
+**Path Parameters:**
+- `userId` - User ID (must match authenticated user's ID)
 
 **Response:**
 
@@ -208,15 +211,20 @@ Get current user's information with their health tracks.
 ```json
 {
   "success": false,
-  "error": "User not found"
+  "error": "Not found"
 }
 ```
 
-#### POST /api/user/tracks
+> **Note:** Returns 404 if `userId` does not match the authenticated user's ID (hides resource existence).
+
+#### POST /api/users/:userId/tracks
 
 Create a new health track for the authenticated user.
 
 **Authentication:** Required
+
+**Path Parameters:**
+- `userId` - User ID (must match authenticated user's ID)
 
 **Request Body:**
 
@@ -321,13 +329,25 @@ All routes use session middleware that:
 3. Sets to `null` if no valid session found
 4. Allows request to continue (individual routes handle auth)
 
+## User Scope Guard
+
+All `/api/users/:userId/*` routes are protected by the `userScopeGuard` middleware which:
+
+1. **Requires authentication** - Returns `401 Unauthorized` if user is not authenticated
+2. **Enforces ownership** - Returns `404 Not found` (not 403) if `userId` does not match the authenticated user's ID (hides resource existence)
+3. **Automatically applied** - No need for handlers to check auth/ownership manually
+
 ### Health Tracks
 
-#### GET /api/tracks/:slug
+#### GET /api/users/:userId/tracks/:slug
 
 Get a health track by its unique slug.
 
-**Authentication:** Not required (public endpoint)
+**Authentication:** Required
+
+**Path Parameters:**
+- `userId` - User ID (must match authenticated user's ID)
+- `slug` - Unique slug identifier for the track (e.g., `sleep`, `hydration`)
 
 **Path Parameters:**
 
@@ -352,18 +372,20 @@ Get a health track by its unique slug.
 ```json
 {
   "success": false,
-  "error": "Track not found"
+  "error": "Not found"
 }
 ```
 
-#### GET /api/tracks/:slug/events
+> **Note:** Returns 404 if `userId` does not match authenticated user's ID (hides resource existence).
+
+#### GET /api/users/:userId/tracks/:slug/events
 
 Get all health events for a specific track, sorted by occurrence date (newest first).
 
-**Authentication:** Not required (public endpoint)
+**Authentication:** Required
 
 **Path Parameters:**
-
+- `userId` - User ID (must match authenticated user's ID)
 - `slug` - Unique slug identifier for the track
 
 **Query Parameters:**
@@ -402,14 +424,14 @@ Get all health events for a specific track, sorted by occurrence date (newest fi
 }
 ```
 
-#### GET /api/tracks/:slug/events/:eventId
+#### GET /api/users/:userId/tracks/:slug/events/:eventId
 
 Get a specific health event by ID.
 
-**Authentication:** Not required (public endpoint)
+**Authentication:** Required
 
 **Path Parameters:**
-
+- `userId` - User ID (must match authenticated user's ID)
 - `slug` - Unique slug identifier for the track
 - `eventId` - Unique identifier for the event
 
@@ -441,14 +463,14 @@ Get a specific health event by ID.
 }
 ```
 
-#### PATCH /api/tracks/:slug/events/:eventId
+#### PATCH /api/users/:userId/tracks/:slug/events/:eventId
 
 Update a health event's title and/or notes.
 
-**Authentication:** Not required (public endpoint)
+**Authentication:** Required
 
 **Path Parameters:**
-
+- `userId` - User ID (must match authenticated user's ID)
 - `slug` - Unique slug identifier for the track
 - `eventId` - Unique identifier for the event
 
@@ -509,14 +531,14 @@ Both fields are optional. Only provided fields will be updated.
 
 ### Event Document Upload
 
-#### POST /api/tracks/:slug/events/:eventId/upload-url
+#### POST /api/users/:userId/tracks/:slug/events/:eventId/upload-url
 
 Create an upload intent and return a presigned S3 URL for uploading an event document directly from the browser.
 
-- **Authentication:** Required (Better Auth session)
+**Authentication:** Required
 
 **Path Parameters:**
-
+- `userId` - User ID (must match authenticated user's ID)
 - `slug` - Unique slug identifier for the track
 - `eventId` - Unique identifier for the event
 
@@ -597,14 +619,14 @@ Create an upload intent and return a presigned S3 URL for uploading an event doc
 }
 ```
 
-#### POST /api/tracks/:slug/events/:eventId/upload-confirm
+#### POST /api/users/:userId/tracks/:slug/events/:eventId/upload-confirm
 
 Confirm that an event document has been successfully uploaded to S3 and attach it to the event.
 
-- **Authentication:** Required
+**Authentication:** Required
 
 **Path Parameters:**
-
+- `userId` - User ID (must match authenticated user's ID)
 - `slug` - Unique slug identifier for the track
 - `eventId` - Unique identifier for the event
 
@@ -670,14 +692,14 @@ Confirm that an event document has been successfully uploaded to S3 and attach i
 }
 ```
 
-#### DELETE /api/tracks/:slug/events/:eventId
+#### DELETE /api/users/:userId/tracks/:slug/events/:eventId
 
 Delete a health event and its associated attachment (if any).
 
-- **Authentication:** Not required (public endpoint)
+**Authentication:** Required
 
 **Path Parameters:**
-
+- `userId` - User ID (must match authenticated user's ID)
 - `slug` - Unique slug identifier for the track
 - `eventId` - Unique identifier for the event
 
@@ -725,14 +747,81 @@ or
 
 > **Note:** If S3 file deletion fails, the event deletion will still proceed. The S3 error is logged but does not prevent the event from being deleted.
 
-## Future Endpoints
+### Hub Notifications
 
-### Health Tracks (Authenticated)
+#### GET /api/users/:userId/hub/notifications
 
-- POST /api/tracks - Create health track
-- PUT /api/tracks/:id - Update track
-- DELETE /api/tracks/:id - Delete track
+Get hub notifications for the authenticated user.
 
-### Events (Authenticated)
+**Authentication:** Required
 
-- POST /api/tracks/:trackId/events - Create event
+**Path Parameters:**
+- `userId` - User ID (must match authenticated user's ID)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "event-missing-details-123",
+      "type": "appointmentDetails",
+      "title": "Add details to \"GP check-up\"",
+      "message": "Capture key points from this event...",
+      "ctaLabel": "Add details",
+      "href": "/user-id/tracks/sleep/event-123",
+      "entityId": "event-123",
+      "notificationType": "EVENT_MISSING_DETAILS"
+    }
+  ]
+}
+```
+
+#### POST /api/users/:userId/hub/notifications/dismiss
+
+Dismiss a hub notification.
+
+**Authentication:** Required
+
+**Path Parameters:**
+- `userId` - User ID (must match authenticated user's ID)
+
+**Request Body:**
+
+```json
+{
+  "type": "EVENT_MISSING_DETAILS",
+  "entityId": "event-123"
+}
+```
+
+### Appointments
+
+#### GET /api/users/:userId/appointments/upcoming
+
+Get upcoming appointments for the authenticated user.
+
+**Authentication:** Required
+
+**Path Parameters:**
+- `userId` - User ID (must match authenticated user's ID)
+
+**Query Parameters:**
+- `limit` (optional) - Maximum number of appointments to return (default: 5, max: 100)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "eventId": "event-123",
+      "trackSlug": "sleep",
+      "title": "GP follow-up",
+      "date": "2025-01-15T10:00:00.000Z"
+    }
+  ]
+}
+```

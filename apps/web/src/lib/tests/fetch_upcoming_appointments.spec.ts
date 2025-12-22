@@ -30,11 +30,11 @@ describe('fetchUpcomingAppointments', () => {
       json: async () => ({ success: true, data: mockAppointments })
     })
 
-    const result = await fetchUpcomingAppointments(3)
+    const result = await fetchUpcomingAppointments('user-1', 3)
 
     expect(result).toEqual(mockAppointments)
     expect(global.fetch).toHaveBeenCalledWith(
-      `${SERVER_API_BASE_URL}/api/user/appointments/upcoming?limit=3`,
+      `${SERVER_API_BASE_URL}/api/users/user-1/appointments/upcoming?limit=3`,
       expect.objectContaining({
         cache: 'no-store',
         headers: expect.objectContaining({
@@ -51,7 +51,7 @@ describe('fetchUpcomingAppointments', () => {
       statusText: 'Unauthorized'
     })
 
-    const result = await fetchUpcomingAppointments(5)
+    const result = await fetchUpcomingAppointments('user-1', 5)
     expect(result).toEqual([])
   })
 
@@ -62,7 +62,7 @@ describe('fetchUpcomingAppointments', () => {
       statusText: 'Server Error'
     })
 
-    await expect(fetchUpcomingAppointments(5)).rejects.toThrow(
+    await expect(fetchUpcomingAppointments('user-1', 5)).rejects.toThrow(
       'Failed to fetch upcoming appointments: Server Error'
     )
   })
@@ -73,17 +73,18 @@ describe('fetchUpcomingAppointments', () => {
       json: async () => ({ success: false })
     })
 
-    await expect(fetchUpcomingAppointments(5)).rejects.toThrow('Failed to fetch upcoming appointments')
+    await expect(fetchUpcomingAppointments('user-1', 5)).rejects.toThrow('Failed to fetch upcoming appointments')
   })
 
   it('handles network connection errors', async () => {
     const networkError = new TypeError('fetch failed')
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(networkError)
 
-    await expect(fetchUpcomingAppointments(5)).rejects.toThrow(
+    await expect(fetchUpcomingAppointments('user-1', 5)).rejects.toThrow(
       `Failed to connect to API server at ${SERVER_API_BASE_URL}. Make sure the API server is running.`
     )
   })
 })
+
 
 

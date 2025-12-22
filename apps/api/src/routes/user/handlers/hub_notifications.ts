@@ -11,17 +11,7 @@ const dismissSchema = z.object({
 
 export async function getHubNotifications(c: Context<{ Variables: AppVariables }>) {
   try {
-    const currentUser = c.get('user')
-
-    if (!currentUser) {
-      return c.json(
-        {
-          success: false,
-          error: 'Unauthorized'
-        },
-        401
-      )
-    }
+    const userId = c.req.param('userId')
 
     const now = new Date()
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -29,7 +19,7 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     // Fetch dismissals for this user
     const dismissals = await prisma.hubDismissal.findMany({
       where: {
-        userId: currentUser.id
+        userId
       },
       select: {
         type: true,
@@ -55,7 +45,7 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     const eventsMissingDetails = await prisma.event.findMany({
       where: {
         track: {
-          userId: currentUser.id
+          userId
         },
         date: {
           gte: sevenDaysAgo,
@@ -94,7 +84,7 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
           title: `Add details to "${event.title}"`,
           message: `Capture key points from this event in your ${event.track.title} track while they are still fresh.`,
           ctaLabel: 'Add details',
-          href: `/${currentUser.id}/tracks/${event.track.slug}/${event.id}`,
+          href: `/${userId}/tracks/${event.track.slug}/${event.id}`,
           entityId: event.id,
           notificationType: 'EVENT_MISSING_DETAILS'
         })
@@ -104,7 +94,7 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     // Find tracks missing symptoms (no symptom logged in last 7 days)
     const tracks = await prisma.healthTrack.findMany({
       where: {
-        userId: currentUser.id
+        userId
       },
       select: {
         id: true,
@@ -181,7 +171,7 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     if (dismissalsToDelete.length > 0) {
       await prisma.hubDismissal.deleteMany({
         where: {
-          userId: currentUser.id,
+          userId,
           OR: dismissalsToDelete.map((d) => ({
             type: d.type,
             entityId: d.entityId
@@ -210,17 +200,7 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
 
 export async function dismissHubNotification(c: Context<{ Variables: AppVariables }>) {
   try {
-    const currentUser = c.get('user')
-
-    if (!currentUser) {
-      return c.json(
-        {
-          success: false,
-          error: 'Unauthorized'
-        },
-        401
-      )
-    }
+    const userId = c.req.param('userId')
 
     const body = await c.req.json().catch(() => ({}))
     const parseResult = dismissSchema.safeParse(body)
@@ -243,7 +223,7 @@ export async function dismissHubNotification(c: Context<{ Variables: AppVariable
       where: {
         // eslint-disable-next-line camelcase
         userId_type_entityId: {
-          userId: currentUser.id,
+          userId,
           type,
           entityId
         }
@@ -253,7 +233,7 @@ export async function dismissHubNotification(c: Context<{ Variables: AppVariable
         updatedAt: dismissedAt
       },
       create: {
-        userId: currentUser.id,
+        userId,
         type,
         entityId,
         dismissedAt

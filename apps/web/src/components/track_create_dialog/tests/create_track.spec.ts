@@ -36,9 +36,9 @@ describe('createTrack', () => {
       json: async () => mockResponse
     })
 
-    const result = await createTrack('New Track', 'Test description')
+    const result = await createTrack('user-1', 'New Track', 'Test description')
 
-    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/user/tracks', {
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/users/user-1/tracks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -73,9 +73,9 @@ describe('createTrack', () => {
       json: async () => mockResponse
     })
 
-    const result = await createTrack('New Track')
+    const result = await createTrack('user-1', 'New Track')
 
-    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/user/tracks', {
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/users/user-1/tracks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -100,7 +100,7 @@ describe('createTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createTrack('New Track')).rejects.toThrow('Unauthorized')
+    await expect(createTrack('user-1', 'New Track')).rejects.toThrow('Unauthorized')
   })
 
   it('should handle 400 validation error', async () => {
@@ -115,7 +115,7 @@ describe('createTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createTrack('')).rejects.toThrow(
+    await expect(createTrack('user-1', '')).rejects.toThrow(
       'Title is required and must be a non-empty string'
     )
   })
@@ -123,7 +123,7 @@ describe('createTrack', () => {
   it('should handle network errors', async () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
-    await expect(createTrack('New Track')).rejects.toThrow('Network error')
+    await expect(createTrack('user-1', 'New Track')).rejects.toThrow('Network error')
   })
 
   it('should handle API errors with custom error messages', async () => {
@@ -138,7 +138,7 @@ describe('createTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createTrack('New Track')).rejects.toThrow('Database connection failed')
+    await expect(createTrack('user-1', 'New Track')).rejects.toThrow('Database connection failed')
   })
 
   it('should handle response.ok true but data.success false', async () => {
@@ -153,7 +153,7 @@ describe('createTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createTrack('New Track')).rejects.toThrow('Server error')
+    await expect(createTrack('user-1', 'New Track')).rejects.toThrow('Server error')
   })
 
   it('should use default error message when data.success is false and no error message', async () => {
@@ -167,7 +167,7 @@ describe('createTrack', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(createTrack('New Track')).rejects.toThrow('Failed to create track')
+    await expect(createTrack('user-1', 'New Track')).rejects.toThrow('Failed to create track')
   })
 
   it('should throw error when response is ok but data.data is missing', async () => {
@@ -182,7 +182,7 @@ describe('createTrack', () => {
       json: async () => mockResponse
     })
 
-    await expect(createTrack('New Track')).rejects.toThrow('No track data received')
+    await expect(createTrack('user-1', 'New Track')).rejects.toThrow('No track data received')
   })
 
   it('should include description as null when explicitly passed', async () => {
@@ -206,9 +206,9 @@ describe('createTrack', () => {
       json: async () => mockResponse
     })
 
-    await createTrack('New Track', null)
+    await createTrack('user-1', 'New Track', null)
 
-    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/user/tracks', {
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/users/user-1/tracks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -221,4 +221,3 @@ describe('createTrack', () => {
     })
   })
 })
-

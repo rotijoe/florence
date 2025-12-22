@@ -3,8 +3,30 @@ import { prisma } from '@packages/database'
 import { EventType } from '@packages/types'
 import { s3Client } from '@/lib/s3.js'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { auth } from '@/auth'
 
 let mockS3Send: jest.Mock
+
+const createMockSession = (userId: string) => ({
+  user: {
+    id: userId,
+    email: 'test@example.com',
+    emailVerified: false,
+    name: 'Test User',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  session: {
+    id: 'session-1',
+    userId,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    token: 'test-token',
+    ipAddress: null,
+    userAgent: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+})
 
 describe('Events API - Detail Handler', () => {
   let app: ReturnType<typeof createTestApp>
@@ -24,10 +46,40 @@ describe('Events API - Detail Handler', () => {
   })
 
   describe('GET /api/users/:userId/tracks/:slug/events/:eventId', () => {
+    it('returns 401 when user is not authenticated', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(null)
+
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1')
+      expect(res.status).toBe(401)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Unauthorized')
+
+      getSessionSpy.mockRestore()
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(createMockSession('user-2'))
+
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1')
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
+
+      getSessionSpy.mockRestore()
+    })
+
     it('returns 404 for missing track', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
@@ -38,14 +90,17 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(false)
       expect(json.error).toBe('Track not found')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns 404 for missing event', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue({
         id: 'track-1',
@@ -64,11 +119,13 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(false)
       expect(json.error).toBe('Event not found')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns event for valid slug and eventId', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
@@ -84,6 +141,8 @@ describe('Events API - Detail Handler', () => {
       }
 
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1')
@@ -103,11 +162,15 @@ describe('Events API - Detail Handler', () => {
       })
       expect(json.data.fileUrl).toBeDefined()
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1')
@@ -117,15 +180,54 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(false)
       expect(json.error).toBe('Database connection failed')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
     })
   })
 
   describe('PATCH /api/users/:userId/tracks/:slug/events/:eventId', () => {
+    it('returns 401 when user is not authenticated', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(null)
+
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Updated Title' })
+      })
+      expect(res.status).toBe(401)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Unauthorized')
+
+      getSessionSpy.mockRestore()
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(createMockSession('user-2'))
+
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Updated Title' })
+      })
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
+
+      getSessionSpy.mockRestore()
+    })
+
     it('returns 404 for missing track', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
@@ -140,14 +242,17 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(false)
       expect(json.error).toBe('Track not found')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns 404 for missing event', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue({
         id: 'track-1',
@@ -173,12 +278,16 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(false)
       expect(json.error).toBe('Event not found')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns 400 for invalid title', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue({
         id: 'event-1',
         trackId: 'track-1',
@@ -204,10 +313,12 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(false)
       expect(json.error).toContain('title')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
     })
 
     it('successfully updates event title', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
@@ -231,6 +342,7 @@ describe('Events API - Detail Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const updateSpy = jest.spyOn(prisma.event, 'update')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
       updateSpy.mockResolvedValue(updatedEvent)
 
@@ -246,11 +358,13 @@ describe('Events API - Detail Handler', () => {
       expect(json.data.title).toBe('Updated Title')
       expect(json.data.notes).toBe('Original Description')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       updateSpy.mockRestore()
     })
 
     it('successfully updates event notes', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
@@ -274,6 +388,7 @@ describe('Events API - Detail Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const updateSpy = jest.spyOn(prisma.event, 'update')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
       updateSpy.mockResolvedValue(updatedEvent)
 
@@ -289,11 +404,13 @@ describe('Events API - Detail Handler', () => {
       expect(json.data.notes).toBe('Updated Description')
       expect(json.data.title).toBe('Test Title')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       updateSpy.mockRestore()
     })
 
     it('successfully updates event with empty notes string (converts to null)', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
@@ -317,6 +434,7 @@ describe('Events API - Detail Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const updateSpy = jest.spyOn(prisma.event, 'update')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
       updateSpy.mockResolvedValue(updatedEvent)
 
@@ -331,12 +449,16 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(true)
       expect(json.data.notes).toBeNull()
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       updateSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
@@ -350,15 +472,50 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(false)
       expect(json.error).toBe('Database connection failed')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
     })
   })
 
   describe('DELETE /api/users/:userId/tracks/:slug/events/:eventId', () => {
+    it('returns 401 when user is not authenticated', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(null)
+
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
+        method: 'DELETE'
+      })
+      expect(res.status).toBe(401)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Unauthorized')
+
+      getSessionSpy.mockRestore()
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(createMockSession('user-2'))
+
+      const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
+        method: 'DELETE'
+      })
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
+
+      getSessionSpy.mockRestore()
+    })
+
     it('returns 404 for missing track', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
@@ -373,14 +530,17 @@ describe('Events API - Detail Handler', () => {
 
       expect(mockS3Send).not.toHaveBeenCalled()
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns 404 for missing event', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue({
         id: 'track-1',
@@ -406,11 +566,13 @@ describe('Events API - Detail Handler', () => {
 
       expect(mockS3Send).not.toHaveBeenCalled()
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('successfully deletes event without attachment', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
@@ -428,6 +590,7 @@ describe('Events API - Detail Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const deleteSpy = jest.spyOn(prisma.event, 'delete')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
       deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
 
@@ -444,11 +607,13 @@ describe('Events API - Detail Handler', () => {
         where: { id: 'event-1' }
       })
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       deleteSpy.mockRestore()
     })
 
     it('successfully deletes event with attachment', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
@@ -466,6 +631,7 @@ describe('Events API - Detail Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const deleteSpy = jest.spyOn(prisma.event, 'delete')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
       deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
 
@@ -484,11 +650,13 @@ describe('Events API - Detail Handler', () => {
         where: { id: 'event-1' }
       })
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       deleteSpy.mockRestore()
     })
 
     it('continues deletion even if S3 deletion fails', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
@@ -506,6 +674,7 @@ describe('Events API - Detail Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const deleteSpy = jest.spyOn(prisma.event, 'delete')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
       deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
       mockS3Send.mockReset()
@@ -523,11 +692,13 @@ describe('Events API - Detail Handler', () => {
         where: { id: 'event-1' }
       })
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       deleteSpy.mockRestore()
     })
 
     it('handles event with fileUrl but invalid key gracefully', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
@@ -545,6 +716,7 @@ describe('Events API - Detail Handler', () => {
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
       const deleteSpy = jest.spyOn(prisma.event, 'delete')
 
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
       deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
 
@@ -561,12 +733,16 @@ describe('Events API - Detail Handler', () => {
         where: { id: 'event-1' }
       })
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       deleteSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
@@ -578,6 +754,7 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(false)
       expect(json.error).toBe('Database connection failed')
 
+      getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
     })
   })

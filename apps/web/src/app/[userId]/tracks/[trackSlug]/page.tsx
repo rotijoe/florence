@@ -17,7 +17,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
   const [track, events, hubNotifications] = await Promise.all([
     fetchTrack(userId, trackSlug),
     fetchTrackEvents(userId, trackSlug),
-    fetchHubNotifications()
+    fetchHubNotifications(userId)
   ])
 
   const { futureAppointments, pastEvents } = splitEventsByTime(events, new Date())

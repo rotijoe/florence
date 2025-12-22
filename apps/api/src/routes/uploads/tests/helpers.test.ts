@@ -18,7 +18,7 @@ describe('Uploads Helpers', () => {
         mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
       )
 
-      const result = await verifyEventAndTrack('event-1', 'test-slug')
+      const result = await verifyEventAndTrack('user-1', 'event-1', 'test-slug')
 
       expect(result.event).toEqual(mockEvent)
       expect(result.trackExists).toBe(true)
@@ -35,7 +35,7 @@ describe('Uploads Helpers', () => {
         ReturnType<typeof prisma.healthTrack.findFirst>
       >)
 
-      const result = await verifyEventAndTrack('nonexistent-event', 'test-slug')
+      const result = await verifyEventAndTrack('user-1', 'nonexistent-event', 'test-slug')
 
       expect(result.event).toBeNull()
       expect(result.trackExists).toBe(true)
@@ -51,7 +51,7 @@ describe('Uploads Helpers', () => {
       eventFindFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue(null)
 
-      const result = await verifyEventAndTrack('event-1', 'nonexistent-slug')
+      const result = await verifyEventAndTrack('user-1', 'event-1', 'nonexistent-slug')
 
       expect(result.event).toBeNull()
       expect(result.trackExists).toBe(false)

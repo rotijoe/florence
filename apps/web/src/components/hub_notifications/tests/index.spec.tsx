@@ -241,7 +241,7 @@ describe('HubNotifications', () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/user/hub/notifications/dismiss'),
+        expect.stringContaining('/api/users/'),
         expect.objectContaining({
           method: 'POST',
           headers: {

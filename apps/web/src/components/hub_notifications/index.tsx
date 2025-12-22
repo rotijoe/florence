@@ -36,7 +36,7 @@ export function HubNotifications({
       updateOptimisticNotifications({ type: 'REMOVE_BY_ID', id: notification.id })
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/user/hub/notifications/dismiss`, {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/hub/notifications/dismiss`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

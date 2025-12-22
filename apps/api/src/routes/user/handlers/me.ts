@@ -5,21 +5,11 @@ import type { ApiResponse } from '@packages/types'
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
-    const currentUser = c.get('user')
-
-    if (!currentUser) {
-      return c.json(
-        {
-          success: false,
-          error: 'Unauthorized'
-        },
-        401
-      )
-    }
+    const userId = c.req.param('userId')
 
     const user = await prisma.user.findUnique({
       where: {
-        id: currentUser.id
+        id: userId
       },
       select: {
         id: true,

@@ -7,16 +7,7 @@ const DEFAULT_LIMIT = 5
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
-    const user = c.get('user')
-    if (!user) {
-      return c.json(
-        {
-          success: false,
-          error: 'Unauthorized'
-        },
-        401
-      )
-    }
+    const userId = c.req.param('userId')
 
     const limitParam = c.req.query('limit')
     const limit = limitParam
@@ -29,7 +20,7 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
       where: {
         type: EventType.APPOINTMENT,
         date: { gt: now },
-        track: { userId: user.id }
+        track: { userId }
       },
       orderBy: { date: 'asc' },
       take: limit,

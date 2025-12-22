@@ -261,6 +261,7 @@ export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActi
         onSuccess={handleSymptomSuccess}
       />
       <TrackCreateDialog
+        userId={userId}
         open={isTrackDialogOpen}
         onOpenChange={setIsTrackDialogOpen}
         onSuccess={handleTrackSuccess}

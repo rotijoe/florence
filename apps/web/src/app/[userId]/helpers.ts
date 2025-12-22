@@ -23,14 +23,14 @@ export function getGreetingForUser(name: string | null | undefined): string {
   return `Welcome back, ${trimmedName}`
 }
 
-export async function fetchUserMeWithCookies(): Promise<UserWithTracks> {
+export async function fetchUserMeWithCookies(userId: string): Promise<UserWithTracks> {
   const cookieStore = await cookies()
   const cookieHeader = cookieStore
     .getAll()
     .map((cookie) => `${cookie.name}=${cookie.value}`)
     .join('; ')
 
-  const response = await fetch(`${SERVER_API_BASE_URL}/api/user/me`, {
+  const response = await fetch(`${SERVER_API_BASE_URL}/api/users/${userId}`, {
     cache: 'no-store',
     headers: {
       ...(cookieHeader && { Cookie: cookieHeader })
@@ -130,7 +130,7 @@ export async function fetchUpcomingAppointmentsForHub(
   userId: string
 ): Promise<AppointmentSummary[]> {
   try {
-    const appointments = await fetchUpcomingAppointments(5)
+    const appointments = await fetchUpcomingAppointments(userId, 5)
     return mapUpcomingAppointmentsToSummary(appointments, userId)
   } catch (error) {
     console.error('Failed to fetch upcoming appointments:', error)
@@ -138,7 +138,7 @@ export async function fetchUpcomingAppointmentsForHub(
   }
 }
 
-export async function fetchHubNotifications(): Promise<Notification[]> {
+export async function fetchHubNotifications(userId: string): Promise<Notification[]> {
   try {
     const cookieStore = await cookies()
     const cookieHeader = cookieStore
@@ -146,7 +146,7 @@ export async function fetchHubNotifications(): Promise<Notification[]> {
       .map((cookie) => `${cookie.name}=${cookie.value}`)
       .join('; ')
 
-    const response = await fetch(`${SERVER_API_BASE_URL}/api/user/hub/notifications`, {
+    const response = await fetch(`${SERVER_API_BASE_URL}/api/users/${userId}/hub/notifications`, {
       cache: 'no-store',
       headers: {
         ...(cookieHeader && { Cookie: cookieHeader })

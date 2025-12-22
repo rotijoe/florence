@@ -62,3 +62,4 @@ The event creation page supports type preselection via query param:
 - Implemented in: `apps/web/src/app/[userId]/tracks/[trackSlug]/new/page.tsx`
 
 
+

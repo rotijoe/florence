@@ -9,17 +9,7 @@ import { TRACK_FULL_SELECT } from '../constants.js'
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
-    const currentUser = c.get('user')
-
-    if (!currentUser) {
-      return c.json(
-        {
-          success: false,
-          error: 'Unauthorized'
-        },
-        401
-      )
-    }
+    const userId = c.req.param('userId')
 
     const body = await c.req.json().catch(() => ({}))
     const parseResult = createTrackSchema.safeParse(body)
@@ -30,11 +20,11 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     const { title, description } = parseResult.data
 
-    const slug = await generateUniqueSlug(currentUser.id, title.trim())
+    const slug = await generateUniqueSlug(userId, title.trim())
 
     const track = await prisma.healthTrack.create({
       data: {
-        userId: currentUser.id,
+        userId,
         title: title.trim(),
         slug,
         description: description === '' ? null : description

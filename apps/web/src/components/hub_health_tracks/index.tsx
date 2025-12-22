@@ -37,6 +37,7 @@ export function HubHealthTracks({ userId, tracks }: HubHealthTracksProps) {
           </CardFooter>
         </Card>
         <TrackCreateDialog
+          userId={userId}
           open={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
           onSuccess={handleCreateSuccess}
@@ -86,6 +87,7 @@ export function HubHealthTracks({ userId, tracks }: HubHealthTracksProps) {
         <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>{renderTrackItems()}</div>
       </div>
       <TrackCreateDialog
+        userId={userId}
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         onSuccess={handleCreateSuccess}

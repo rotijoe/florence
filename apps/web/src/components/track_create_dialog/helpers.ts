@@ -8,6 +8,7 @@ interface ApiResponse<T> {
 }
 
 export async function createTrack(
+  userId: string,
   title: string,
   description?: string | null
 ): Promise<CreateTrackResponse> {
@@ -16,7 +17,7 @@ export async function createTrack(
     body.description = description
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/user/tracks`, {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}/tracks`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

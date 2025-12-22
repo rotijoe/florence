@@ -13,12 +13,12 @@ describe('Tracks API - Create Handler', () => {
     jest.clearAllMocks()
   })
 
-  describe('POST /api/user/tracks', () => {
+  describe('POST /api/users/:userId/tracks', () => {
     it('returns 401 when user is not authenticated', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(null)
 
-      const res = await app.request('/api/user/tracks', {
+      const res = await app.request('/api/users/user-1/tracks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -62,7 +62,7 @@ describe('Tracks API - Create Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/user/tracks', {
+      const res = await app.request('/api/users/user-1/tracks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -104,7 +104,7 @@ describe('Tracks API - Create Handler', () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       getSessionSpy.mockResolvedValue(mockSession)
 
-      const res = await app.request('/api/user/tracks', {
+      const res = await app.request('/api/users/user-1/tracks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -165,7 +165,7 @@ describe('Tracks API - Create Handler', () => {
         mockCreatedTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.create>>
       )
 
-      const res = await app.request('/api/user/tracks', {
+      const res = await app.request('/api/users/user-1/tracks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -246,7 +246,7 @@ describe('Tracks API - Create Handler', () => {
         mockCreatedTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.create>>
       )
 
-      const res = await app.request('/api/user/tracks', {
+      const res = await app.request('/api/users/user-1/tracks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -297,7 +297,7 @@ describe('Tracks API - Create Handler', () => {
       findFirstSpy.mockResolvedValue(null)
       createSpy.mockRejectedValue(new Error('Database connection failed'))
 
-      const res = await app.request('/api/user/tracks', {
+      const res = await app.request('/api/users/user-1/tracks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -316,6 +316,50 @@ describe('Tracks API - Create Handler', () => {
       getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       createSpy.mockRestore()
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const mockSession = {
+        user: {
+          id: 'user-2',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-2',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(mockSession)
+
+      const res = await app.request('/api/users/user-1/tracks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: 'Test Track'
+        })
+      })
+
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
+
+      getSessionSpy.mockRestore()
     })
   })
 })

@@ -33,7 +33,7 @@ describe('TrackCreateDialog', () => {
 
   it('renders dialog when open', () => {
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     expect(screen.getByRole('heading', { name: 'Create new health track' })).toBeInTheDocument()
@@ -41,7 +41,7 @@ describe('TrackCreateDialog', () => {
 
   it('does not render dialog when closed', () => {
     render(
-      <TrackCreateDialog open={false} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={false} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     expect(screen.queryByText('Create new health track')).not.toBeInTheDocument()
@@ -49,7 +49,7 @@ describe('TrackCreateDialog', () => {
 
   it('renders track name input field', () => {
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     expect(screen.getByLabelText(/track name/i)).toBeInTheDocument()
@@ -57,7 +57,7 @@ describe('TrackCreateDialog', () => {
 
   it('renders description textarea', () => {
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument()
@@ -65,7 +65,7 @@ describe('TrackCreateDialog', () => {
 
   it('allows entering track name', () => {
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -76,7 +76,7 @@ describe('TrackCreateDialog', () => {
 
   it('allows entering description', () => {
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const descriptionInput = screen.getByLabelText(/description/i)
@@ -88,7 +88,7 @@ describe('TrackCreateDialog', () => {
   it('submits form with correct payload', async () => {
     const user = userEvent.setup()
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -102,7 +102,7 @@ describe('TrackCreateDialog', () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/user/tracks'),
+        expect.stringContaining('/api/users/user-1/tracks'),
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
@@ -120,7 +120,7 @@ describe('TrackCreateDialog', () => {
   it('submits form with null description when empty', async () => {
     const user = userEvent.setup()
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -131,7 +131,7 @@ describe('TrackCreateDialog', () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/user/tracks'),
+        expect.stringContaining('/api/users/user-1/tracks'),
         expect.objectContaining({
           body: JSON.stringify({
             title: 'Sleep Tracker',
@@ -145,7 +145,7 @@ describe('TrackCreateDialog', () => {
   it('calls onSuccess callback on successful submission', async () => {
     const user = userEvent.setup()
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -162,7 +162,7 @@ describe('TrackCreateDialog', () => {
   it('closes dialog on successful submission', async () => {
     const user = userEvent.setup()
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -187,7 +187,7 @@ describe('TrackCreateDialog', () => {
 
     const user = userEvent.setup()
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -206,7 +206,7 @@ describe('TrackCreateDialog', () => {
 
     const user = userEvent.setup()
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -231,7 +231,7 @@ describe('TrackCreateDialog', () => {
 
     const user = userEvent.setup()
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -265,7 +265,7 @@ describe('TrackCreateDialog', () => {
   it('closes dialog when cancel button is clicked', async () => {
     const user = userEvent.setup()
     render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const cancelButton = screen.getByRole('button', { name: /cancel/i })
@@ -276,7 +276,7 @@ describe('TrackCreateDialog', () => {
 
   it('clears form when dialog is reopened', () => {
     const { rerender } = render(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const titleInput = screen.getByLabelText(/track name/i)
@@ -286,10 +286,10 @@ describe('TrackCreateDialog', () => {
 
     // Close and reopen dialog
     rerender(
-      <TrackCreateDialog open={false} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={false} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
     rerender(
-      <TrackCreateDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
     )
 
     const newTitleInput = screen.getByLabelText(/track name/i)

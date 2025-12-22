@@ -6,6 +6,6 @@ import * as create from './handlers/create.js'
 const app = new Hono<{ Variables: AppVariables }>()
 
 app.get('/users/:userId/tracks/:slug', get.handler)
-app.post('/user/tracks', create.handler)
+app.post('/users/:userId/tracks', create.handler)
 
 export default app

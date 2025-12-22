@@ -135,7 +135,7 @@ export async function createEventUploadIntentAction(
       .join('; ')
 
     const response = await fetch(
-      `${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}/upload-url`,
+      `${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}/upload-url`,
       {
         method: 'POST',
         headers: {
@@ -216,7 +216,7 @@ export async function confirmEventUploadAction(formData: FormData): Promise<Conf
       .join('; ')
 
     const response = await fetch(
-      `${API_BASE_URL}/api/tracks/${trackSlug}/events/${eventId}/upload-confirm`,
+      `${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}/upload-confirm`,
       {
         method: 'POST',
         headers: {

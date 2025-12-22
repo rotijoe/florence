@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { AppVariables } from '@/types'
 import { auth } from '@/auth'
+import { userScopeGuard } from '@/middleware/user_scope_guard'
 import userRoute from '@/routes/user/index'
 import tracksRoute from '@/routes/tracks/index'
 import eventsRoute from '@/routes/events/index'
@@ -36,6 +37,9 @@ app.use('*', async (c, next) => {
   c.set('session', session.session)
   return next()
 })
+
+// User scope guard - enforces authentication and ownership for all user-scoped routes
+app.use('/api/users/:userId/*', userScopeGuard)
 
 // Better Auth handler
 app.on(['POST', 'GET'], '/api/auth/*', (c) => {

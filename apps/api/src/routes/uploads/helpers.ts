@@ -4,6 +4,7 @@ import { prisma } from '@packages/database'
 import { formatEvent } from '../events/helpers.js'
 
 export async function verifyEventAndTrack(
+  userId: string,
   eventId: string,
   slug: string
 ): Promise<{ event: { id: string; trackId: string } | null; trackExists: boolean }> {
@@ -11,6 +12,7 @@ export async function verifyEventAndTrack(
     where: {
       id: eventId,
       track: {
+        userId,
         slug: slug
       }
     },
@@ -22,7 +24,7 @@ export async function verifyEventAndTrack(
 
   if (!event) {
     const trackExists = await prisma.healthTrack.findFirst({
-      where: { slug },
+      where: { userId, slug },
       select: { id: true }
     })
 

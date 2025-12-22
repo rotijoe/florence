@@ -3,6 +3,7 @@ import type { UpcomingAppointmentResponse, ApiResponse } from '@packages/types'
 import { cookies } from 'next/headers'
 
 export async function fetchUpcomingAppointments(
+  userId: string,
   limit: number = 5
 ): Promise<UpcomingAppointmentResponse[]> {
   try {
@@ -13,7 +14,7 @@ export async function fetchUpcomingAppointments(
       .join('; ')
 
     const response = await fetch(
-      `${SERVER_API_BASE_URL}/api/user/appointments/upcoming?limit=${limit}`,
+      `${SERVER_API_BASE_URL}/api/users/${userId}/appointments/upcoming?limit=${limit}`,
       {
         cache: 'no-store',
         headers: {

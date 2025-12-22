@@ -14,14 +14,49 @@ describe('User API - Upcoming Appointments Handler', () => {
     jest.clearAllMocks()
   })
 
-  describe('GET /api/user/appointments/upcoming', () => {
+  describe('GET /api/users/:userId/appointments/upcoming', () => {
     it('returns 401 when user is not authenticated', async () => {
-      const res = await app.request('/api/user/appointments/upcoming')
+      const res = await app.request('/api/users/user-1/appointments/upcoming')
       expect(res.status).toBe(401)
 
       const json = await res.json()
       expect(json.success).toBe(false)
       expect(json.error).toBe('Unauthorized')
+    })
+
+    it('returns 404 when userId does not match authenticated user', async () => {
+      const mockSession = {
+        user: {
+          id: 'user-2',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-2',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      getSessionSpy.mockResolvedValue(mockSession)
+
+      const res = await app.request('/api/users/user-1/appointments/upcoming')
+      expect(res.status).toBe(404)
+
+      const json = await res.json()
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('Not found')
+
+      getSessionSpy.mockRestore()
     })
 
     it('returns upcoming appointment events scoped to signed-in user (sorted soonest-first)', async () => {
@@ -68,7 +103,7 @@ describe('User API - Upcoming Appointments Handler', () => {
         }
       ] as unknown as Awaited<ReturnType<typeof prisma.event.findMany>>)
 
-      const res = await app.request('/api/user/appointments/upcoming?limit=5')
+      const res = await app.request('/api/users/user-1/appointments/upcoming?limit=5')
       expect(res.status).toBe(200)
 
       expect(findManySpy).toHaveBeenCalledWith({
@@ -142,7 +177,7 @@ describe('User API - Upcoming Appointments Handler', () => {
         [] as unknown as Awaited<ReturnType<typeof prisma.event.findMany>>
       )
 
-      const res = await app.request('/api/user/appointments/upcoming')
+      const res = await app.request('/api/users/user-1/appointments/upcoming')
       expect(res.status).toBe(200)
 
       expect(findManySpy).toHaveBeenCalledWith(

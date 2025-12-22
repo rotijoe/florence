@@ -7,8 +7,8 @@ describe('Uploads API - Route Composition', () => {
     app = createTestApp()
   })
 
-  it('mounts POST /api/tracks/:slug/events/:eventId/upload-url route', async () => {
-    const res = await app.request('/api/tracks/test-slug/events/event-1/upload-url', {
+  it('mounts POST /api/users/:userId/tracks/:slug/events/:eventId/upload-url route', async () => {
+    const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-url', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({})
@@ -18,8 +18,8 @@ describe('Uploads API - Route Composition', () => {
     expect(res.status).toBeLessThan(500)
   })
 
-  it('mounts POST /api/tracks/:slug/events/:eventId/upload-confirm route', async () => {
-    const res = await app.request('/api/tracks/test-slug/events/event-1/upload-confirm', {
+  it('mounts POST /api/users/:userId/tracks/:slug/events/:eventId/upload-confirm route', async () => {
+    const res = await app.request('/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({})

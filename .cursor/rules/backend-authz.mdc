@@ -1,0 +1,69 @@
+---
+alwaysApply: true
+description: Backend authentication and authorization requirements for user-scoped endpoints.
+---
+
+# Backend Authentication & Authorization Rules
+
+## Critical Security Requirements
+
+All API endpoints that handle user-scoped resources (tracks, events, documents) MUST enforce authentication and ownership checks.
+
+## Rules for `/api/users/:userId/*` Routes
+
+1. **Authentication Required**
+   - All `/api/users/:userId/*` routes MUST require authentication
+   - Unauthenticated requests MUST return `401 Unauthorized` with `{ success: false, error: 'Unauthorized' }`
+   - Use `c.get('user')` to check authentication status
+
+2. **Ownership Enforcement**
+   - All `/api/users/:userId/*` routes MUST verify that `c.req.param('userId') === c.get('user').id`
+   - Mismatched user access MUST return `404 Not found` (not 403) to hide resource existence
+   - Response format: `{ success: false, error: 'Not found' }`
+
+3. **Middleware Protection**
+   - All `/api/users/:userId/*` routes MUST be protected by the `userScopeGuard` middleware
+   - The middleware is applied globally in `app.ts` and MUST NOT be bypassed
+   - Handlers should NOT duplicate auth/ownership checks (middleware handles it)
+
+4. **Presigned URLs**
+   - Presigned URLs (S3 document access) are sensitive and MUST require:
+     - Authentication (401 if not authenticated)
+     - Ownership verification (404 if wrong user)
+   - Never generate presigned URLs without verifying the requesting user owns the resource
+
+5. **Test Requirements (TDD)**
+   - When adding new `/api/users/:userId/*` routes, tests MUST include:
+     - Test case: unauthenticated request → 401
+     - Test case: authenticated but `userId` mismatch → 404
+     - Test case: authenticated and `userId` matches → existing success cases
+   - Use `jest.spyOn(auth.api, 'getSession')` to mock sessions in tests
+
+## Implementation Pattern
+
+```typescript
+// Middleware handles auth + ownership (in app.ts)
+app.use('/api/users/:userId/*', userScopeGuard)
+
+// Handler only needs to handle business logic
+export async function handler(c: Context<{ Variables: AppVariables }>) {
+  // c.get('user') is guaranteed to exist and match :userId
+  // No need to check auth/ownership here
+  const userId = c.req.param('userId') // Already validated by middleware
+  // ... business logic
+}
+```
+
+## Anti-Patterns (DO NOT DO)
+
+- ❌ Trusting `:userId` param without comparing to `c.get('user').id`
+- ❌ Returning 403 Forbidden for mismatched users (use 404 instead)
+- ❌ Skipping auth checks "because middleware handles it" without verifying middleware is applied
+- ❌ Creating user-scoped routes without adding auth/ownership test cases
+- ❌ Generating presigned URLs without ownership verification
+
+## Migration Notes
+
+- Upload endpoints (`/api/tracks/:slug/events/:eventId/upload-*`) are being migrated to user-scoped routes
+- Old routes MUST be removed once migration is complete
+- All new routes MUST follow the `/api/users/:userId/...` pattern
