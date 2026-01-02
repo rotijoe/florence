@@ -75,3 +75,8 @@ export type UpcomingAppointmentResponse = {
   title: string
   date: string
 }
+
+export type UpcomingAppointmentsResponse = {
+  appointments: UpcomingAppointmentResponse[]
+  hasMore: boolean
+}

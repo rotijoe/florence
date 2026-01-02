@@ -113,7 +113,7 @@ describe('User API - Upcoming Appointments Handler', () => {
           track: { userId: 'user-1' }
         },
         orderBy: { date: 'asc' },
-        take: 5,
+        take: 6, // limit + 1 to check for hasMore
         select: {
           id: true,
           title: true,
@@ -124,20 +124,23 @@ describe('User API - Upcoming Appointments Handler', () => {
 
       const json = await res.json()
       expect(json.success).toBe(true)
-      expect(json.data).toEqual([
-        {
-          eventId: 'event-2',
-          trackSlug: 'sleep',
-          title: 'Sooner appt',
-          date: '2025-01-01T12:00:00.000Z'
-        },
-        {
-          eventId: 'event-1',
-          trackSlug: 'pain',
-          title: 'Later appt',
-          date: '2025-01-02T12:00:00.000Z'
-        }
-      ])
+      expect(json.data).toEqual({
+        appointments: [
+          {
+            eventId: 'event-2',
+            trackSlug: 'sleep',
+            title: 'Sooner appt',
+            date: '2025-01-01T12:00:00.000Z'
+          },
+          {
+            eventId: 'event-1',
+            trackSlug: 'pain',
+            title: 'Later appt',
+            date: '2025-01-02T12:00:00.000Z'
+          }
+        ],
+        hasMore: false
+      })
 
       getSessionSpy.mockRestore()
       findManySpy.mockRestore()
@@ -182,9 +185,123 @@ describe('User API - Upcoming Appointments Handler', () => {
 
       expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          take: 5
+          take: 6 // DEFAULT_LIMIT (5) + 1
         })
       )
+
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(json.data).toEqual({
+        appointments: [],
+        hasMore: false
+      })
+
+      getSessionSpy.mockRestore()
+      findManySpy.mockRestore()
+      jest.useRealTimers()
+    })
+
+    it('returns hasMore=true when there are more appointments than the limit', async () => {
+      const now = new Date('2025-01-01T10:00:00.000Z')
+      jest.useFakeTimers().setSystemTime(now)
+
+      const mockSession = {
+        user: {
+          id: 'user-1',
+          email: 'test@example.com',
+          emailVerified: false,
+          name: 'Test User',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: {
+          id: 'session-1',
+          userId: 'user-1',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          token: 'test-token',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      }
+
+      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+
+      getSessionSpy.mockResolvedValue(mockSession)
+      // Return 4 appointments when limit is 3 (3 + 1 to check hasMore)
+      findManySpy.mockResolvedValue([
+        {
+          id: 'event-1',
+          title: 'First appt',
+          date: new Date('2025-01-01T12:00:00.000Z'),
+          track: { slug: 'sleep' }
+        },
+        {
+          id: 'event-2',
+          title: 'Second appt',
+          date: new Date('2025-01-02T12:00:00.000Z'),
+          track: { slug: 'pain' }
+        },
+        {
+          id: 'event-3',
+          title: 'Third appt',
+          date: new Date('2025-01-03T12:00:00.000Z'),
+          track: { slug: 'sleep' }
+        },
+        {
+          id: 'event-4',
+          title: 'Fourth appt',
+          date: new Date('2025-01-04T12:00:00.000Z'),
+          track: { slug: 'pain' }
+        }
+      ] as unknown as Awaited<ReturnType<typeof prisma.event.findMany>>)
+
+      const res = await app.request('/api/users/user-1/appointments/upcoming?limit=3')
+      expect(res.status).toBe(200)
+
+      expect(findManySpy).toHaveBeenCalledWith({
+        where: {
+          type: EventType.APPOINTMENT,
+          date: { gt: now },
+          track: { userId: 'user-1' }
+        },
+        orderBy: { date: 'asc' },
+        take: 4, // limit (3) + 1
+        select: {
+          id: true,
+          title: true,
+          date: true,
+          track: { select: { slug: true } }
+        }
+      })
+
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(json.data).toEqual({
+        appointments: [
+          {
+            eventId: 'event-1',
+            trackSlug: 'sleep',
+            title: 'First appt',
+            date: '2025-01-01T12:00:00.000Z'
+          },
+          {
+            eventId: 'event-2',
+            trackSlug: 'pain',
+            title: 'Second appt',
+            date: '2025-01-02T12:00:00.000Z'
+          },
+          {
+            eventId: 'event-3',
+            trackSlug: 'sleep',
+            title: 'Third appt',
+            date: '2025-01-03T12:00:00.000Z'
+          }
+        ],
+        hasMore: true
+      })
 
       getSessionSpy.mockRestore()
       findManySpy.mockRestore()

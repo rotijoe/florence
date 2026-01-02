@@ -27,12 +27,15 @@ describe('fetchUpcomingAppointments', () => {
 
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ success: true, data: mockAppointments })
+      json: async () => ({
+        success: true,
+        data: { appointments: mockAppointments, hasMore: false }
+      })
     })
 
     const result = await fetchUpcomingAppointments('user-1', 3)
 
-    expect(result).toEqual(mockAppointments)
+    expect(result).toEqual({ appointments: mockAppointments, hasMore: false })
     expect(global.fetch).toHaveBeenCalledWith(
       `${SERVER_API_BASE_URL}/api/users/user-1/appointments/upcoming?limit=3`,
       expect.objectContaining({
@@ -44,7 +47,25 @@ describe('fetchUpcomingAppointments', () => {
     )
   })
 
-  it('returns empty array when API responds with 401', async () => {
+  it('returns hasMore=true when there are more appointments', async () => {
+    const mockAppointments = [
+      { eventId: 'e1', trackSlug: 'sleep', title: 'GP follow-up', date: '2025-10-21T00:00:00.000Z' }
+    ]
+
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: { appointments: mockAppointments, hasMore: true }
+      })
+    })
+
+    const result = await fetchUpcomingAppointments('user-1', 3)
+
+    expect(result).toEqual({ appointments: mockAppointments, hasMore: true })
+  })
+
+  it('returns empty appointments and hasMore=false when API responds with 401', async () => {
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       status: 401,
@@ -52,7 +73,7 @@ describe('fetchUpcomingAppointments', () => {
     })
 
     const result = await fetchUpcomingAppointments('user-1', 5)
-    expect(result).toEqual([])
+    expect(result).toEqual({ appointments: [], hasMore: false })
   })
 
   it('throws error when API responds with non-401 error', async () => {

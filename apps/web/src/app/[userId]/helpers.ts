@@ -117,13 +117,17 @@ export function mapUpcomingAppointmentsToSummary(
 
 export async function fetchUpcomingAppointmentsForHub(
   userId: string
-): Promise<AppointmentSummary[]> {
+): Promise<{ appointments: AppointmentSummary[]; hasMore: boolean }> {
   try {
-    const appointments = await fetchUpcomingAppointments(userId, 5)
-    return mapUpcomingAppointmentsToSummary(appointments, userId)
+    const result = await fetchUpcomingAppointments(userId, 3)
+    const appointments = mapUpcomingAppointmentsToSummary(result.appointments, userId)
+    return {
+      appointments,
+      hasMore: result.hasMore
+    }
   } catch (error) {
     console.error('Failed to fetch upcoming appointments:', error)
-    return []
+    return { appointments: [], hasMore: false }
   }
 }
 

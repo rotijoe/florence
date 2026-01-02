@@ -34,6 +34,7 @@ export default async function Hub({ params }: UserHomePageProps) {
   let tracks: HealthTrackSummary[] = []
   let actualUserId = userId
   let appointments: AppointmentSummary[] = []
+  let appointmentsHasMore = false
   let notifications: Notification[] = []
 
   try {
@@ -41,7 +42,9 @@ export default async function Hub({ params }: UserHomePageProps) {
       const userMe = await fetchUserMeWithCookies(session.user.id)
       actualUserId = userMe.id
       tracks = mapTracksToHealthTrackSummary(userMe.tracks)
-      appointments = await fetchUpcomingAppointmentsForHub(actualUserId)
+      const appointmentsResult = await fetchUpcomingAppointmentsForHub(actualUserId)
+      appointments = appointmentsResult.appointments
+      appointmentsHasMore = appointmentsResult.hasMore
       notifications = await fetchHubNotifications(actualUserId)
     }
   } catch (error) {
@@ -61,7 +64,11 @@ export default async function Hub({ params }: UserHomePageProps) {
         <section className='grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]'>
           <div className='space-y-4'>
             <HubHealthTracks userId={actualUserId} tracks={tracks} />
-            <HubUpcomingAppointments appointments={appointments} />
+            <HubUpcomingAppointments
+              appointments={appointments}
+              userId={actualUserId}
+              hasMore={appointmentsHasMore}
+            />
           </div>
 
           <div className='space-y-4'>

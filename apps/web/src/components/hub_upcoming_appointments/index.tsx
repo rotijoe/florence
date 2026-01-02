@@ -1,12 +1,39 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { HUB_SECTION_TITLES } from './constants'
 import type { HubUpcomingAppointmentsProps } from './types'
-import { formatAppointmentDateLabel, formatAppointmentTime } from './helpers'
+import type { AppointmentSummary } from '@/app/[userId]/types'
+import { formatAppointmentDateLabel, formatAppointmentTime, fetchAllAppointments } from './helpers'
 
-export function HubUpcomingAppointments({ appointments }: HubUpcomingAppointmentsProps) {
+export function HubUpcomingAppointments({
+  appointments: initialAppointments,
+  userId,
+  hasMore
+}: HubUpcomingAppointmentsProps) {
+  const [allAppointments, setAllAppointments] = useState<AppointmentSummary[]>(initialAppointments)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showAll, setShowAll] = useState(false)
+
+  async function handleShowMore() {
+    setIsLoading(true)
+    try {
+      const result = await fetchAllAppointments(userId)
+      setAllAppointments(result.appointments)
+      setShowAll(true)
+    } catch (error) {
+      console.error('Failed to fetch all appointments:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const appointments = showAll ? allAppointments : initialAppointments
+  const shouldShowButton = hasMore && !showAll
+
   function renderEmptyState() {
     return (
       <Card className='border-muted/40 bg-muted/30 shadow-none'>
@@ -54,6 +81,11 @@ export function HubUpcomingAppointments({ appointments }: HubUpcomingAppointment
     <div className='space-y-3'>
       <h2 className='text-base font-semibold'>{HUB_SECTION_TITLES.upcomingAppointments}</h2>
       <div className='space-y-3'>{renderAppointmentItems()}</div>
+      {shouldShowButton && (
+        <Button variant='ghost' onClick={handleShowMore} disabled={isLoading} className='w-full'>
+          {isLoading ? 'Loading...' : 'Show more'}
+        </Button>
+      )}
     </div>
   )
 }

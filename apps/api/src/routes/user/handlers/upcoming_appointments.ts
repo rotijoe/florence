@@ -1,7 +1,12 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
 import { prisma } from '@packages/database'
-import { EventType, type ApiResponse, type UpcomingAppointmentResponse } from '@packages/types'
+import {
+  EventType,
+  type ApiResponse,
+  type UpcomingAppointmentResponse,
+  type UpcomingAppointmentsResponse
+} from '@packages/types'
 
 const DEFAULT_LIMIT = 5
 
@@ -16,6 +21,7 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     const now = new Date()
 
+    // Fetch limit+1 to check if there are more appointments
     const events = await prisma.event.findMany({
       where: {
         type: EventType.APPOINTMENT,
@@ -23,7 +29,7 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
         track: { userId }
       },
       orderBy: { date: 'asc' },
-      take: limit,
+      take: limit + 1,
       select: {
         id: true,
         title: true,
@@ -32,16 +38,27 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
       }
     })
 
-    const appointments: UpcomingAppointmentResponse[] = events.map((event) => ({
+    // Determine if there are more appointments
+    const hasMore = events.length > limit
+
+    // Return only the requested limit
+    const eventsToReturn = events.slice(0, limit)
+
+    const appointments: UpcomingAppointmentResponse[] = eventsToReturn.map((event) => ({
       eventId: event.id,
       trackSlug: event.track.slug,
       title: event.title,
       date: event.date.toISOString()
     }))
 
-    const response: ApiResponse<UpcomingAppointmentResponse[]> = {
+    const responseData: UpcomingAppointmentsResponse = {
+      appointments,
+      hasMore
+    }
+
+    const response: ApiResponse<UpcomingAppointmentsResponse> = {
       success: true,
-      data: appointments
+      data: responseData
     }
 
     return c.json(response)

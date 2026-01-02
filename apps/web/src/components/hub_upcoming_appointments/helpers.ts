@@ -1,3 +1,11 @@
+import { API_BASE_URL } from '@/constants/api'
+import type {
+  UpcomingAppointmentsResponse,
+  ApiResponse,
+  UpcomingAppointmentResponse
+} from '@packages/types'
+import type { AppointmentSummary } from '@/app/[userId]/types'
+
 /**
  * Formats an appointment time in 24-hour format (e.g., "14:30").
  *
@@ -62,4 +70,66 @@ export function formatAppointmentDateLabel(datetime: Date | string, referenceDat
       month: 'short'
     })
     .toUpperCase()
+}
+
+/**
+ * Maps UpcomingAppointmentResponse to AppointmentSummary
+ */
+function mapAppointmentsToSummary(
+  appointments: UpcomingAppointmentResponse[],
+  userId: string
+): AppointmentSummary[] {
+  return appointments.map((appt) => ({
+    id: appt.eventId,
+    title: appt.title,
+    datetime: appt.date,
+    location: null,
+    href: `/${userId}/tracks/${appt.trackSlug}/${appt.eventId}`
+  }))
+}
+
+/**
+ * Fetches all upcoming appointments client-side (for "Show more" button).
+ *
+ * @param userId - The user ID
+ * @returns Promise resolving to appointments array and hasMore flag
+ */
+export async function fetchAllAppointments(
+  userId: string
+): Promise<{ appointments: AppointmentSummary[]; hasMore: boolean }> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/users/${userId}/appointments/upcoming?limit=50`,
+      {
+        cache: 'no-store',
+        credentials: 'include' // Include cookies for authentication
+      }
+    )
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        return { appointments: [], hasMore: false }
+      }
+      throw new Error(`Failed to fetch upcoming appointments: ${response.statusText}`)
+    }
+
+    const data: ApiResponse<UpcomingAppointmentsResponse> = await response.json()
+
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to fetch upcoming appointments')
+    }
+
+    const appointments = mapAppointmentsToSummary(data.data.appointments, userId)
+    return {
+      appointments,
+      hasMore: data.data.hasMore
+    }
+  } catch (error) {
+    if (error instanceof TypeError && error.message === 'fetch failed') {
+      throw new Error(
+        `Failed to connect to API server at ${API_BASE_URL}. Make sure the API server is running.`
+      )
+    }
+    throw error
+  }
 }

@@ -1,11 +1,11 @@
 import { SERVER_API_BASE_URL } from '@/constants/api'
-import type { UpcomingAppointmentResponse, ApiResponse } from '@packages/types'
+import type { UpcomingAppointmentsResponse, ApiResponse } from '@packages/types'
 import { cookies } from 'next/headers'
 
 export async function fetchUpcomingAppointments(
   userId: string,
   limit: number = 5
-): Promise<UpcomingAppointmentResponse[]> {
+): Promise<UpcomingAppointmentsResponse> {
   try {
     const cookieStore = await cookies()
     const cookieHeader = cookieStore
@@ -25,12 +25,12 @@ export async function fetchUpcomingAppointments(
 
     if (!response.ok) {
       if (response.status === 401) {
-        return []
+        return { appointments: [], hasMore: false }
       }
       throw new Error(`Failed to fetch upcoming appointments: ${response.statusText}`)
     }
 
-    const data: ApiResponse<UpcomingAppointmentResponse[]> = await response.json()
+    const data: ApiResponse<UpcomingAppointmentsResponse> = await response.json()
 
     if (!data.success || !data.data) {
       throw new Error(data.error || 'Failed to fetch upcoming appointments')

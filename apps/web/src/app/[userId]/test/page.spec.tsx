@@ -58,8 +58,8 @@ jest.mock('@/components/hub_recent_activity', () => ({
 }))
 
 jest.mock('@/components/hub_upcoming_appointments', () => ({
-  HubUpcomingAppointments: ({ appointments }: { appointments: unknown[] }) => (
-    <div data-testid='hub-upcoming-appointments' data-appointments-count={appointments.length}>
+  HubUpcomingAppointments: ({ appointments }: { appointments?: unknown[] }) => (
+    <div data-testid='hub-upcoming-appointments' data-appointments-count={appointments?.length ?? 0}>
       Upcoming Appointments
     </div>
   )
@@ -137,7 +137,7 @@ describe('UserHomePage', () => {
     mockGetGreetingForUser.mockReturnValue('Welcome back, John Doe')
     mockFetchUserMeWithCookies.mockResolvedValue(mockUserMeData)
     mockMapTracksToHealthTrackSummary.mockReturnValue(mockMappedTracks)
-    mockFetchUpcomingAppointmentsForHub.mockResolvedValue([])
+    mockFetchUpcomingAppointmentsForHub.mockResolvedValue({ appointments: [], hasMore: false })
     mockFetchHubNotifications.mockResolvedValue([])
   })
 
@@ -302,11 +302,14 @@ describe('UserHomePage', () => {
   })
 
   it('should pass appointments to HubUpcomingAppointments', async () => {
-    mockFetchUpcomingAppointmentsForHub.mockResolvedValue([
-      { id: 'a1', title: 'GP Visit', datetimeLabel: 'Mon, 10 Jan · 10:00', href: '/user-123/tracks/sleep/a1' },
-      { id: 'a2', title: 'Physio', datetimeLabel: 'Tue, 11 Jan · 14:00', href: '/user-123/tracks/pain/a2' },
-      { id: 'a3', title: 'Dentist', datetimeLabel: 'Wed, 12 Jan · 09:00', href: '/user-123/tracks/dental/a3' }
-    ])
+    mockFetchUpcomingAppointmentsForHub.mockResolvedValue({
+      appointments: [
+        { id: 'a1', title: 'GP Visit', datetimeLabel: 'Mon, 10 Jan · 10:00', href: '/user-123/tracks/sleep/a1' },
+        { id: 'a2', title: 'Physio', datetimeLabel: 'Tue, 11 Jan · 14:00', href: '/user-123/tracks/pain/a2' },
+        { id: 'a3', title: 'Dentist', datetimeLabel: 'Wed, 12 Jan · 09:00', href: '/user-123/tracks/dental/a3' }
+      ],
+      hasMore: false
+    })
 
     const params = Promise.resolve({ userId: 'user-123' })
     const result = await UserHomePage({ params })
