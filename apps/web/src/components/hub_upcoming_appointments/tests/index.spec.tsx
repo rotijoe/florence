@@ -12,12 +12,15 @@ describe('HubUpcomingAppointments', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders appointments when present', () => {
+  it('renders appointments with date box, time and title', () => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(14, 30, 0, 0)
     const appointments: AppointmentSummary[] = [
       {
         id: '1',
         title: 'GP Appointment',
-        datetimeLabel: 'Tomorrow at 2:00 PM',
+        datetime: tomorrow,
         location: 'Clinic A',
         href: '/user-1/tracks/sleep/event-1'
       }
@@ -25,46 +28,33 @@ describe('HubUpcomingAppointments', () => {
 
     render(<HubUpcomingAppointments appointments={appointments} />)
 
+    // Date box shows TOM
+    expect(screen.getByText('TOM')).toBeInTheDocument()
+    // Time shows above title
+    expect(screen.getByText('14:30')).toBeInTheDocument()
+    // Title
     expect(screen.getByText('GP Appointment')).toBeInTheDocument()
-    expect(screen.getByText('Tomorrow at 2:00 PM · Clinic A')).toBeInTheDocument()
 
     const link = screen.getByRole('link', { name: /GP Appointment/i })
     expect(link).toHaveAttribute('href', '/user-1/tracks/sleep/event-1')
   })
 
-  it('renders appointment without location suffix when location is missing', () => {
-    const appointments: AppointmentSummary[] = [
-      {
-        id: '1',
-        title: 'GP Appointment',
-        datetimeLabel: 'Tomorrow at 2:00 PM',
-        location: undefined,
-        href: '/user-1/tracks/pain/event-2'
-      }
-    ]
-
-    render(<HubUpcomingAppointments appointments={appointments} />)
-
-    expect(screen.getByText('GP Appointment')).toBeInTheDocument()
-    expect(screen.getByText('Tomorrow at 2:00 PM')).toBeInTheDocument()
-    expect(screen.queryByText(/ · /)).not.toBeInTheDocument()
-
-    const link = screen.getByRole('link', { name: /GP Appointment/i })
-    expect(link).toHaveAttribute('href', '/user-1/tracks/pain/event-2')
-  })
-
   it('renders each appointment as a link to the event detail page', () => {
+    const date1 = new Date()
+    date1.setDate(date1.getDate() + 3) // 3 days from now
+    const date2 = new Date()
+    date2.setDate(date2.getDate() + 4) // 4 days from now
     const appointments: AppointmentSummary[] = [
       {
         id: 'event-1',
         title: 'First Appointment',
-        datetimeLabel: 'Mon, 1 Jan · 10:00',
+        datetime: date1,
         href: '/user-1/tracks/sleep/event-1'
       },
       {
         id: 'event-2',
         title: 'Second Appointment',
-        datetimeLabel: 'Tue, 2 Jan · 14:00',
+        datetime: date2,
         href: '/user-1/tracks/pain/event-2'
       }
     ]

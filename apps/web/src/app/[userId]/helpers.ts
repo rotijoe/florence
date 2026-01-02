@@ -102,17 +102,6 @@ export function mapTracksToHealthTrackSummary(
   }))
 }
 
-function formatAppointmentDateTime(isoString: string): string {
-  const date = new Date(isoString)
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date)
-}
-
 export function mapUpcomingAppointmentsToSummary(
   appointments: UpcomingAppointmentResponse[],
   userId: string
@@ -120,7 +109,7 @@ export function mapUpcomingAppointmentsToSummary(
   return appointments.map((appt) => ({
     id: appt.eventId,
     title: appt.title,
-    datetimeLabel: formatAppointmentDateTime(appt.date),
+    datetime: appt.date,
     location: null,
     href: `/${userId}/tracks/${appt.trackSlug}/${appt.eventId}`
   }))
@@ -218,14 +207,14 @@ export function buildMockAccountOverviewData(name: string | null | undefined): A
       {
         id: 'upcoming-appointment-1',
         title: 'GP follow‑up',
-        datetimeLabel: 'Tue, 14 Jan · 10:30',
+        datetime: '2025-01-14T10:30:00Z',
         location: 'City Health Centre',
         href: '/mock-user/tracks/sleep/upcoming-appointment-1'
       },
       {
         id: 'upcoming-appointment-2',
         title: 'Physio session',
-        datetimeLabel: 'Fri, 17 Jan · 15:00',
+        datetime: '2025-01-17T15:00:00Z',
         location: 'Riverside Clinic',
         href: '/mock-user/tracks/pain/upcoming-appointment-2'
       }

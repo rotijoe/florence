@@ -29,7 +29,7 @@ export interface HealthTrackSummary {
 export interface AppointmentSummary {
   id: string
   title: string
-  datetimeLabel: string
+  datetime: Date | string
   location?: string | null
   href: string
 }
