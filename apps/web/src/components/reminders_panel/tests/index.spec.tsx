@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { HubNotifications } from '../index'
+import { RemindersPanel } from '../index'
 import type { Notification } from '@/app/[userId]/types'
 import type { TrackOption } from '@/components/hub_quick_actions/types'
 
@@ -39,19 +39,59 @@ const defaultProps = {
   userId: 'user-123'
 }
 
-describe('HubNotifications', () => {
+describe('RemindersPanel', () => {
   beforeEach(() => {
     mockRefresh.mockClear()
     jest.clearAllMocks()
   })
 
   it('renders empty state when no notifications', () => {
-    render(<HubNotifications notifications={[]} {...defaultProps} />)
+    render(<RemindersPanel notifications={[]} {...defaultProps} />)
 
-    expect(screen.getByText('Notifications')).toBeInTheDocument()
+    expect(screen.getByText('Reminders')).toBeInTheDocument()
     expect(
       screen.getByText('You have no reminders right now. New suggestions will appear here.')
     ).toBeInTheDocument()
+  })
+
+  it('uses custom title prop', () => {
+    render(<RemindersPanel notifications={[]} {...defaultProps} title='Custom Title' />)
+
+    expect(screen.getByText('Custom Title')).toBeInTheDocument()
+  })
+
+  it('uses custom description prop when notifications exist', () => {
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'appointmentDetails',
+        title: 'Test notification',
+        message: 'Test message',
+        ctaLabel: undefined
+      }
+    ]
+
+    render(
+      <RemindersPanel
+        notifications={notifications}
+        {...defaultProps}
+        description='Custom description text'
+      />
+    )
+
+    expect(screen.getByText('Custom description text')).toBeInTheDocument()
+  })
+
+  it('uses custom emptyStateMessage prop', () => {
+    render(
+      <RemindersPanel
+        notifications={[]}
+        {...defaultProps}
+        emptyStateMessage='No reminders available'
+      />
+    )
+
+    expect(screen.getByText('No reminders available')).toBeInTheDocument()
   })
 
   it('renders notifications when present', () => {
@@ -65,7 +105,7 @@ describe('HubNotifications', () => {
       }
     ]
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     expect(screen.getByText('Test notification')).toBeInTheDocument()
   })
@@ -81,7 +121,7 @@ describe('HubNotifications', () => {
       }
     ]
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     expect(screen.getByLabelText('Dismiss notification')).toBeInTheDocument()
   })
@@ -97,7 +137,7 @@ describe('HubNotifications', () => {
       }
     ]
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     expect(screen.getByRole('button', { name: 'Add details' })).toBeInTheDocument()
   })
@@ -113,7 +153,7 @@ describe('HubNotifications', () => {
       }
     ]
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     // Only dismiss button should be present, no other action buttons
     const buttons = screen.getAllByRole('button')
@@ -139,9 +179,7 @@ describe('HubNotifications', () => {
       }
     ]
 
-    const { container } = render(
-      <HubNotifications notifications={notifications} {...defaultProps} />
-    )
+    const { container } = render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     expect(screen.getByText('First notification')).toBeInTheDocument()
     expect(screen.getByText('Second notification')).toBeInTheDocument()
@@ -175,9 +213,7 @@ describe('HubNotifications', () => {
       }
     ]
 
-    const { container } = render(
-      <HubNotifications notifications={notifications} {...defaultProps} />
-    )
+    const { container } = render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     // Should have n-1 separators for n notifications
     const separators = container.querySelectorAll('[data-slot="separator"]')
@@ -203,7 +239,7 @@ describe('HubNotifications', () => {
       json: async () => ({ success: true, data: { ok: true } })
     })
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     expect(screen.getByText('Test notification')).toBeInTheDocument()
 
@@ -234,7 +270,7 @@ describe('HubNotifications', () => {
       json: async () => ({ success: true, data: { ok: true } })
     })
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     const dismissButton = screen.getByLabelText('Dismiss notification')
     await user.click(dismissButton)
@@ -275,7 +311,7 @@ describe('HubNotifications', () => {
       json: async () => ({ success: false, error: 'Failed to dismiss' })
     })
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     expect(screen.getByText('Test notification')).toBeInTheDocument()
 
@@ -306,7 +342,7 @@ describe('HubNotifications', () => {
 
     global.fetch = jest.fn()
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     await user.click(screen.getByLabelText('Dismiss notification'))
 
@@ -328,7 +364,7 @@ describe('HubNotifications', () => {
       }
     ]
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     await user.click(screen.getByRole('button', { name: 'Log symptom' }))
 
@@ -348,10 +384,11 @@ describe('HubNotifications', () => {
       }
     ]
 
-    render(<HubNotifications notifications={notifications} {...defaultProps} />)
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
 
     await user.click(screen.getByRole('button', { name: 'Add details' }))
 
     expect(window.location.hash).toBe('#details')
   })
 })
+

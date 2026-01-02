@@ -33,9 +33,9 @@ jest.mock('@/components/hub_health_tracks', () => ({
   )
 }))
 
-jest.mock('@/components/hub_notifications', () => ({
-  HubNotifications: ({ notifications }: { notifications: unknown[] }) => (
-    <div data-testid='hub-notifications' data-notifications-count={notifications.length}>
+jest.mock('@/components/reminders_panel', () => ({
+  RemindersPanel: ({ notifications }: { notifications: unknown[] }) => (
+    <div data-testid='reminders-panel' data-notifications-count={notifications.length}>
       Notifications
     </div>
   )
@@ -57,9 +57,19 @@ jest.mock('@/components/hub_recent_activity', () => ({
   )
 }))
 
-jest.mock('@/components/hub_upcoming_appointments', () => ({
-  HubUpcomingAppointments: ({ appointments }: { appointments?: unknown[] }) => (
-    <div data-testid='hub-upcoming-appointments' data-appointments-count={appointments?.length ?? 0}>
+jest.mock('@/components/upcoming_events_panel/hub_wrapper', () => ({
+  HubUpcomingEventsPanel: ({
+    initialEvents
+  }: {
+    title: string
+    initialEvents: Array<{ id: string; title: string; datetime: Date | string; href: string }>
+    userId: string
+    hasMore: boolean
+  }) => (
+    <div
+      data-testid='hub-upcoming-appointments'
+      data-appointments-count={initialEvents?.length ?? 0}
+    >
       Upcoming Appointments
     </div>
   )
@@ -82,9 +92,8 @@ describe('UserHomePage', () => {
   const mockFetchUpcomingAppointmentsForHub = (
     helpers as unknown as { fetchUpcomingAppointmentsForHub: jest.Mock }
   ).fetchUpcomingAppointmentsForHub
-  const mockFetchHubNotifications = (
-    helpers as unknown as { fetchHubNotifications: jest.Mock }
-  ).fetchHubNotifications
+  const mockFetchHubNotifications = (helpers as unknown as { fetchHubNotifications: jest.Mock })
+    .fetchHubNotifications
 
   const mockOverviewData = {
     user: { id: 'user-123', name: 'John Doe' },
@@ -151,7 +160,7 @@ describe('UserHomePage', () => {
     expect(screen.getByTestId('hub-quick-actions')).toBeInTheDocument()
     expect(screen.getByTestId('hub-health-tracks')).toBeInTheDocument()
     expect(screen.getByTestId('hub-upcoming-appointments')).toBeInTheDocument()
-    expect(screen.getByTestId('hub-notifications')).toBeInTheDocument()
+    expect(screen.getByTestId('reminders-panel')).toBeInTheDocument()
     expect(screen.getByTestId('hub-recent-activity')).toBeInTheDocument()
     expect(screen.getByTestId('hub-footer')).toBeInTheDocument()
   })
@@ -276,7 +285,7 @@ describe('UserHomePage', () => {
     expect(quickActions).toHaveAttribute('data-tracks-count', '2')
   })
 
-  it('should pass notifications to HubNotifications', async () => {
+  it('should pass notifications to RemindersPanel', async () => {
     mockFetchHubNotifications.mockResolvedValue([
       { id: 'n1', type: 'symptomReminder', title: 'Test 1' },
       { id: 'n2', type: 'appointmentDetails', title: 'Test 2' }
@@ -287,7 +296,7 @@ describe('UserHomePage', () => {
 
     render(result)
 
-    const notifications = screen.getByTestId('hub-notifications')
+    const notifications = screen.getByTestId('reminders-panel')
     expect(notifications).toHaveAttribute('data-notifications-count', '2')
   })
 
@@ -301,12 +310,27 @@ describe('UserHomePage', () => {
     expect(healthTracks).toHaveAttribute('data-tracks-count', '1')
   })
 
-  it('should pass appointments to HubUpcomingAppointments', async () => {
+  it('should pass appointments to HubUpcomingEventsPanel', async () => {
     mockFetchUpcomingAppointmentsForHub.mockResolvedValue({
       appointments: [
-        { id: 'a1', title: 'GP Visit', datetimeLabel: 'Mon, 10 Jan · 10:00', href: '/user-123/tracks/sleep/a1' },
-        { id: 'a2', title: 'Physio', datetimeLabel: 'Tue, 11 Jan · 14:00', href: '/user-123/tracks/pain/a2' },
-        { id: 'a3', title: 'Dentist', datetimeLabel: 'Wed, 12 Jan · 09:00', href: '/user-123/tracks/dental/a3' }
+        {
+          id: 'a1',
+          title: 'GP Visit',
+          datetimeLabel: 'Mon, 10 Jan · 10:00',
+          href: '/user-123/tracks/sleep/a1'
+        },
+        {
+          id: 'a2',
+          title: 'Physio',
+          datetimeLabel: 'Tue, 11 Jan · 14:00',
+          href: '/user-123/tracks/pain/a2'
+        },
+        {
+          id: 'a3',
+          title: 'Dentist',
+          datetimeLabel: 'Wed, 12 Jan · 09:00',
+          href: '/user-123/tracks/dental/a3'
+        }
       ],
       hasMore: false
     })

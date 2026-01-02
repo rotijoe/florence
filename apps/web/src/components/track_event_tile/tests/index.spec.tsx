@@ -23,16 +23,12 @@ describe('TrackEventTile', () => {
     updatedAt: '2025-10-21T11:00:00.000Z'
   }
 
-  it('renders title, notes, type, event date/time, createdAt, and updatedAt', () => {
+  it('renders title, notes, and type', () => {
     render(<TrackEventTile userId={userId} trackSlug={trackSlug} event={baseEvent} />)
 
     expect(screen.getByText('Event title')).toBeInTheDocument()
     expect(screen.getByText('Event notes')).toBeInTheDocument()
     expect(screen.getAllByText('NOTE').length).toBeGreaterThan(0)
-
-    expect(screen.getByText(/event time/i)).toBeInTheDocument()
-    expect(screen.getByText(/created/i)).toBeInTheDocument()
-    expect(screen.getByText(/updated/i)).toBeInTheDocument()
   })
 
   it('renders a calendar icon for appointment events', () => {
@@ -42,7 +38,7 @@ describe('TrackEventTile', () => {
     expect(screen.getAllByTestId('event-type-icon-APPOINTMENT').length).toBeGreaterThan(0)
   })
 
-  it('renders a symptom variant with symptomType and severity', () => {
+  it('renders a symptom variant', () => {
     const event: EventResponse = {
       ...baseEvent,
       type: EventType.SYMPTOM,
@@ -53,8 +49,6 @@ describe('TrackEventTile', () => {
     render(<TrackEventTile userId={userId} trackSlug={trackSlug} event={event} />)
 
     expect(screen.getByTestId('track-event-tile')).toHaveAttribute('data-variant', 'symptom')
-    expect(screen.getByText('Headache')).toBeInTheDocument()
-    expect(screen.getByText(/severity 7\/10/i)).toBeInTheDocument()
   })
 
   it('shows an action menu with Edit and Delete', async () => {

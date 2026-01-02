@@ -1,4 +1,4 @@
-import { notificationsOptimisticReducer } from '../helpers'
+import { notificationsOptimisticReducer, hasNotifications } from '../helpers'
 import type { Notification } from '@/app/[userId]/types'
 
 const createNotification = (overrides: Partial<Notification> = {}): Notification => ({
@@ -160,5 +160,28 @@ describe('notificationsOptimisticReducer', () => {
 
       expect(result).toEqual(notifications)
     })
+  })
+})
+
+describe('hasNotifications', () => {
+  it('returns false for empty array', () => {
+    expect(hasNotifications([])).toBe(false)
+  })
+
+  it('returns false for non-array', () => {
+    expect(hasNotifications(null as unknown as Notification[])).toBe(false)
+  })
+
+  it('returns true for array with items', () => {
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'appointmentDetails',
+        title: 'Test',
+        message: 'Test message',
+        ctaLabel: undefined
+      }
+    ]
+    expect(hasNotifications(notifications)).toBe(true)
   })
 })

@@ -3,10 +3,6 @@ import TrackPage from '../page'
 import { fetchTrack, fetchTrackEvents } from '../helpers'
 import { EventType, type TrackResponse, type EventResponse } from '@packages/types'
 
-jest.mock('@/app/[userId]/helpers', () => ({
-  fetchHubNotifications: jest.fn(async () => [])
-}))
-
 // Mock the helpers
 jest.mock('../helpers', () => {
   const actual = jest.requireActual('../helpers')
@@ -17,32 +13,50 @@ jest.mock('../helpers', () => {
   }
 })
 
-jest.mock('@/components/track_quick_add_bar', () => ({
-  TrackQuickAddBar: ({ userId, trackSlug }: { userId: string; trackSlug: string }) => (
-    <div data-testid='track-quick-add-bar' data-user-id={userId} data-track-slug={trackSlug} />
-  )
-}))
 
 jest.mock('@/components/track_timeline', () => ({
   TrackTimeline: ({
-    futureAppointments,
     pastEvents
   }: {
-    futureAppointments: EventResponse[]
     pastEvents: EventResponse[]
     userId: string
     trackSlug: string
   }) => (
     <div
       data-testid='track-timeline'
-      data-future-count={futureAppointments.length}
       data-past-count={pastEvents.length}
     />
   )
 }))
 
-jest.mock('@/components/track_reminders_panel', () => ({
-  TrackRemindersPanel: () => <div data-testid='track-reminders-panel' />
+jest.mock('@/components/reminders_panel', () => ({
+  RemindersPanel: () => <div data-testid='reminders-panel' />
+}))
+
+jest.mock('@/components/upcoming_events_panel', () => ({
+  UpcomingEventsPanel: ({
+    upcomingEvents
+  }: {
+    title: string
+    upcomingEvents: Array<{ id: string; title: string; datetime: Date | string; href: string }>
+  }) => (
+    <div data-testid='upcoming-events-panel' data-event-count={upcomingEvents.length} />
+  )
+}))
+
+jest.mock('@/app/[userId]/helpers', () => ({
+  fetchHubNotifications: jest.fn(async () => []),
+  fetchUserMeWithCookies: jest.fn(async () => ({
+    id: 'user-1',
+    name: 'Test User',
+    email: 'test@example.com',
+    tracks: []
+  })),
+  mapTracksToHealthTrackSummary: jest.fn(() => [])
+}))
+
+jest.mock('@/components/hub_quick_actions/helpers', () => ({
+  buildTrackOptions: jest.fn(() => [])
 }))
 
 // Mock TrackHeader component
@@ -120,10 +134,8 @@ describe('TrackPage', () => {
     const result = await TrackPage({ params })
     render(result)
 
-    expect(screen.getByTestId('track-quick-add-bar')).toBeInTheDocument()
-    expect(screen.getByTestId('track-reminders-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('reminders-panel')).toBeInTheDocument()
     expect(screen.getByTestId('track-timeline')).toBeInTheDocument()
-    expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-future-count', '0')
     expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-past-count', '2')
   })
 
@@ -147,7 +159,6 @@ describe('TrackPage', () => {
     render(result)
 
     expect(screen.getByTestId('track-timeline')).toBeInTheDocument()
-    expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-future-count', '0')
     expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-past-count', '0')
   })
 })

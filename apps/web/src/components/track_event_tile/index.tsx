@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { Calendar, MoreVertical } from 'lucide-react'
-import { formatEventDate, formatEventTime } from '@/components/track_event_list/helpers'
 import type { TrackEventTileProps } from './types'
 
 function stopLinkNavigation(e: { preventDefault: () => void; stopPropagation: () => void }) {
@@ -43,33 +42,6 @@ function renderTypeBadge(event: EventResponse) {
   )
 }
 
-function renderSymptomMeta(event: EventResponse) {
-  if (event.type !== EventType.SYMPTOM) return null
-
-  return (
-    <div className='flex flex-wrap items-center gap-2'>
-      {event.symptomType && (
-        <span className='rounded-full bg-rose-500/10 px-3 py-1 text-xs font-medium text-rose-700 dark:bg-rose-400/10 dark:text-rose-200'>
-          {event.symptomType}
-        </span>
-      )}
-      {typeof event.severity === 'number' && (
-        <span className='rounded-full bg-rose-500/10 px-3 py-1 text-xs font-medium text-rose-700 dark:bg-rose-400/10 dark:text-rose-200'>
-          Severity {event.severity}/10
-        </span>
-      )}
-    </div>
-  )
-}
-
-function renderMetaRow(label: string, value: string) {
-  return (
-    <div className='flex items-center justify-between gap-3 text-xs text-muted-foreground'>
-      <span className='font-medium'>{label}</span>
-      <span className='tabular-nums'>{value}</span>
-    </div>
-  )
-}
 
 export function TrackEventTile({
   userId,
@@ -86,7 +58,9 @@ export function TrackEventTile({
   const href = `/${userId}/tracks/${trackSlug}/${event.id}`
 
   async function handleConfirmDelete() {
-    const { deleteEventAction } = await import('@/app/[userId]/tracks/[trackSlug]/[eventId]/actions')
+    const { deleteEventAction } = await import(
+      '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
+    )
     await deleteEventAction(userId, trackSlug, event.id)
   }
 
@@ -111,7 +85,12 @@ export function TrackEventTile({
                   {event.title}
                 </CardTitle>
                 {event.notes && (
-                  <p className={cn('text-sm text-muted-foreground line-clamp-2', isSymptom && 'line-clamp-1')}>
+                  <p
+                    className={cn(
+                      'text-sm text-muted-foreground line-clamp-2',
+                      isSymptom && 'line-clamp-1'
+                    )}
+                  >
                     {event.notes}
                   </p>
                 )}
@@ -160,13 +139,14 @@ export function TrackEventTile({
           </CardHeader>
 
           <CardContent className={cn('space-y-3', isSymptom && 'space-y-2')}>
-            {renderSymptomMeta(event)}
-
-            <div className='space-y-1'>
-              {renderMetaRow('Event time', `${formatEventDate(event.date)} · ${formatEventTime(event.date)}`)}
+            {/* <div className='space-y-1'>
+              {renderMetaRow(
+                'Event time',
+                `${formatEventDate(event.date)} · ${formatEventTime(event.date)}`
+              )}
               {renderMetaRow('Created', formatEventDate(event.createdAt))}
               {renderMetaRow('Updated', formatEventDate(event.updatedAt))}
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </Link>
@@ -192,5 +172,3 @@ export function TrackEventTile({
     </>
   )
 }
-
-

@@ -7,16 +7,19 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { SymptomDialogue } from '@/components/hub_quick_actions/symptom_dialogue'
-import { HUB_SECTION_TITLES } from './constants'
-import { hubHasNotifications, notificationsOptimisticReducer } from './helpers'
-import type { HubNotificationsProps } from './types'
+import { DEFAULT_TITLE, DEFAULT_DESCRIPTION, DEFAULT_EMPTY_STATE_MESSAGE } from './constants'
+import { hasNotifications, notificationsOptimisticReducer } from './helpers'
+import type { RemindersPanelProps } from './types'
 import { API_BASE_URL } from '@/constants/api'
 
-export function HubNotifications({
+export function RemindersPanel({
   notifications: initialNotifications,
   tracks,
-  userId
-}: HubNotificationsProps) {
+  userId,
+  title = DEFAULT_TITLE,
+  description = DEFAULT_DESCRIPTION,
+  emptyStateMessage = DEFAULT_EMPTY_STATE_MESSAGE
+}: RemindersPanelProps) {
   const router = useRouter()
   const [optimisticNotifications, updateOptimisticNotifications] = useOptimistic(
     initialNotifications,
@@ -59,16 +62,13 @@ export function HubNotifications({
       }
     })
   }
-  if (!hubHasNotifications(optimisticNotifications)) {
+
+  if (!hasNotifications(optimisticNotifications)) {
     return (
       <Card className='border-muted/40 bg-muted/40 shadow-none'>
         <CardHeader>
-          <CardTitle className='text-base font-semibold'>
-            {HUB_SECTION_TITLES.notifications}
-          </CardTitle>
-          <CardDescription className='text-sm'>
-            You have no reminders right now. New suggestions will appear here.
-          </CardDescription>
+          <CardTitle className='text-base font-semibold'>{title}</CardTitle>
+          <CardDescription className='text-sm'>{emptyStateMessage}</CardDescription>
         </CardHeader>
       </Card>
     )
@@ -81,7 +81,7 @@ export function HubNotifications({
       return (
         <div key={notification.id} className='space-y-2'>
           <div className='flex flex-col items-start justify-between gap-3'>
-            <div className='flex justify-between items-start w-full gap-1.5v'>
+            <div className='flex justify-between items-start w-full gap-1.5'>
               <div>
                 <p className='font-medium text-sm sm:text-[15px]'>{notification.title}</p>
               </div>
@@ -141,12 +141,8 @@ export function HubNotifications({
     <>
       <Card className='border-muted/40 bg-muted/40 shadow-none'>
         <CardHeader>
-          <CardTitle className='text-base font-semibold'>
-            {HUB_SECTION_TITLES.notifications}
-          </CardTitle>
-          <CardDescription className='text-sm'>
-            Gentle reminders to keep your health record up to date.
-          </CardDescription>
+          <CardTitle className='text-base font-semibold'>{title}</CardTitle>
+          <CardDescription className='text-sm'>{description}</CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>{renderItems()}</CardContent>
       </Card>
@@ -161,3 +157,4 @@ export function HubNotifications({
     </>
   )
 }
+

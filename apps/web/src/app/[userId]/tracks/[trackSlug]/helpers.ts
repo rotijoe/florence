@@ -6,6 +6,7 @@ import {
 } from '@packages/types'
 import { SERVER_API_BASE_URL } from '@/constants/api'
 import type { Notification } from '@/app/[userId]/types'
+import type { UpcomingEvent } from '@/components/upcoming_events_panel/types'
 import { cookies } from 'next/headers'
 
 export async function fetchTrack(userId: string, slug: string): Promise<TrackResponse> {
@@ -138,4 +139,17 @@ export function filterNotificationsForTrack(
 
     return false
   })
+}
+
+export function mapEventResponseToUpcomingEvent(
+  event: EventResponse,
+  userId: string,
+  trackSlug: string
+): UpcomingEvent {
+  return {
+    id: event.id,
+    title: event.title,
+    datetime: event.date,
+    href: `/${userId}/tracks/${trackSlug}/${event.id}`
+  }
 }

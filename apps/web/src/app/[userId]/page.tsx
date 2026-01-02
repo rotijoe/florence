@@ -1,11 +1,11 @@
 import { getServerSession } from '@/lib/auth_server'
 import { HubFooter } from '@/components/hub_footer'
 import { HubHealthTracks } from '@/components/hub_health_tracks'
-import { HubNotifications } from '@/components/hub_notifications'
+import { RemindersPanel } from '@/components/reminders_panel'
 import { HubQuickActions } from '@/components/hub_quick_actions'
 import { buildTrackOptions } from '@/components/hub_quick_actions/helpers'
 import { HubRecentActivity } from '@/components/hub_recent_activity'
-import { HubUpcomingAppointments } from '@/components/hub_upcoming_appointments'
+import { HubUpcomingEventsPanel } from '@/components/upcoming_events_panel/hub_wrapper'
 import { HubWelcomeHeader } from '@/components/hub_welcome_header'
 import {
   buildMockAccountOverviewData,
@@ -64,18 +64,20 @@ export default async function Hub({ params }: UserHomePageProps) {
         <section className='grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]'>
           <div className='space-y-4'>
             <HubHealthTracks userId={actualUserId} tracks={tracks} />
-            <HubUpcomingAppointments
-              appointments={appointments}
+            <HubUpcomingEventsPanel
+              title='Upcoming appointments'
+              initialEvents={appointments}
               userId={actualUserId}
               hasMore={appointmentsHasMore}
             />
           </div>
 
           <div className='space-y-4'>
-            <HubNotifications
+            <RemindersPanel
               notifications={notifications}
               tracks={quickActionTrackOptions}
               userId={actualUserId}
+              title='Notifications'
             />
             <HubRecentActivity items={overview.recentActivity} />
           </div>

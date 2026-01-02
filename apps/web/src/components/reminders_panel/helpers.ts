@@ -23,6 +23,7 @@ export function notificationsOptimisticReducer(
   }
 }
 
-export function hubHasNotifications(notifications: Notification[]): boolean {
+export function hasNotifications(notifications: Notification[]): boolean {
   return Array.isArray(notifications) && notifications.length > 0
 }
+
