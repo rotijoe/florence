@@ -1,5 +1,4 @@
 import {
-  EventType,
   type TrackResponse,
   type EventResponse,
   type ApiResponse
@@ -87,27 +86,29 @@ export async function fetchTrackEvents(userId: string, slug: string): Promise<Ev
 export function splitEventsByTime(
   events: EventResponse[],
   now: Date
-): { futureAppointments: EventResponse[]; pastEvents: EventResponse[] } {
-  const futureAppointments: EventResponse[] = []
+): { futureEvents: EventResponse[]; pastEvents: EventResponse[] } {
+  const futureEvents: EventResponse[] = []
   const pastEvents: EventResponse[] = []
   const nowTime = now.getTime()
 
   for (const event of events) {
-    const isFutureAppointment =
-      event.type === EventType.APPOINTMENT && new Date(event.date).getTime() > nowTime
+    const isFutureEvent = new Date(event.date).getTime() > nowTime
 
-    if (isFutureAppointment) {
-      futureAppointments.push(event)
+    if (isFutureEvent) {
+      futureEvents.push(event)
       continue
     }
 
     pastEvents.push(event)
   }
 
-  return { futureAppointments, pastEvents }
+  // Sort future events ascending by date (soonest first)
+  futureEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  return { futureEvents, pastEvents }
 }
 
-export function sortFutureAppointments(events: EventResponse[]): EventResponse[] {
+export function sortFutureEvents(events: EventResponse[]): EventResponse[] {
   return [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 }
 

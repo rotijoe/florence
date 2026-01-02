@@ -27,11 +27,11 @@ export default async function TrackPage({ params }: TrackPageProps) {
     fetchUserMeWithCookies(userId)
   ])
 
-  const { futureAppointments, pastEvents } = splitEventsByTime(events, new Date())
+  const { futureEvents, pastEvents } = splitEventsByTime(events, new Date())
   const trackNotifications = filterNotificationsForTrack(hubNotifications, userId, trackSlug)
   const tracks = mapTracksToHealthTrackSummary(userData.tracks)
   const trackOptions = buildTrackOptions(tracks)
-  const upcomingEvents = futureAppointments.map((event) =>
+  const upcomingEvents = futureEvents.map((event) =>
     mapEventResponseToUpcomingEvent(event, userId, trackSlug)
   )
 
@@ -51,7 +51,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
 
           <div className='space-y-4'>
             {upcomingEvents.length > 0 && (
-              <UpcomingEventsPanel title='Upcoming appointments' upcomingEvents={upcomingEvents} />
+              <UpcomingEventsPanel title='Upcoming' upcomingEvents={upcomingEvents} />
             )}
             <RemindersPanel
               notifications={trackNotifications}

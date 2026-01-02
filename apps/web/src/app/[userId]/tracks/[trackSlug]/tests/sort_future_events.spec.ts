@@ -1,8 +1,8 @@
 import { EventType, type EventResponse } from '@packages/types'
-import { sortFutureAppointments } from '../helpers'
+import { sortFutureEvents } from '../helpers'
 
-describe('sortFutureAppointments', () => {
-  it('sorts appointments ascending by date without mutating the original array', () => {
+describe('sortFutureEvents', () => {
+  it('sorts events ascending by date without mutating the original array', () => {
     const events: EventResponse[] = [
       {
         id: 'b',
@@ -29,12 +29,10 @@ describe('sortFutureAppointments', () => {
     ]
 
     const copy = [...events]
-    const sorted = sortFutureAppointments(events)
+    const sorted = sortFutureEvents(events)
 
     expect(sorted.map((e) => e.id)).toEqual(['a', 'b'])
     expect(events).toEqual(copy)
   })
 })
-
-
 

@@ -2,7 +2,7 @@ import { EventType, type EventResponse } from '@packages/types'
 import { splitEventsByTime } from '../helpers'
 
 describe('splitEventsByTime', () => {
-  it('returns APPOINTMENT events in the futureAppointments array (time-aware)', () => {
+  it('returns any event with date > now in the futureEvents array, sorted ascending', () => {
     const now = new Date('2025-01-01T10:00:00.000Z')
     const events: EventResponse[] = [
       {
@@ -37,15 +37,25 @@ describe('splitEventsByTime', () => {
         fileUrl: null,
         createdAt: '2025-01-01T09:00:00.000Z',
         updatedAt: '2025-01-01T09:00:00.000Z'
+      },
+      {
+        id: 'result-future',
+        trackId: 't1',
+        date: '2025-01-01T11:00:00.000Z',
+        type: EventType.RESULT,
+        title: 'Future result',
+        notes: null,
+        fileUrl: null,
+        createdAt: '2025-01-01T09:00:00.000Z',
+        updatedAt: '2025-01-01T09:00:00.000Z'
       }
     ]
 
-    const { futureAppointments, pastEvents } = splitEventsByTime(events, now)
+    const { futureEvents, pastEvents } = splitEventsByTime(events, now)
 
-    expect(futureAppointments.map((e) => e.id)).toEqual(['appt-future'])
-    expect(pastEvents.map((e) => e.id)).toEqual(['appt-now', 'note-future'])
+    // Future events should include any event type with date > now, sorted ascending
+    expect(futureEvents.map((e) => e.id)).toEqual(['appt-future', 'result-future', 'note-future'])
+    // Past events include events at exactly now
+    expect(pastEvents.map((e) => e.id)).toEqual(['appt-now'])
   })
 })
-
-
-
