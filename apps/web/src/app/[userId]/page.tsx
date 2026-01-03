@@ -5,7 +5,8 @@ import { RemindersPanel } from '@/components/reminders_panel'
 import { HubQuickActions } from '@/components/hub_quick_actions'
 import { buildTrackOptions } from '@/components/hub_quick_actions/helpers'
 import { HubRecentActivity } from '@/components/hub_recent_activity'
-import { HubUpcomingEventsPanel } from '@/components/upcoming_events_panel/hub_wrapper'
+import { UpcomingEventsPanel } from '@/components/upcoming_events_panel'
+import type { UpcomingEvent } from '@/components/upcoming_events_panel/types'
 import { HubWelcomeHeader } from '@/components/hub_welcome_header'
 import {
   buildMockAccountOverviewData,
@@ -16,7 +17,7 @@ import {
   fetchHubNotifications
 } from './helpers'
 import { WELCOME_SUBTITLE } from './constants'
-import { AppointmentSummary, HealthTrackSummary, Notification } from './types'
+import { HealthTrackSummary, Notification } from './types'
 
 interface UserHomePageProps {
   params: Promise<{ userId: string }>
@@ -33,8 +34,7 @@ export default async function Hub({ params }: UserHomePageProps) {
   // Fetch real tracks from API
   let tracks: HealthTrackSummary[] = []
   let actualUserId = userId
-  let appointments: AppointmentSummary[] = []
-  let appointmentsHasMore = false
+  let upcomingEvents: UpcomingEvent[] = []
   let notifications: Notification[] = []
 
   try {
@@ -42,9 +42,7 @@ export default async function Hub({ params }: UserHomePageProps) {
       const userMe = await fetchUserMeWithCookies(session.user.id)
       actualUserId = userMe.id
       tracks = mapTracksToHealthTrackSummary(userMe.tracks)
-      const appointmentsResult = await fetchUpcomingAppointmentsForHub(actualUserId)
-      appointments = appointmentsResult.appointments
-      appointmentsHasMore = appointmentsResult.hasMore
+      upcomingEvents = await fetchUpcomingAppointmentsForHub(actualUserId)
       notifications = await fetchHubNotifications(actualUserId)
     }
   } catch (error) {
@@ -64,12 +62,7 @@ export default async function Hub({ params }: UserHomePageProps) {
         <section className='grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]'>
           <div className='space-y-4'>
             <HubHealthTracks userId={actualUserId} tracks={tracks} />
-            <HubUpcomingEventsPanel
-              title='Upcoming appointments'
-              initialEvents={appointments}
-              userId={actualUserId}
-              hasMore={appointmentsHasMore}
-            />
+            <UpcomingEventsPanel title='Upcoming appointments' upcomingEvents={upcomingEvents} />
           </div>
 
           <div className='space-y-4'>

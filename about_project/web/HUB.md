@@ -29,8 +29,9 @@ The main landing page for authenticated users, showing an overview of tracks, up
   - Fetcher: `fetchUserMeWithCookies(userId)` in `apps/web/src/app/[userId]/helpers.ts`
   - Falls back to mock data on error
 - **Upcoming appointments:** `GET /api/users/:userId/appointments/upcoming?limit=3`
-  - Fetcher: `fetchUpcomingAppointmentsForHub(userId)`
-  - Returns future `APPOINTMENT` events across all tracks, sorted soonest-first
+  - Fetcher: `fetchUpcomingAppointmentsForHub(userId)` in `apps/web/src/app/[userId]/helpers.ts`
+  - Returns `UpcomingEvent[]` (first 3 future `APPOINTMENT` events across all tracks, sorted soonest-first)
+  - No "show more" functionality - displays only the first 3 appointments
 - **Notifications:** `GET /api/users/:userId/hub/notifications`
   - Fetcher: `fetchHubNotifications(userId)`
   - See [Hub Notifications](./HUB_NOTIFICATIONS.md) for details
@@ -43,8 +44,8 @@ The main landing page for authenticated users, showing an overview of tracks, up
 - **HubWelcomeHeader** - Greeting card
 - **HubQuickActions** - Action buttons (symptom, event, appointment)
 - **HubHealthTracks** - Grid of track summary cards
-- **HubUpcomingAppointments** - List of upcoming appointment cards
-- **HubNotifications** - Notification list with dismiss
+- **UpcomingEventsPanel** - List of upcoming appointment cards (shows first 3 appointments)
+- **RemindersPanel** - Notification list with dismiss
 - **HubRecentActivity** - Placeholder card
 - **HubFooter** - Footer text
 

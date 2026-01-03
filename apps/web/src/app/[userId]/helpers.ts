@@ -7,6 +7,7 @@ import type {
 } from './types'
 import type { UserWithTracks } from './tracks/types'
 import type { ApiResponse, UpcomingAppointmentResponse } from '@packages/types'
+import type { UpcomingEvent } from '@/components/upcoming_events_panel/types'
 import { SERVER_API_BASE_URL } from '@/constants/api'
 import { fetchUpcomingAppointments } from '@/lib/fetch_upcoming_appointments'
 
@@ -115,19 +116,25 @@ export function mapUpcomingAppointmentsToSummary(
   }))
 }
 
-export async function fetchUpcomingAppointmentsForHub(
+export function mapUpcomingAppointmentsToUpcomingEvents(
+  appointments: UpcomingAppointmentResponse[],
   userId: string
-): Promise<{ appointments: AppointmentSummary[]; hasMore: boolean }> {
+): UpcomingEvent[] {
+  return appointments.map((appt) => ({
+    id: appt.eventId,
+    title: appt.title,
+    datetime: appt.date,
+    href: `/${userId}/tracks/${appt.trackSlug}/${appt.eventId}`
+  }))
+}
+
+export async function fetchUpcomingAppointmentsForHub(userId: string): Promise<UpcomingEvent[]> {
   try {
     const result = await fetchUpcomingAppointments(userId, 3)
-    const appointments = mapUpcomingAppointmentsToSummary(result.appointments, userId)
-    return {
-      appointments,
-      hasMore: result.hasMore
-    }
+    return mapUpcomingAppointmentsToUpcomingEvents(result.appointments, userId)
   } catch (error) {
     console.error('Failed to fetch upcoming appointments:', error)
-    return { appointments: [], hasMore: false }
+    return []
   }
 }
 

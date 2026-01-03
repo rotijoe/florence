@@ -57,18 +57,16 @@ jest.mock('@/components/hub_recent_activity', () => ({
   )
 }))
 
-jest.mock('@/components/upcoming_events_panel/hub_wrapper', () => ({
-  HubUpcomingEventsPanel: ({
-    initialEvents
+jest.mock('@/components/upcoming_events_panel', () => ({
+  UpcomingEventsPanel: ({
+    upcomingEvents
   }: {
     title: string
-    initialEvents: Array<{ id: string; title: string; datetime: Date | string; href: string }>
-    userId: string
-    hasMore: boolean
+    upcomingEvents: Array<{ id: string; title: string; datetime: Date | string; href: string }>
   }) => (
     <div
       data-testid='hub-upcoming-appointments'
-      data-appointments-count={initialEvents?.length ?? 0}
+      data-appointments-count={upcomingEvents?.length ?? 0}
     >
       Upcoming Appointments
     </div>
@@ -146,7 +144,7 @@ describe('UserHomePage', () => {
     mockGetGreetingForUser.mockReturnValue('Welcome back, John Doe')
     mockFetchUserMeWithCookies.mockResolvedValue(mockUserMeData)
     mockMapTracksToHealthTrackSummary.mockReturnValue(mockMappedTracks)
-    mockFetchUpcomingAppointmentsForHub.mockResolvedValue({ appointments: [], hasMore: false })
+    mockFetchUpcomingAppointmentsForHub.mockResolvedValue([])
     mockFetchHubNotifications.mockResolvedValue([])
   })
 
@@ -310,30 +308,27 @@ describe('UserHomePage', () => {
     expect(healthTracks).toHaveAttribute('data-tracks-count', '1')
   })
 
-  it('should pass appointments to HubUpcomingEventsPanel', async () => {
-    mockFetchUpcomingAppointmentsForHub.mockResolvedValue({
-      appointments: [
-        {
-          id: 'a1',
-          title: 'GP Visit',
-          datetimeLabel: 'Mon, 10 Jan · 10:00',
-          href: '/user-123/tracks/sleep/a1'
-        },
-        {
-          id: 'a2',
-          title: 'Physio',
-          datetimeLabel: 'Tue, 11 Jan · 14:00',
-          href: '/user-123/tracks/pain/a2'
-        },
-        {
-          id: 'a3',
-          title: 'Dentist',
-          datetimeLabel: 'Wed, 12 Jan · 09:00',
-          href: '/user-123/tracks/dental/a3'
-        }
-      ],
-      hasMore: false
-    })
+  it('should pass appointments to UpcomingEventsPanel', async () => {
+    mockFetchUpcomingAppointmentsForHub.mockResolvedValue([
+      {
+        id: 'a1',
+        title: 'GP Visit',
+        datetime: '2024-01-10T10:00:00Z',
+        href: '/user-123/tracks/sleep/a1'
+      },
+      {
+        id: 'a2',
+        title: 'Physio',
+        datetime: '2024-01-11T14:00:00Z',
+        href: '/user-123/tracks/pain/a2'
+      },
+      {
+        id: 'a3',
+        title: 'Dentist',
+        datetime: '2024-01-12T09:00:00Z',
+        href: '/user-123/tracks/dental/a3'
+      }
+    ])
 
     const params = Promise.resolve({ userId: 'user-123' })
     const result = await UserHomePage({ params })

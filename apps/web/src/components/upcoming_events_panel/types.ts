@@ -8,8 +8,6 @@ export interface UpcomingEvent {
 export interface UpcomingEventsPanelProps {
   title: string
   upcomingEvents: UpcomingEvent[]
-  hasMore?: boolean
-  onShowMore?: () => Promise<void>
   emptyStateMessage?: string
 }
 
