@@ -1,19 +1,19 @@
 import { render, screen } from '@testing-library/react'
 import { EventType, type EventResponse } from '@packages/types'
-import { TrackTimeline } from '../index'
+import { TrackEventsTimeline } from '../index'
 
-describe('TrackTimeline', () => {
+describe('TrackEventsTimeline', () => {
   const userId = 'user-1'
   const trackSlug = 'sleep'
 
   it('renders empty state when no events', () => {
-    render(<TrackTimeline userId={userId} trackSlug={trackSlug} pastEvents={[]} />)
+    render(<TrackEventsTimeline userId={userId} trackSlug={trackSlug} events={[]} />)
 
     expect(screen.getByText('No events recorded yet for this track.')).toBeInTheDocument()
   })
 
   it('groups past events by date and renders the date label once per group', () => {
-    const pastEvents: EventResponse[] = [
+    const events: EventResponse[] = [
       {
         id: 'past-1',
         trackId: 't1',
@@ -38,12 +38,11 @@ describe('TrackTimeline', () => {
       }
     ]
 
-    render(<TrackTimeline userId={userId} trackSlug={trackSlug} pastEvents={pastEvents} />)
+    render(<TrackEventsTimeline userId={userId} trackSlug={trackSlug} events={events} />)
 
     expect(screen.getAllByText('21 October 2025')).toHaveLength(1)
     expect(screen.getByTestId('timeline-event-past-1')).toBeInTheDocument()
     expect(screen.getByTestId('timeline-event-past-2')).toBeInTheDocument()
   })
 })
-
 

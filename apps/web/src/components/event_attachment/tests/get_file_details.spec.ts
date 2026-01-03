@@ -1,4 +1,4 @@
-import { getFileDetails } from '../helpers'
+import { getFileDetails } from '@/lib/get_file_details'
 
 describe('getFileDetails', () => {
   it('extracts filename from URL', () => {

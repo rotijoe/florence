@@ -4,7 +4,7 @@ import { useState, useOptimistic, startTransition, useEffect, useRef } from 'rea
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFormStatus } from 'react-dom'
 import { toast } from 'sonner'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -35,7 +35,7 @@ import {
 import { createEventOnSaveAction } from '@/app/[userId]/tracks/[trackSlug]/new/actions'
 import { EventType, type EventResponse } from '@packages/types'
 import { UploadDocument } from '@/components/upload_document'
-import { EventAttachment } from '@/components/attachment_list'
+import { EventAttachment } from '@/components/event_attachment'
 
 export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps) {
   const router = useRouter()
@@ -236,43 +236,41 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
 
   return (
     <>
-      <Card>
-        <form action={formAction}>
-          <input type='hidden' name='userId' value={userId} />
-          <input type='hidden' name='eventId' value={optimisticEvent.id} />
-          <input type='hidden' name='trackSlug' value={trackSlug} />
-          {renderHeader(
-            optimisticEvent,
-            isEditing,
-            handleCancel,
-            handleEdit,
-            handleUploadClick,
-            handleDeleteClick,
-            isCreateMode,
-            setCurrentTitle
-          )}
-          {renderContent(
-            optimisticEvent,
-            isEditing,
-            handleDeleteAttachment,
-            isCreateMode,
-            currentTitle,
-            currentNotes,
-            setCurrentTitle,
-            setCurrentNotes,
-            currentType,
-            setCurrentType,
-            currentDate,
-            setCurrentDate
-          )}
-          {renderFooter(optimisticEvent, isCreateMode)}
-        </form>
-        {error && (
-          <div data-testid='error-message' className='px-6 pb-4 text-sm text-destructive'>
-            {error}
-          </div>
+      <form action={formAction}>
+        <input type='hidden' name='userId' value={userId} />
+        <input type='hidden' name='eventId' value={optimisticEvent.id} />
+        <input type='hidden' name='trackSlug' value={trackSlug} />
+        {renderHeader(
+          optimisticEvent,
+          isEditing,
+          handleCancel,
+          handleEdit,
+          handleUploadClick,
+          handleDeleteClick,
+          isCreateMode,
+          setCurrentTitle
         )}
-      </Card>
+        {renderContent(
+          optimisticEvent,
+          isEditing,
+          handleDeleteAttachment,
+          isCreateMode,
+          currentTitle,
+          currentNotes,
+          setCurrentTitle,
+          setCurrentNotes,
+          currentType,
+          setCurrentType,
+          currentDate,
+          setCurrentDate
+        )}
+        {renderFooter(optimisticEvent, isCreateMode)}
+      </form>
+      {error && (
+        <div data-testid='error-message' className='px-6 pb-4 text-sm text-destructive'>
+          {error}
+        </div>
+      )}
       {showUploadDialog && (
         <UploadDocument
           event={optimisticEvent}
@@ -372,16 +370,16 @@ function renderHeader(
   return (
     <CardHeader data-testid='event-header' className='gap-4'>
       <div className='flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between'>
-        <div className='flex justify-end gap-2'>
-          <div className='flex gap-2'>{renderEditingButtons(onCancel, isEditing)}</div>
-          {!isEditing &&
-            renderActionsMenu(handleEdit, handleUploadClick, handleDeleteClick, isCreateMode)}
-        </div>
         <div className='space-y-2'>
           {renderTitle(isEditing, event, setCurrentTitle)}
           <span className='w-fit rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[0.65rem] font-medium uppercase tracking-wide text-primary'>
             {event.type}
           </span>
+        </div>
+        <div className='flex justify-end gap-2'>
+          <div className='flex gap-2'>{renderEditingButtons(onCancel, isEditing)}</div>
+          {!isEditing &&
+            renderActionsMenu(handleEdit, handleUploadClick, handleDeleteClick, isCreateMode)}
         </div>
       </div>
     </CardHeader>

@@ -1,4 +1,8 @@
-import type { AttachmentItem } from './types'
+export type FileDetails = {
+  url: string
+  filename: string
+  fileType: 'image' | 'pdf' | 'word' | 'text' | 'other'
+}
 
 // Backend allowed content types:
 // 'application/pdf'
@@ -12,7 +16,7 @@ const PDF_EXTENSIONS = ['pdf']
 const WORD_EXTENSIONS = ['doc', 'docx']
 const TEXT_EXTENSIONS = ['txt']
 
-export function getFileDetails(url: string): AttachmentItem {
+export function getFileDetails(url: string): FileDetails {
   const urlObj = new URL(url)
   const pathname = urlObj.pathname
   const filename = pathname.split('/').pop() || 'attachment'
@@ -37,3 +41,4 @@ export function getFileDetails(url: string): AttachmentItem {
     fileType
   }
 }
+

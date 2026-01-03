@@ -108,7 +108,7 @@ describe('EventDetail', () => {
       expect(screen.getByText('file.pdf')).toBeInTheDocument()
     })
 
-    it('handles event without fileUrl', () => {
+    it('handles event without fileUrl and displays empty state', () => {
       const eventWithoutFile: EventResponse = {
         ...mockEvent,
         fileUrl: null
@@ -118,7 +118,7 @@ describe('EventDetail', () => {
         <EventDetail event={eventWithoutFile} trackSlug={trackSlug} userId={userId} mode='edit' />
       )
 
-      expect(screen.queryByText('Attachments')).not.toBeInTheDocument()
+      expect(screen.getByText('No attachments found')).toBeInTheDocument()
     })
 
     it('displays created timestamp', () => {

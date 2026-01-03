@@ -18,16 +18,10 @@ describe('EventAttachment', () => {
     jest.clearAllMocks()
   })
 
-  it('renders nothing when fileUrl is null', () => {
-    const { container } = render(<EventAttachment fileUrl={null} />)
+  it('renders empty state when fileUrl is not provided', () => {
+    render(<EventAttachment fileUrl={null} />)
 
-    expect(container.firstChild).toBeNull()
-  })
-
-  it('renders nothing when fileUrl is undefined', () => {
-    const { container } = render(<EventAttachment fileUrl={undefined} />)
-
-    expect(container.firstChild).toBeNull()
+    expect(screen.getByText('No attachments found')).toBeInTheDocument()
   })
 
   it('renders attachment header with filename when fileUrl is provided', () => {

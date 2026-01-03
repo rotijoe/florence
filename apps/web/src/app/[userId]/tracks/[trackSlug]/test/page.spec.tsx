@@ -14,17 +14,17 @@ jest.mock('../helpers', () => {
 })
 
 
-jest.mock('@/components/track_timeline', () => ({
-  TrackTimeline: ({
-    pastEvents
+jest.mock('@/components/track_events_timeline', () => ({
+  TrackEventsTimeline: ({
+    events
   }: {
-    pastEvents: EventResponse[]
+    events: EventResponse[]
     userId: string
     trackSlug: string
   }) => (
     <div
       data-testid='track-timeline'
-      data-past-count={pastEvents.length}
+      data-past-count={events.length}
     />
   )
 }))

@@ -6,7 +6,7 @@ import {
   mapEventResponseToUpcomingEvent
 } from './helpers'
 import { TrackHeader } from '@/components/track_header'
-import { TrackTimeline } from '@/components/track_timeline'
+import { TrackEventsTimeline } from '@/components/track_events_timeline'
 import { RemindersPanel } from '@/components/reminders_panel'
 import { UpcomingEventsPanel } from '@/components/upcoming_events_panel'
 import type { TrackPageProps } from './types'
@@ -46,7 +46,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
           <div className='space-y-6'>
             {/* <TrackQuickAddBar userId={userId} trackSlug={trackSlug} /> */}
 
-            <TrackTimeline userId={userId} trackSlug={trackSlug} pastEvents={pastEvents} />
+            <TrackEventsTimeline userId={userId} trackSlug={trackSlug} events={pastEvents} />
           </div>
 
           <div className='space-y-4'>
