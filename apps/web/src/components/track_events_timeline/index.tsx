@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card'
-import type { EventResponse } from '@packages/types'
+import { EventType, type EventResponse } from '@packages/types'
 import type { TrackEventsTimelineProps } from './types'
 import { groupEventsByDate, formatDateLabel } from '@/components/track_event_list/helpers'
 import { TrackEventTile } from '@/components/track_event_tile'
@@ -20,7 +20,7 @@ export function TrackEventsTimeline({ userId, trackSlug, events }: TrackEventsTi
   }
 
   const eventGroups = groupEventsByDate(events)
-
+  console.log('eventGroups', eventGroups)
   return (
     <div className='relative space-y-6'>
       {eventGroups.map((group) => renderDateGroup(group, userId, trackSlug))}
@@ -33,9 +33,11 @@ function renderDateGroup(
   userId: string,
   trackSlug: string
 ) {
+  const hasNonSymptomEvents = group.events.some((event) => event.type !== EventType.SYMPTOM)
+
   return (
     <div key={group.date}>
-      {renderDateLabel(group.date)}
+      {hasNonSymptomEvents && renderDateLabel(group.date)}
       <div className='space-y-3'>
         {group.events.map((event) => renderEvent(event, userId, trackSlug))}
       </div>

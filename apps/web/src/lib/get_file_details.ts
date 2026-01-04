@@ -41,4 +41,3 @@ export function getFileDetails(url: string): FileDetails {
     fileType
   }
 }
-
