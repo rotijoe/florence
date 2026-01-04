@@ -31,6 +31,21 @@ describe('TrackCreateDialog', () => {
     })
   })
 
+  it('keeps focus on the track name input while typing', async () => {
+    const user = userEvent.setup()
+    render(
+      <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
+    )
+
+    const titleInput = screen.getByLabelText(/track name/i)
+    await user.click(titleInput)
+    expect(titleInput).toHaveFocus()
+
+    await user.type(titleInput, 'Sleep')
+    expect(titleInput).toHaveFocus()
+    expect(titleInput).toHaveValue('Sleep')
+  })
+
   it('renders dialog when open', () => {
     render(
       <TrackCreateDialog userId='user-1' open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />

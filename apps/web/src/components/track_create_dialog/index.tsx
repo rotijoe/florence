@@ -60,55 +60,9 @@ export function TrackCreateDialog({
     }
   }
 
-  function RenderFormFields() {
-    return (
-      <div className='space-y-4 py-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='track-title'>Track name</Label>
-          <Input
-            id='track-title'
-            value={trackTitle}
-            onChange={(e) => setTrackTitle(e.target.value)}
-            placeholder='e.g., Sleep, Hydration, Medication'
-            required
-            disabled={isCreating}
-          />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='track-description'>Description</Label>
-          <Textarea
-            id='track-description'
-            value={trackDescription}
-            onChange={(e) => setTrackDescription(e.target.value)}
-            placeholder='Optional description for this track'
-            disabled={isCreating}
-          />
-        </div>
-        {error && (
-          <p className='text-sm text-destructive' role='alert'>
-            {error}
-          </p>
-        )}
-      </div>
-    )
-  }
-
-  function RenderFooter() {
-    return (
-      <DialogFooter>
-        <Button type='button' variant='outline' onClick={handleClose} disabled={isCreating}>
-          Cancel
-        </Button>
-        <Button type='submit' disabled={isCreating}>
-          {isCreating ? 'Creating...' : 'Create'}
-        </Button>
-      </DialogFooter>
-    )
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Create new health track</DialogTitle>
           <DialogDescription>
@@ -116,8 +70,42 @@ export function TrackCreateDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <RenderFormFields />
-          <RenderFooter />
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='track-title'>Track name</Label>
+              <Input
+                id='track-title'
+                value={trackTitle}
+                onChange={(e) => setTrackTitle(e.target.value)}
+                placeholder='e.g., Sleep, Hydration, Medication'
+                required
+                disabled={isCreating}
+              />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='track-description'>Description</Label>
+              <Textarea
+                id='track-description'
+                value={trackDescription}
+                onChange={(e) => setTrackDescription(e.target.value)}
+                placeholder='Optional description for this track'
+                disabled={isCreating}
+              />
+            </div>
+            {error && (
+              <p className='text-sm text-destructive' role='alert'>
+                {error}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type='button' variant='outline' onClick={handleClose} disabled={isCreating}>
+              Cancel
+            </Button>
+            <Button type='submit' disabled={isCreating}>
+              {isCreating ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

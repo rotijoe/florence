@@ -1,77 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { ArrowUpIcon, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { SymptomDialogue } from './symptom_dialogue'
-import { TrackCreateDialog } from '@/components/track_create_dialog'
-import { DocumentUploadDialogue } from './document_upload_dialogue'
+import { HubQuickActionSymptom } from '@/components/hub_quick_action_symptom'
+import { HubQuickActionEvent } from '@/components/hub_quick_action_event'
+import { HubQuickActionTrack } from '@/components/hub_quick_action_track'
+import { HubQuickActionDocument } from '@/components/hub_quick_action_document'
 import type { HubQuickActionsProps } from './types'
 
 export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActionsProps) {
-  const router = useRouter()
-  const [isSymptomDialogOpen, setIsSymptomDialogOpen] = useState(false)
-  const [isTrackDialogOpen, setIsTrackDialogOpen] = useState(false)
-  const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false)
-  const [selectedDocumentTrack, setSelectedDocumentTrack] = useState<{
-    slug: string
-    title: string
-  } | null>(null)
   const hasTracks = tracks && tracks.length > 0
-
-  function handleTrackSelect(trackSlug: string) {
-    if (!trackSlug) {
-      return
-    }
-
-    const returnTo = encodeURIComponent(`/${userId}`)
-    router.push(`/${userId}/tracks/${trackSlug}/new?returnTo=${returnTo}`)
-  }
-
-  function handleSymptomSuccess() {
-    setIsSymptomDialogOpen(false)
-    // Optionally refresh data or show success message
-  }
-
-  function handleTrackSuccess() {
-    setIsTrackDialogOpen(false)
-    onTrackCreated?.()
-  }
-
-  function handleDocumentTrackSelect(trackSlug: string) {
-    if (!trackSlug) {
-      return
-    }
-
-    const track = tracks.find((t) => t.slug === trackSlug)
-    if (track) {
-      setSelectedDocumentTrack({ slug: track.slug, title: track.title })
-      setIsDocumentDialogOpen(true)
-    }
-  }
-
-  function handleDocumentSuccess({ eventId, trackSlug }: { eventId: string; trackSlug: string }) {
-    setIsDocumentDialogOpen(false)
-    setSelectedDocumentTrack(null)
-    router.refresh()
-    toast.success('Document uploaded successfully', {
-      action: {
-        label: 'View event',
-        onClick: () => {
-          router.push(`/${userId}/tracks/${trackSlug}/${eventId}`)
-        }
-      }
-    })
-  }
 
   function RenderQuickLogHeader() {
     return (
@@ -84,198 +20,23 @@ export function HubQuickActions({ tracks, userId, onTrackCreated }: HubQuickActi
     )
   }
 
-  function RenderLogSymptomButton() {
-    return (
-      <Button
-        variant='outline'
-        className='justify-between rounded-full px-5 sm:w-auto'
-        type='button'
-        onClick={() => setIsSymptomDialogOpen(true)}
-      >
-        <span>Log symptom</span>
-        <Plus className='size-4 text-muted-foreground' />
-      </Button>
-    )
-  }
-
-  function renderTrackMenuItems() {
-    return tracks.map((track) => (
-      <DropdownMenuItem
-        key={track.id}
-        onSelect={() => handleTrackSelect(track.slug)}
-        className='flex-col items-start'
-      >
-        <span className='text-sm font-medium'>{track.title}</span>
-        <span className='text-xs text-muted-foreground'>Create new event</span>
-      </DropdownMenuItem>
-    ))
-  }
-
-  function renderDisabledEventButton() {
-    return (
-      <TooltipProvider>
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <span className='inline-flex'>
-              <Button
-                variant='outline'
-                className='justify-between rounded-full px-5 sm:w-auto'
-                type='button'
-                disabled
-              >
-                <span>event</span>
-                <Plus className='size-4 text-muted-foreground' />
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Add a track before creating events</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    )
-  }
-
-  function RenderAddEventDropdown() {
-    if (!hasTracks) {
-      return renderDisabledEventButton()
-    }
-
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant='outline'
-            className='justify-between rounded-full px-5 sm:w-auto'
-            type='button'
-            aria-haspopup='listbox'
-          >
-            <span>event</span>
-            <Plus className='size-4 text-muted-foreground' />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='start' className='min-w-[12rem]'>
-          {renderTrackMenuItems()}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    )
-  }
-
-  function RenderTrackButton() {
-    return (
-      <Button
-        variant='outline'
-        className='justify-between rounded-full px-5 sm:w-auto'
-        type='button'
-        onClick={() => setIsTrackDialogOpen(true)}
-      >
-        <span>track</span>
-        <Plus className='size-4 text-muted-foreground' />
-      </Button>
-    )
-  }
-
-  function renderDocumentMenuItems() {
-    return tracks.map((track) => (
-      <DropdownMenuItem
-        key={track.id}
-        onSelect={() => handleDocumentTrackSelect(track.slug)}
-        className='flex-col items-start'
-      >
-        <span className='text-sm font-medium'>{track.title}</span>
-        <span className='text-xs text-muted-foreground'>Upload document</span>
-      </DropdownMenuItem>
-    ))
-  }
-
-  function renderDisabledDocumentButton() {
-    return (
-      <TooltipProvider>
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <span className='inline-flex'>
-              <Button
-                variant='outline'
-                className='justify-between rounded-full px-5 sm:w-auto'
-                type='button'
-                disabled
-              >
-                <span>document</span>
-                <ArrowUpIcon className='size-4 text-muted-foreground' />
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Add a track before uploading documents</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    )
-  }
-
-  function RenderDocumentDropdown() {
-    if (!hasTracks) {
-      return renderDisabledDocumentButton()
-    }
-
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant='outline'
-            className='justify-between rounded-full px-5 sm:w-auto'
-            type='button'
-            aria-haspopup='listbox'
-          >
-            <span>document</span>
-            <ArrowUpIcon className='size-4 text-muted-foreground' />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='start' className='min-w-[12rem]'>
-          {renderDocumentMenuItems()}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    )
-  }
-
   function RenderQuickActionButtons() {
     return (
       <div className='-mx-4 overflow-x-auto pb-1 sm:mx-0 sm:overflow-visible'>
         <div className='flex w-max gap-3 px-4 sm:w-auto sm:px-0'>
-          <RenderLogSymptomButton />
-          <RenderAddEventDropdown />
-          <RenderTrackButton />
-          <RenderDocumentDropdown />
+          <HubQuickActionSymptom tracks={tracks} userId={userId} />
+          <HubQuickActionEvent tracks={tracks} userId={userId} hasTracks={hasTracks} />
+          <HubQuickActionTrack userId={userId} onSuccess={onTrackCreated} />
+          <HubQuickActionDocument tracks={tracks} userId={userId} hasTracks={hasTracks} />
         </div>
       </div>
     )
   }
 
   return (
-    <>
-      <div className='flex flex-col gap-3 rounded-2xl bg-muted/40 px-4 py-4 sm:px-6 sm:py-5'>
-        <RenderQuickLogHeader />
-        <RenderQuickActionButtons />
-      </div>
-      <SymptomDialogue
-        open={isSymptomDialogOpen}
-        onOpenChange={setIsSymptomDialogOpen}
-        tracks={tracks}
-        userId={userId}
-        onSuccess={handleSymptomSuccess}
-      />
-      <TrackCreateDialog
-        userId={userId}
-        open={isTrackDialogOpen}
-        onOpenChange={setIsTrackDialogOpen}
-        onSuccess={handleTrackSuccess}
-      />
-      {selectedDocumentTrack && (
-        <DocumentUploadDialogue
-          open={isDocumentDialogOpen}
-          onOpenChange={setIsDocumentDialogOpen}
-          selectedTrackTitle={selectedDocumentTrack.title}
-          selectedTrackSlug={selectedDocumentTrack.slug}
-          userId={userId}
-          onSuccess={handleDocumentSuccess}
-        />
-      )}
-    </>
+    <div className='flex flex-col gap-3 rounded-2xl bg-muted/40 px-4 py-4 sm:px-6 sm:py-5'>
+      <RenderQuickLogHeader />
+      <RenderQuickActionButtons />
+    </div>
   )
 }

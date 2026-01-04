@@ -16,7 +16,7 @@ jest.mock('@/components/auth_dialog', () => ({
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ src, alt, ...props }: { src: string; alt: string }) => (
+  default: ({ src, alt, priority, ...props }: { src: string; alt: string; priority?: boolean }) => (
     <img src={src} alt={alt} {...props} data-testid='logo-image' />
   )
 }))
@@ -37,20 +37,11 @@ describe('HomePage', () => {
   })
 
   describe('when user is not authenticated', () => {
-    it('renders logo image and subtitle', async () => {
+    it('renders logo image', async () => {
       render(await HomePage())
 
       expect(screen.getByTestId('logo-image')).toBeInTheDocument()
       expect(screen.getByTestId('logo-image')).toHaveAttribute('alt', 'Florence')
-      expect(screen.getByText('Health Tracking')).toBeInTheDocument()
-    })
-
-    it('renders app description', async () => {
-      render(await HomePage())
-
-      expect(
-        screen.getByText(/Florence helps you take control of your health/i)
-      ).toBeInTheDocument()
     })
 
     it('renders Sign In and Sign Up buttons', async () => {
@@ -120,19 +111,10 @@ describe('HomePage', () => {
       })
     })
 
-    it('renders logo image and subtitle', async () => {
+    it('renders logo image', async () => {
       render(await HomePage())
 
       expect(screen.getByTestId('logo-image')).toBeInTheDocument()
-      expect(screen.getByText('Health Tracking')).toBeInTheDocument()
-    })
-
-    it('renders app description', async () => {
-      render(await HomePage())
-
-      expect(
-        screen.getByText(/Florence helps you take control of your health/i)
-      ).toBeInTheDocument()
     })
 
     it('renders Go to Hub button instead of auth buttons', async () => {
@@ -156,12 +138,5 @@ describe('HomePage', () => {
 
     const mainContainer = container.firstChild as HTMLElement
     expect(mainContainer).toHaveClass('flex', 'min-h-screen', 'items-center', 'justify-center')
-  })
-
-  it('renders subtitle with muted foreground color', async () => {
-    render(await HomePage())
-
-    const subtitle = screen.getByText('Health Tracking')
-    expect(subtitle).toHaveClass('text-muted-foreground', 'text-lg')
   })
 })

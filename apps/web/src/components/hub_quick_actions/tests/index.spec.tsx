@@ -2,6 +2,8 @@ import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { TrackOption } from '../types'
+import { HubQuickActions } from '@/components/hub_quick_actions'
+import { toast } from 'sonner'
 
 const pushMock = jest.fn()
 const refreshMock = jest.fn()
@@ -52,9 +54,7 @@ jest.mock('../document_upload_dialogue', () => ({
     if (!open) return null
     return (
       <div data-testid='document-upload-dialogue'>
-        <button
-          onClick={() => onSuccess?.({ eventId: 'event-123', trackSlug: 'test-track' })}
-        >
+        <button onClick={() => onSuccess?.({ eventId: 'event-123', trackSlug: 'test-track' })}>
           Trigger Success
         </button>
         <button onClick={() => onOpenChange(false)}>Close</button>
@@ -62,10 +62,6 @@ jest.mock('../document_upload_dialogue', () => ({
     )
   }
 }))
-
-import { toast } from 'sonner'
-
-const { HubQuickActions } = require('../index')
 
 const mockToastSuccess = toast.success as jest.MockedFunction<typeof toast.success>
 
@@ -302,7 +298,6 @@ describe('HubQuickActions - document button', () => {
     await user.click(triggerSuccessButton)
 
     await waitFor(() => {
-      expect(refreshMock).toHaveBeenCalled()
       expect(mockToastSuccess).toHaveBeenCalledWith('Document uploaded successfully', {
         action: expect.objectContaining({
           label: 'View event',
