@@ -2,6 +2,10 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import HomePage from '../page'
 
+jest.mock('@/lib/auth_server', () => ({
+  getServerSession: jest.fn()
+}))
+
 jest.mock('@/components/auth_dialog', () => ({
   AuthDialog: jest.fn(({ open, onOpenChange, defaultTab }) => (
     <div data-testid='auth-dialog' data-open={open} data-default-tab={defaultTab}>
@@ -10,88 +14,152 @@ jest.mock('@/components/auth_dialog', () => ({
   ))
 }))
 
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: ({ src, alt, ...props }: { src: string; alt: string }) => (
+    <img src={src} alt={alt} {...props} data-testid='logo-image' />
+  )
+}))
+
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  )
+}))
+
 describe('HomePage', () => {
+  const { getServerSession } = require('@/lib/auth_server')
+
   beforeEach(() => {
     jest.clearAllMocks()
+    getServerSession.mockResolvedValue(null)
   })
 
-  it('renders Florence logo and subtitle', () => {
-    render(<HomePage />)
+  describe('when user is not authenticated', () => {
+    it('renders logo image and subtitle', async () => {
+      render(await HomePage())
 
-    expect(screen.getByText('Florence')).toBeInTheDocument()
-    expect(screen.getByText('Health Tracking')).toBeInTheDocument()
-  })
+      expect(screen.getByTestId('logo-image')).toBeInTheDocument()
+      expect(screen.getByTestId('logo-image')).toHaveAttribute('alt', 'Florence')
+      expect(screen.getByText('Health Tracking')).toBeInTheDocument()
+    })
 
-  it('renders Sign In and Sign Up buttons', () => {
-    render(<HomePage />)
+    it('renders app description', async () => {
+      render(await HomePage())
 
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument()
-  })
+      expect(
+        screen.getByText(/Florence helps you take control of your health/i)
+      ).toBeInTheDocument()
+    })
 
-  it('opens auth dialog with signin tab when Sign In button is clicked', async () => {
-    const user = userEvent.setup()
-    render(<HomePage />)
+    it('renders Sign In and Sign Up buttons', async () => {
+      render(await HomePage())
 
-    const signInButton = screen.getByRole('button', { name: /sign in/i })
-    await user.click(signInButton)
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument()
+    })
 
-    await waitFor(() => {
-      const authDialog = screen.getByTestId('auth-dialog')
-      expect(authDialog).toHaveAttribute('data-open', 'true')
-      expect(authDialog).toHaveAttribute('data-default-tab', 'signin')
+    it('opens auth dialog with signin tab when Sign In button is clicked', async () => {
+      const user = userEvent.setup()
+      render(await HomePage())
+
+      const signInButton = screen.getByRole('button', { name: /sign in/i })
+      await user.click(signInButton)
+
+      await waitFor(() => {
+        const authDialog = screen.getByTestId('auth-dialog')
+        expect(authDialog).toHaveAttribute('data-open', 'true')
+        expect(authDialog).toHaveAttribute('data-default-tab', 'signin')
+      })
+    })
+
+    it('opens auth dialog with signup tab when Sign Up button is clicked', async () => {
+      const user = userEvent.setup()
+      render(await HomePage())
+
+      const signUpButton = screen.getByRole('button', { name: /sign up/i })
+      await user.click(signUpButton)
+
+      await waitFor(() => {
+        const authDialog = screen.getByTestId('auth-dialog')
+        expect(authDialog).toHaveAttribute('data-open', 'true')
+        expect(authDialog).toHaveAttribute('data-default-tab', 'signup')
+      })
+    })
+
+    it('closes auth dialog when onOpenChange is called', async () => {
+      const user = userEvent.setup()
+      render(await HomePage())
+
+      const signInButton = screen.getByRole('button', { name: /sign in/i })
+      await user.click(signInButton)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('auth-dialog')).toHaveAttribute('data-open', 'true')
+      })
+
+      const closeButton = screen.getByText('Close Dialog')
+      await user.click(closeButton)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('auth-dialog')).toHaveAttribute('data-open', 'false')
+      })
     })
   })
 
-  it('opens auth dialog with signup tab when Sign Up button is clicked', async () => {
-    const user = userEvent.setup()
-    render(<HomePage />)
+  describe('when user is authenticated', () => {
+    beforeEach(() => {
+      getServerSession.mockResolvedValue({
+        user: {
+          id: 'user-123',
+          name: 'Test User',
+          email: 'test@example.com'
+        },
+        session: {}
+      })
+    })
 
-    const signUpButton = screen.getByRole('button', { name: /sign up/i })
-    await user.click(signUpButton)
+    it('renders logo image and subtitle', async () => {
+      render(await HomePage())
 
-    await waitFor(() => {
-      const authDialog = screen.getByTestId('auth-dialog')
-      expect(authDialog).toHaveAttribute('data-open', 'true')
-      expect(authDialog).toHaveAttribute('data-default-tab', 'signup')
+      expect(screen.getByTestId('logo-image')).toBeInTheDocument()
+      expect(screen.getByText('Health Tracking')).toBeInTheDocument()
+    })
+
+    it('renders app description', async () => {
+      render(await HomePage())
+
+      expect(
+        screen.getByText(/Florence helps you take control of your health/i)
+      ).toBeInTheDocument()
+    })
+
+    it('renders Go to Hub button instead of auth buttons', async () => {
+      render(await HomePage())
+
+      expect(screen.getByRole('link', { name: /go to hub/i })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /sign up/i })).not.toBeInTheDocument()
+    })
+
+    it('links to user hub page', async () => {
+      render(await HomePage())
+
+      const hubLink = screen.getByRole('link', { name: /go to hub/i })
+      expect(hubLink).toHaveAttribute('href', '/user-123')
     })
   })
 
-  it('closes auth dialog when onOpenChange is called', async () => {
-    const user = userEvent.setup()
-    render(<HomePage />)
-
-    const signInButton = screen.getByRole('button', { name: /sign in/i })
-    await user.click(signInButton)
-
-    await waitFor(() => {
-      expect(screen.getByTestId('auth-dialog')).toHaveAttribute('data-open', 'true')
-    })
-
-    const closeButton = screen.getByText('Close Dialog')
-    await user.click(closeButton)
-
-    await waitFor(() => {
-      expect(screen.getByTestId('auth-dialog')).toHaveAttribute('data-open', 'false')
-    })
-  })
-
-  it('centers content vertically and horizontally', () => {
-    const { container } = render(<HomePage />)
+  it('centers content vertically and horizontally', async () => {
+    const { container } = render(await HomePage())
 
     const mainContainer = container.firstChild as HTMLElement
     expect(mainContainer).toHaveClass('flex', 'min-h-screen', 'items-center', 'justify-center')
   })
 
-  it('renders logo with correct styling', () => {
-    render(<HomePage />)
-
-    const logo = screen.getByText('Florence')
-    expect(logo).toHaveClass('text-6xl', 'font-bold', 'tracking-tight')
-  })
-
-  it('renders subtitle with muted foreground color', () => {
-    render(<HomePage />)
+  it('renders subtitle with muted foreground color', async () => {
+    render(await HomePage())
 
     const subtitle = screen.getByText('Health Tracking')
     expect(subtitle).toHaveClass('text-muted-foreground', 'text-lg')

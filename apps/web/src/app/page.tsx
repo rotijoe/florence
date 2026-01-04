@@ -1,46 +1,41 @@
-'use client'
-
-import { useState } from 'react'
-import { AuthDialog } from '@/components/auth_dialog'
+import Image from 'next/image'
+import Link from 'next/link'
+import { getServerSession } from '@/lib/auth_server'
+import { LandingAuthButtons } from './landing_auth_buttons'
 import { Button } from '@/components/ui/button'
 
-export default function HomePage() {
-  const [authDialogOpen, setAuthDialogOpen] = useState(false)
-  const [authDialogTab, setAuthDialogTab] = useState<'signin' | 'signup'>('signin')
-
-  const handleSignInClick = () => {
-    setAuthDialogTab('signin')
-    setAuthDialogOpen(true)
-  }
-
-  const handleSignUpClick = () => {
-    setAuthDialogTab('signup')
-    setAuthDialogOpen(true)
-  }
+export default async function HomePage() {
+  const session = await getServerSession()
+  const isAuthenticated = !!session?.user
+  const userId = session?.user?.id
 
   return (
     <div className='flex min-h-screen items-center justify-center'>
-      <div className='flex flex-col items-center gap-8'>
-        <div className='flex flex-col items-center gap-2'>
-          <h1 className='text-6xl font-bold tracking-tight'>Florence</h1>
-          <p className='text-muted-foreground text-lg'>Health Tracking</p>
+      <div className='flex flex-col items-center gap-8 max-w-2xl px-4'>
+        <div className='flex flex-col items-center border-1 border-grey-300 rounded-xl p-1'>
+          <Image
+            src='/logo.png'
+            alt='Florence'
+            width={120}
+            height={120}
+            priority
+            className='object-contain'
+          />
         </div>
 
-        <div className='flex gap-4'>
-          <Button onClick={handleSignInClick} variant='default' size='lg'>
-            Sign In
+        {isAuthenticated && userId ? (
+          <Button
+            asChild
+            size='lg'
+            variant='default'
+            className='bg-blue-300 hover:bg-blue-400 hover:text-white cursor-pointer'
+          >
+            <Link href={`/${userId}`}>Go to Hub</Link>
           </Button>
-          <Button onClick={handleSignUpClick} variant='outline' size='lg'>
-            Sign Up
-          </Button>
-        </div>
+        ) : (
+          <LandingAuthButtons />
+        )}
       </div>
-
-      <AuthDialog
-        open={authDialogOpen}
-        onOpenChange={setAuthDialogOpen}
-        defaultTab={authDialogTab}
-      />
     </div>
   )
 }
