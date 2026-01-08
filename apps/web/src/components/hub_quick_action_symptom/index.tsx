@@ -35,4 +35,3 @@ export function HubQuickActionSymptom({ tracks, userId, onSuccess }: HubQuickAct
     </>
   )
 }
-

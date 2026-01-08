@@ -12,11 +12,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { HubQuickActionEventProps } from './types'
 
-export function HubQuickActionEvent({
-  tracks,
-  userId,
-  hasTracks
-}: HubQuickActionEventProps) {
+export function HubQuickActionEvent({ tracks, userId, hasTracks }: HubQuickActionEventProps) {
   const router = useRouter()
 
   function handleTrackSelect(trackSlug: string) {
@@ -87,4 +83,3 @@ export function HubQuickActionEvent({
     </DropdownMenu>
   )
 }
-

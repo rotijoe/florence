@@ -4,6 +4,6 @@ dist
 .next
 .DS_Store
 .turbo
-*.log, 
+*.log
 .env*.local
 .pnpm-store/

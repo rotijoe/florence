@@ -34,4 +34,3 @@ export function HubQuickActionTrack({ userId, onSuccess }: HubQuickActionTrackPr
     </>
   )
 }
-
