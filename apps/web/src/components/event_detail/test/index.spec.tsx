@@ -275,8 +275,9 @@ describe('EventDetail', () => {
       })
     })
 
-    it('displays error message when save fails', async () => {
+    it('shows toast error when save fails', async () => {
       const user = userEvent.setup()
+      const toast = (await import('sonner')).toast
       mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
 
       render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} mode='edit' />)
@@ -291,7 +292,7 @@ describe('EventDetail', () => {
       await user.click(saveButton)
 
       await waitFor(() => {
-        expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to update event')
+        expect(toast.error).toHaveBeenCalledWith('Failed to update event')
       })
     })
   })
@@ -352,38 +353,19 @@ describe('EventDetail', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument()
     })
 
-    it('clears error when upload dialog is opened', async () => {
+    it('opens upload dialog successfully', async () => {
       const user = userEvent.setup()
-      mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
 
       render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} mode='edit' />)
 
-      // First, trigger an error by trying to save with invalid data
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
 
-      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
-      await user.click(editMenuItem)
-
-      const saveButton = screen.getByRole('button', { name: /save/i })
-      await user.click(saveButton)
-
-      await waitFor(() => {
-        expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to update event')
-      })
-
-      // Cancel edit mode first to show the menu button again
-      const cancelButton = screen.getByRole('button', { name: /cancel/i })
-      await user.click(cancelButton)
-
-      // Now open upload dialog - error should be cleared
-      const menuButtonAgain = screen.getByRole('button', { name: /event actions/i })
-      await user.click(menuButtonAgain)
       const uploadMenuItem = await screen.findByRole('menuitem', { name: /upload document/i })
       await user.click(uploadMenuItem)
 
       await waitFor(() => {
-        expect(screen.queryByTestId('error-message')).not.toBeInTheDocument()
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
       })
     })
   })
@@ -454,8 +436,9 @@ describe('EventDetail', () => {
       })
     })
 
-    it('displays error message when delete fails', async () => {
+    it('shows toast error when delete fails', async () => {
       const user = userEvent.setup()
+      const toast = (await import('sonner')).toast
       mockDeleteEventAction.mockResolvedValue({ error: 'Failed to delete event' })
 
       render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} mode='edit' />)
@@ -474,43 +457,25 @@ describe('EventDetail', () => {
       await user.click(deleteButton)
 
       await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Failed to delete event')
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-        expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to delete event')
       })
     })
 
-    it('clears error when delete dialog is opened', async () => {
+    it('opens delete dialog successfully', async () => {
       const user = userEvent.setup()
-      mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
 
       render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} mode='edit' />)
 
-      // First, trigger an error by trying to save with invalid data
       const menuButton = screen.getByRole('button', { name: /event actions/i })
       await user.click(menuButton)
 
-      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
-      await user.click(editMenuItem)
-
-      const saveButton = screen.getByRole('button', { name: /save/i })
-      await user.click(saveButton)
-
-      await waitFor(() => {
-        expect(screen.getByTestId('error-message')).toHaveTextContent('Failed to update event')
-      })
-
-      // Cancel edit mode first to show the menu button again
-      const cancelButton = screen.getByRole('button', { name: /cancel/i })
-      await user.click(cancelButton)
-
-      // Now open delete dialog - error should be cleared
-      const menuButtonAgain = screen.getByRole('button', { name: /event actions/i })
-      await user.click(menuButtonAgain)
       const deleteMenuItem = await screen.findByRole('menuitem', { name: /delete event/i })
       await user.click(deleteMenuItem)
 
       await waitFor(() => {
-        expect(screen.queryByTestId('error-message')).not.toBeInTheDocument()
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+        expect(screen.getByText('Delete Event')).toBeInTheDocument()
       })
     })
   })

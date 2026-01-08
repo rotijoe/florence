@@ -58,12 +58,19 @@ export async function updateEventAction(
   }
 
   try {
+    const cookieStore = await cookies()
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((cookie) => `${cookie.name}=${cookie.value}`)
+      .join('; ')
+
     const response = await fetch(
       `${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}/events/${eventId}`,
       {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(cookieHeader && { Cookie: cookieHeader })
         },
         body: JSON.stringify({
           title: title.trim(),

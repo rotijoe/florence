@@ -43,7 +43,6 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
   const isCreateMode = mode === 'create'
   const returnTo = searchParams.get('returnTo')
   const [isEditing, setIsEditing] = useState(isCreateMode)
-  const [error, setError] = useState<string | null>(null)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [optimisticEvent, updateOptimisticEvent] = useOptimistic(event, optimisticReducer)
@@ -79,15 +78,12 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
   }, [isDirty])
 
   async function formAction(formData: FormData) {
-    setError(null)
-
     if (isCreateMode) {
       // Create mode: use createEventOnSaveAction
       const result = await createEventOnSaveAction(formData)
 
       if (result.error) {
         toast.error(result.error)
-        setError(result.error)
         return
       }
 
@@ -115,7 +111,6 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
         updatedAt: event.updatedAt
       })
       toast.error(result.error)
-      setError(result.error)
       return
     }
 
@@ -137,7 +132,6 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
 
   const handleEdit = () => {
     setIsEditing(true)
-    setError(null)
   }
 
   const handleCancel = () => {
@@ -149,19 +143,19 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
     }
     // In edit mode, reset to original values
     setIsEditing(false)
-    setError(null)
     setCurrentTitle(initialTitleRef.current)
     setCurrentNotes(initialNotesRef.current)
-    updateOptimisticEvent({
-      title: event.title,
-      notes: event.notes ?? null,
-      updatedAt: event.updatedAt
+    startTransition(() => {
+      updateOptimisticEvent({
+        title: event.title,
+        notes: event.notes ?? null,
+        updatedAt: event.updatedAt
+      })
     })
   }
 
   const handleUploadClick = () => {
     setShowUploadDialog(true)
-    setError(null)
   }
 
   const handleUploadComplete = (updatedEvent: EventResponse) => {
@@ -196,7 +190,6 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
           updatedAt: event.updatedAt
         })
         toast.error(result.error)
-        setError(result.error)
         return
       }
 
@@ -212,7 +205,6 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true)
-    setError(null)
   }
 
   const handleDeleteCancel = () => {
@@ -220,12 +212,10 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
   }
 
   const handleDeleteEvent = async () => {
-    setError(null)
     const result = await deleteEventAction(userId, trackSlug, optimisticEvent.id)
 
     if (result.error) {
       toast.error(result.error)
-      setError(result.error)
       setShowDeleteDialog(false)
       return
     }
@@ -266,11 +256,6 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
         )}
         {renderFooter(optimisticEvent, isCreateMode)}
       </form>
-      {error && (
-        <div data-testid='error-message' className='px-6 pb-4 text-sm text-destructive'>
-          {error}
-        </div>
-      )}
       {showUploadDialog && (
         <UploadDocument
           event={optimisticEvent}
