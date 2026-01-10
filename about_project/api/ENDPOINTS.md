@@ -161,6 +161,7 @@ Delete a track and all its events.
 ```
 
 **Behavior:**
+
 - Deletes all events associated with the track (cascade delete)
 - Deletes all S3 files attached to events
 - Continues deletion even if S3 file deletion fails (logs errors)
