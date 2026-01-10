@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TrackCreateDialog } from '../index'
 
@@ -113,7 +113,9 @@ describe('TrackCreateDialog', () => {
     setInputValue(descriptionInput, 'Track my sleep patterns')
 
     const submitButton = screen.getByRole('button', { name: /^create$/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -142,7 +144,9 @@ describe('TrackCreateDialog', () => {
     setInputValue(titleInput, 'Sleep Tracker')
 
     const submitButton = screen.getByRole('button', { name: /^create$/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -167,7 +171,9 @@ describe('TrackCreateDialog', () => {
     setInputValue(titleInput, 'Sleep Tracker')
 
     const submitButton = screen.getByRole('button', { name: /^create$/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(mockOnSuccess).toHaveBeenCalled()
@@ -184,7 +190,9 @@ describe('TrackCreateDialog', () => {
     setInputValue(titleInput, 'Sleep Tracker')
 
     const submitButton = screen.getByRole('button', { name: /^create$/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(mockOnOpenChange).toHaveBeenCalledWith(false)
@@ -209,7 +217,9 @@ describe('TrackCreateDialog', () => {
     setInputValue(titleInput, 'Sleep Tracker')
 
     const submitButton = screen.getByRole('button', { name: /^create$/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(screen.getByText(/failed to create track/i)).toBeInTheDocument()
@@ -228,7 +238,9 @@ describe('TrackCreateDialog', () => {
     setInputValue(titleInput, 'Sleep Tracker')
 
     const submitButton = screen.getByRole('button', { name: /^create$/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Failed to create track')).toBeInTheDocument()
@@ -253,7 +265,9 @@ describe('TrackCreateDialog', () => {
     setInputValue(titleInput, 'Sleep Tracker')
 
     const submitButton = screen.getByRole('button', { name: /^create$/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     // Should show creating state
     await waitFor(() => {
@@ -261,19 +275,22 @@ describe('TrackCreateDialog', () => {
     })
 
     // Resolve the promise to clean up
-    resolveSubmit!({
-      ok: true,
-      json: async () => ({
-        success: true,
-        data: {
-          id: 'track-1',
-          title: 'Sleep Tracker',
-          slug: 'sleep-tracker',
-          description: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
+    await act(async () => {
+      resolveSubmit!({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            id: 'track-1',
+            title: 'Sleep Tracker',
+            slug: 'sleep-tracker',
+            description: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        })
       })
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
   })
 

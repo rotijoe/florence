@@ -24,8 +24,15 @@ The tracks page lists a user’s health tracks as **friendly, calming tiles** th
 - **Notifications toggle** (UI-only switch, local state)
 
 ## Implementation notes
-- Page: `apps/web/src/app/[userId]/tracks/page.tsx`
-- Tiles: `apps/web/src/components/track_tile/`
-- UI-only states are labeled as “UI only” so users aren’t misled.
+- **Server Component**: `apps/web/src/app/[userId]/tracks/page.tsx`
+  - Fetches tracks data using `fetchTracksWithCookies()`
+  - Passes data to client component
+- **Client Component**: `apps/web/src/app/[userId]/tracks/tracks_page_client.tsx`
+  - Handles interactive UI (dialog state, router refresh)
+  - Renders tracks tiles and create dialog
+- **Data Fetching**: `apps/web/src/lib/fetch_tracks.ts`
+  - Server-side function to fetch tracks with cookie-based auth
+- **Tiles**: `apps/web/src/components/track_tile/`
+- UI-only states are labeled as "UI only" so users aren't misled.
 
 

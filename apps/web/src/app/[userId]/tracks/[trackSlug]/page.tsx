@@ -10,9 +10,9 @@ import { TrackEventsTimeline } from '@/components/track_events_timeline'
 import { RemindersPanel } from '@/components/reminders_panel'
 import { UpcomingEventsPanel } from '@/components/upcoming_events_panel'
 import type { TrackPageProps } from './types'
+import { fetchHubNotifications } from '@/lib/fetch_hub_notifications'
+import { fetchTracksWithCookies } from '@/lib/fetch_tracks'
 import {
-  fetchHubNotifications,
-  fetchTracksWithCookies,
   mapTracksToHealthTrackSummary
 } from '@/app/[userId]/helpers'
 import { buildTrackOptions } from '@/components/hub_quick_actions/helpers'

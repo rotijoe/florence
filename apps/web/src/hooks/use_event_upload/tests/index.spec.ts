@@ -57,6 +57,8 @@ describe('useEventUpload', () => {
 
     await act(async () => {
       await result.current.upload({ eventId: mockEventId, file: mockFile })
+      // Wait for all state updates to complete
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
 
     expect(result.current.status).toBe('success')
@@ -77,6 +79,8 @@ describe('useEventUpload', () => {
 
     await act(async () => {
       await result.current.upload({ eventId: mockEventId, file: mockFile })
+      // Wait for all state updates to complete
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
 
     expect(result.current.status).toBe('error')
@@ -100,6 +104,8 @@ describe('useEventUpload', () => {
 
     await act(async () => {
       await result.current.upload({ eventId: mockEventId, file: mockFile })
+      // Wait for all state updates to complete
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
 
     expect(result.current.status).toBe('error')
@@ -141,6 +147,8 @@ describe('useEventUpload', () => {
 
     await act(async () => {
       await result.current.upload({ eventId: mockEventId, file: mockFile })
+      // Wait for all state updates to complete
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
 
     expect(result.current.status).toBe('error')
@@ -163,6 +171,8 @@ describe('useEventUpload', () => {
 
     await act(async () => {
       await result.current.upload({ eventId: mockEventId, file: mockFile })
+      // Wait for all state updates to complete
+      await new Promise((resolve) => setTimeout(resolve, 0))
     })
 
     expect(result.current.status).toBe('error')

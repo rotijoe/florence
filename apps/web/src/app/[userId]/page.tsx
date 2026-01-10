@@ -8,12 +8,12 @@ import { UpcomingEventsPanel } from '@/components/upcoming_events_panel'
 import { HubWelcomeHeader } from '@/components/hub_welcome_header'
 import {
   getGreetingForUser,
-  fetchUserProfileWithCookies,
-  fetchTracksWithCookies,
   mapTracksToHealthTrackSummary,
-  fetchUpcomingAppointmentsForHub,
-  fetchHubNotifications
+  fetchUpcomingAppointmentsForHub
 } from './helpers'
+import { fetchUserProfileWithCookies } from '@/lib/fetch_user_profile'
+import { fetchTracksWithCookies } from '@/lib/fetch_tracks'
+import { fetchHubNotifications } from '@/lib/fetch_hub_notifications'
 import { WELCOME_SUBTITLE } from './constants'
 
 interface UserHomePageProps {

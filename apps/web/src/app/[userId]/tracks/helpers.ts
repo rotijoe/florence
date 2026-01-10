@@ -1,25 +1,3 @@
-import type { TrackResponse, ApiResponse } from '@packages/types'
-
-export async function fetchTracks(userId: string): Promise<TrackResponse[]> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
-
-  const response = await fetch(`${apiUrl}/api/users/${userId}/tracks`, {
-    credentials: 'include'
-  })
-
-  const data: ApiResponse<TrackResponse[]> = await response.json()
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.error || 'Failed to fetch tracks')
-  }
-
-  if (!data.data) {
-    throw new Error('No tracks data received')
-  }
-
-  return data.data
-}
-
 export function formatTrackDate(dateString: string): string {
   const date = new Date(dateString)
   return date.toLocaleDateString('en-GB', {

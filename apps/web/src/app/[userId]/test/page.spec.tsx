@@ -1,14 +1,26 @@
 import { render, screen } from '@testing-library/react'
 import UserHomePage from '../page'
 import * as helpers from '../helpers'
+import * as fetchUserProfile from '@/lib/fetch_user_profile'
+import * as fetchTracks from '@/lib/fetch_tracks'
+import * as fetchHubNotifications from '@/lib/fetch_hub_notifications'
 
 // Mock dependencies
 jest.mock('../helpers', () => ({
   getGreetingForUser: jest.fn(),
-  fetchUserProfileWithCookies: jest.fn(),
-  fetchTracksWithCookies: jest.fn(),
   mapTracksToHealthTrackSummary: jest.fn(),
-  fetchUpcomingAppointmentsForHub: jest.fn(),
+  fetchUpcomingAppointmentsForHub: jest.fn()
+}))
+
+jest.mock('@/lib/fetch_user_profile', () => ({
+  fetchUserProfileWithCookies: jest.fn()
+}))
+
+jest.mock('@/lib/fetch_tracks', () => ({
+  fetchTracksWithCookies: jest.fn()
+}))
+
+jest.mock('@/lib/fetch_hub_notifications', () => ({
   fetchHubNotifications: jest.fn()
 }))
 
@@ -78,14 +90,13 @@ jest.mock('@/components/hub_welcome_header', () => ({
 
 describe('UserHomePage', () => {
   const mockGetGreetingForUser = helpers.getGreetingForUser as jest.Mock
-  const mockFetchUserProfileWithCookies = helpers.fetchUserProfileWithCookies as jest.Mock
-  const mockFetchTracksWithCookies = helpers.fetchTracksWithCookies as jest.Mock
+  const mockFetchUserProfileWithCookies = fetchUserProfile.fetchUserProfileWithCookies as jest.Mock
+  const mockFetchTracksWithCookies = fetchTracks.fetchTracksWithCookies as jest.Mock
   const mockMapTracksToHealthTrackSummary = helpers.mapTracksToHealthTrackSummary as jest.Mock
   const mockFetchUpcomingAppointmentsForHub = (
     helpers as unknown as { fetchUpcomingAppointmentsForHub: jest.Mock }
   ).fetchUpcomingAppointmentsForHub
-  const mockFetchHubNotifications = (helpers as unknown as { fetchHubNotifications: jest.Mock })
-    .fetchHubNotifications
+  const mockFetchHubNotifications = fetchHubNotifications.fetchHubNotifications as jest.Mock
 
   const mockUserProfile = {
     id: 'user-123',

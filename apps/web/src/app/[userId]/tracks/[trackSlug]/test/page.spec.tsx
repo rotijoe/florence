@@ -13,7 +13,6 @@ jest.mock('../helpers', () => {
   }
 })
 
-
 jest.mock('@/components/track_events_timeline', () => ({
   TrackEventsTimeline: ({
     events
@@ -21,12 +20,7 @@ jest.mock('@/components/track_events_timeline', () => ({
     events: EventResponse[]
     userId: string
     trackSlug: string
-  }) => (
-    <div
-      data-testid='track-timeline'
-      data-past-count={events.length}
-    />
-  )
+  }) => <div data-testid='track-timeline' data-past-count={events.length} />
 }))
 
 jest.mock('@/components/reminders_panel', () => ({
@@ -39,14 +33,18 @@ jest.mock('@/components/upcoming_events_panel', () => ({
   }: {
     title: string
     upcomingEvents: Array<{ id: string; title: string; datetime: Date | string; href: string }>
-  }) => (
-    <div data-testid='upcoming-events-panel' data-event-count={upcomingEvents.length} />
-  )
+  }) => <div data-testid='upcoming-events-panel' data-event-count={upcomingEvents.length} />
+}))
+
+jest.mock('@/lib/fetch_hub_notifications', () => ({
+  fetchHubNotifications: jest.fn(async () => [])
+}))
+
+jest.mock('@/lib/fetch_tracks', () => ({
+  fetchTracksWithCookies: jest.fn(async () => [])
 }))
 
 jest.mock('@/app/[userId]/helpers', () => ({
-  fetchHubNotifications: jest.fn(async () => []),
-  fetchTracksWithCookies: jest.fn(async () => []),
   mapTracksToHealthTrackSummary: jest.fn(() => [])
 }))
 

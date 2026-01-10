@@ -62,10 +62,7 @@ describe('User API - Me Handler', () => {
       const mockUser = {
         id: 'user-1',
         name: 'Test User',
-        email: 'test@example.com',
-        emailVerified: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        email: 'test@example.com'
       }
 
       const mockSession = {
@@ -90,10 +87,23 @@ describe('User API - Me Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique')
+      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique') as jest.MockedFunction<typeof prisma.user.findUnique>
 
       getSessionSpy.mockResolvedValue(mockSession)
-      findUniqueSpy.mockResolvedValue(mockUser)
+      // Mock should return only the fields selected in the query
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      findUniqueSpy.mockImplementation((async (args: Parameters<typeof prisma.user.findUnique>[0]): Promise<any> => {
+        if (args?.select) {
+          // Return only selected fields
+          return {
+            id: 'user-1',
+            name: 'Test User',
+            email: 'test@example.com'
+          }
+        }
+        return mockUser
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any)
 
       const res = await app.request('/api/users/user-1')
       expect(res.status).toBe(200)
@@ -162,10 +172,7 @@ describe('User API - Me Handler', () => {
       const mockUser = {
         id: 'user-1',
         name: 'Test User',
-        email: 'test@example.com',
-        emailVerified: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        email: 'test@example.com'
       }
 
       const mockSession = {
@@ -190,10 +197,23 @@ describe('User API - Me Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique')
+      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique') as jest.MockedFunction<typeof prisma.user.findUnique>
 
       getSessionSpy.mockResolvedValue(mockSession)
-      findUniqueSpy.mockResolvedValue(mockUser)
+      // Mock should return only the fields selected in the query
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      findUniqueSpy.mockImplementation((async (args: Parameters<typeof prisma.user.findUnique>[0]): Promise<any> => {
+        if (args?.select) {
+          // Return only selected fields
+          return {
+            id: 'user-1',
+            name: 'Test User',
+            email: 'test@example.com'
+          }
+        }
+        return mockUser
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any)
 
       const res = await app.request('/api/users/user-1')
       expect(res.status).toBe(200)
