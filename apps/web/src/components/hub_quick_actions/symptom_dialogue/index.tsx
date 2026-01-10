@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { ChevronDownIcon } from 'lucide-react'
+import { ChevronDownIcon, Loader2 } from 'lucide-react'
 import { API_BASE_URL } from '@/constants/api'
 import { EventType } from '@packages/types'
 import type { SymptomDialogueProps } from './types'
@@ -31,7 +32,8 @@ export function SymptomDialogue({
   tracks,
   userId,
   onSuccess,
-  initialTrackSlug
+  initialTrackSlug,
+  onLoadingChange
 }: SymptomDialogueProps) {
   const [selectedTrack, setSelectedTrack] = useState<string>('')
   const [selectedSymptomType, setSelectedSymptomType] = useState<string>('')
@@ -62,6 +64,7 @@ export function SymptomDialogue({
 
     setIsSubmitting(true)
     setError(null)
+    onLoadingChange?.(true)
 
     try {
       const response = await fetch(
@@ -88,11 +91,15 @@ export function SymptomDialogue({
         throw new Error(data.error || 'Failed to create symptom event')
       }
 
+      toast.success('Symptom logged successfully')
+      onLoadingChange?.(false)
       onSuccess?.()
       onOpenChange(false)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create symptom event'
       setError(errorMessage)
+      toast.error(errorMessage)
+      onLoadingChange?.(false)
     } finally {
       setIsSubmitting(false)
     }
@@ -217,7 +224,8 @@ export function SymptomDialogue({
             Cancel
           </Button>
           <Button type='button' onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Logging...' : 'Log symptom'}
+            {isSubmitting && <Loader2 className='mr-2 size-4 animate-spin' />}
+            Log symptom
           </Button>
         </DialogFooter>
       </DialogContent>

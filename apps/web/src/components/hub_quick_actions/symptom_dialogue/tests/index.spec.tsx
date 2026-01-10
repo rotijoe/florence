@@ -1,7 +1,15 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { toast } from 'sonner'
 import { SymptomDialogue } from '../index'
 import { SYMPTOM_TYPES, SEVERITY_LABELS } from '../constants'
+
+jest.mock('sonner', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn()
+  }
+}))
 
 const mockTracks = [
   {
@@ -195,29 +203,11 @@ describe('SymptomDialogue', () => {
   })
 
   it('disables submit button while submitting', async () => {
+    let resolvePromise: (value: unknown) => void
     ;(global.fetch as jest.Mock).mockImplementation(
       () =>
         new Promise((resolve) => {
-          setTimeout(() => {
-            resolve({
-              ok: true,
-              json: async () => ({
-                success: true,
-                data: {
-                  id: 'event-1',
-                  trackId: 'track-1',
-                  date: new Date().toISOString(),
-                  type: 'SYMPTOM',
-                  title: 'Headache',
-                  notes: 'Test notes',
-                  symptomType: 'headache',
-                  severity: 3,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                }
-              })
-            })
-          }, 100)
+          resolvePromise = resolve
         })
     )
 
@@ -247,6 +237,16 @@ describe('SymptomDialogue', () => {
     await user.click(submitButton)
 
     expect(submitButton).toBeDisabled()
+
+    // Resolve the promise to clean up
+    await act(async () => {
+      resolvePromise!({
+        ok: true,
+        json: async () => ({ success: true, data: {} })
+      })
+      // Wait for the promise to resolve
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
   })
 
   it('displays error message on API failure', async () => {
@@ -452,7 +452,6 @@ describe('SymptomDialogue', () => {
   it('uses empty string title when symptom type data is not found', async () => {
     // This tests the fallback for selectedSymptomTypeData?.label || ''
     // In practice this shouldn't happen since we have validation, but we test the branch
-    const user = userEvent.setup()
     render(
       <SymptomDialogue
         open={true}
@@ -466,5 +465,122 @@ describe('SymptomDialogue', () => {
     // The symptom type combobox should show "Select symptom type" when nothing is selected
     const symptomTypeCombobox = screen.getByRole('combobox', { name: /symptom type/i })
     expect(symptomTypeCombobox).toHaveTextContent('Select symptom type')
+  })
+
+  it('shows spinner in button when submitting', async () => {
+    let resolvePromise: (value: unknown) => void
+    ;(global.fetch as jest.Mock).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePromise = resolve
+        })
+    )
+
+    const user = userEvent.setup()
+    render(
+      <SymptomDialogue
+        open={true}
+        onOpenChange={mockOnClose}
+        tracks={mockTracks}
+        userId='user-1'
+        onSuccess={mockOnSuccess}
+      />
+    )
+
+    const symptomTypeCombobox = screen.getByRole('combobox', { name: /symptom type/i })
+    await user.click(symptomTypeCombobox)
+    const symptomTypeOption = await screen.findByRole('menuitem', {
+      name: SYMPTOM_TYPES[0].label
+    })
+    await user.click(symptomTypeOption)
+
+    const severityButton = screen.getByRole('button', { name: /Severity 3: Moderate/i })
+    await user.click(severityButton)
+
+    const submitButton = screen.getByRole('button', { name: /log symptom/i })
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      const spinner = submitButton.querySelector('.animate-spin')
+      expect(spinner).toBeInTheDocument()
+    })
+
+    // Resolve the promise to clean up
+    await act(async () => {
+      resolvePromise!({
+        ok: true,
+        json: async () => ({ success: true, data: {} })
+      })
+      // Wait for the promise to resolve
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+  })
+
+  it('shows success toast on successful submission', async () => {
+    const user = userEvent.setup()
+    render(
+      <SymptomDialogue
+        open={true}
+        onOpenChange={mockOnClose}
+        tracks={mockTracks}
+        userId='user-1'
+        onSuccess={mockOnSuccess}
+      />
+    )
+
+    const symptomTypeCombobox = screen.getByRole('combobox', { name: /symptom type/i })
+    await user.click(symptomTypeCombobox)
+    const symptomTypeOption = await screen.findByRole('menuitem', {
+      name: SYMPTOM_TYPES[0].label
+    })
+    await user.click(symptomTypeOption)
+
+    const severityButton = screen.getByRole('button', { name: /Severity 3: Moderate/i })
+    await user.click(severityButton)
+
+    const submitButton = screen.getByRole('button', { name: /log symptom/i })
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('Symptom logged successfully')
+    })
+  })
+
+  it('shows error toast on API failure', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        success: false,
+        error: 'Failed to create event'
+      })
+    })
+
+    const user = userEvent.setup()
+    render(
+      <SymptomDialogue
+        open={true}
+        onOpenChange={mockOnClose}
+        tracks={mockTracks}
+        userId='user-1'
+        onSuccess={mockOnSuccess}
+      />
+    )
+
+    const symptomTypeCombobox = screen.getByRole('combobox', { name: /symptom type/i })
+    await user.click(symptomTypeCombobox)
+    const symptomTypeOption = await screen.findByRole('menuitem', {
+      name: SYMPTOM_TYPES[0].label
+    })
+    await user.click(symptomTypeOption)
+
+    const severityButton = screen.getByRole('button', { name: /Severity 3: Moderate/i })
+    await user.click(severityButton)
+
+    const submitButton = screen.getByRole('button', { name: /log symptom/i })
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Failed to create event')
+    })
   })
 })

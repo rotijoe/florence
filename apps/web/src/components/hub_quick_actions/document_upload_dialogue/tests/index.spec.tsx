@@ -1,7 +1,15 @@
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { toast } from 'sonner'
 import { EventType, type EventResponse } from '@packages/types'
+
+jest.mock('sonner', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn()
+  }
+}))
 
 // Mock server action
 jest.mock('@/app/[userId]/tracks/[trackSlug]/actions', () => ({
@@ -13,9 +21,12 @@ jest.mock('@/hooks/use_event_upload', () => ({
   useEventUpload: jest.fn()
 }))
 
-const { DocumentUploadDialogue } = require('../index')
-const { createEventAction } = require('@/app/[userId]/tracks/[trackSlug]/actions')
-const { useEventUpload } = require('@/hooks/use_event_upload')
+import { DocumentUploadDialogue } from '../index'
+import {
+  createEventAction,
+  type CreateEventResult
+} from '@/app/[userId]/tracks/[trackSlug]/actions'
+import { useEventUpload } from '@/hooks/use_event_upload'
 
 const mockCreateEventAction = createEventAction as jest.MockedFunction<typeof createEventAction>
 const mockUseEventUpload = useEventUpload as jest.MockedFunction<typeof useEventUpload>
@@ -219,7 +230,6 @@ describe('DocumentUploadDialogue', () => {
   })
 
   it('resets form fields when dialog opens', async () => {
-    const user = userEvent.setup()
     const { rerender } = render(
       <DocumentUploadDialogue
         open={false}
@@ -251,7 +261,7 @@ describe('DocumentUploadDialogue', () => {
     // The upload button is disabled when file/title are missing, but we can test
     // the error display when createEventAction fails
     const user = userEvent.setup()
-    mockCreateEventAction.mockResolvedValue({ error: 'Missing required data', event: null })
+    mockCreateEventAction.mockResolvedValue({ error: 'Missing required data', event: undefined })
 
     renderComponent(true, 'Test Track', 'test-track')
 
@@ -272,7 +282,7 @@ describe('DocumentUploadDialogue', () => {
 
   it('displays error and clears creating state when createEventAction returns error', async () => {
     const user = userEvent.setup()
-    mockCreateEventAction.mockResolvedValue({ error: 'Failed to create event', event: null })
+    mockCreateEventAction.mockResolvedValue({ error: 'Failed to create event', event: undefined })
 
     renderComponent(true, 'Test Track', 'test-track')
 
@@ -339,7 +349,6 @@ describe('DocumentUploadDialogue', () => {
   })
 
   it('disables Cancel button and prevents close when uploading', async () => {
-    const user = userEvent.setup()
     const onOpenChange = jest.fn()
 
     mockUseEventUpload.mockReturnValue({
@@ -355,8 +364,6 @@ describe('DocumentUploadDialogue', () => {
     const cancelButton = screen.getByRole('button', { name: /cancel/i })
     expect(cancelButton).toBeDisabled()
 
-    // Try to close dialog programmatically (simulating Dialog onOpenChange)
-    const dialog = screen.getByRole('dialog')
     // The handleClose function should prevent closing
     // We can't directly test handleClose, but we can verify the button is disabled
     expect(cancelButton).toBeDisabled()
@@ -367,7 +374,7 @@ describe('DocumentUploadDialogue', () => {
     const onOpenChange = jest.fn()
 
     // Mock a delayed createEventAction to keep isCreatingEvent true
-    let resolveCreate: (value: any) => void
+    let resolveCreate: (value: CreateEventResult) => void
     mockCreateEventAction.mockImplementation(
       () =>
         new Promise((resolve) => {
@@ -402,7 +409,18 @@ describe('DocumentUploadDialogue', () => {
     })
 
     // Resolve to clean up
-    resolveCreate!({ event: { id: 'event-123' } })
+    resolveCreate!({
+      event: {
+        id: 'event-123',
+        trackId: 'track-1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Test',
+        notes: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
+      }
+    })
   })
 
   it('shows status text and spinner when uploading', () => {
@@ -531,5 +549,42 @@ describe('DocumentUploadDialogue', () => {
 
     // File should be cleared
     expect(screen.queryByText(/selected: test\.pdf/i)).not.toBeInTheDocument()
+  })
+
+  it('shows error toast when createEventAction fails', async () => {
+    const user = userEvent.setup()
+    mockCreateEventAction.mockResolvedValue({ error: 'Failed to create event', event: undefined })
+
+    renderComponent(true, 'Test Track', 'test-track')
+
+    const fileInput = screen.getByLabelText(/file/i)
+    const titleInput = screen.getByLabelText(/title/i)
+
+    const file = new File(['test'], 'test.pdf', { type: 'application/pdf' })
+    await user.upload(fileInput, file)
+    await user.type(titleInput, 'My Document Title')
+
+    const uploadButton = screen.getByRole('button', { name: /upload/i })
+    await user.click(uploadButton)
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Failed to create event')
+    })
+  })
+
+  it('shows error toast when upload error occurs', async () => {
+    mockUseEventUpload.mockReturnValue({
+      status: 'error',
+      error: 'Upload failed',
+      isUploading: false,
+      upload: jest.fn(),
+      reset: jest.fn()
+    })
+
+    renderComponent(true, 'Test Track', 'test-track')
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Upload failed')
+    })
   })
 })

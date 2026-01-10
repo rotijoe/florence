@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowUpIcon } from 'lucide-react'
+import { ArrowUpIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { DocumentUploadDialogue } from '@/components/hub_quick_actions/document_upload_dialogue'
 import type { HubQuickActionDocumentProps } from './types'
 
@@ -19,6 +20,8 @@ export function HubQuickActionDocument({ tracks, hasTracks, userId }: HubQuickAc
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [selectedTrack, setSelectedTrack] = useState<{ slug: string; title: string } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isHighlighted, setIsHighlighted] = useState(false)
 
   function handleTrackSelect(trackSlug: string) {
     if (!trackSlug) return
@@ -32,6 +35,9 @@ export function HubQuickActionDocument({ tracks, hasTracks, userId }: HubQuickAc
   function handleSuccess({ eventId, trackSlug }: { eventId: string; trackSlug: string }) {
     setIsOpen(false)
     setSelectedTrack(null)
+    setIsLoading(false)
+    setIsHighlighted(true)
+    setTimeout(() => setIsHighlighted(false), 3000)
     toast.success('Document uploaded successfully', {
       action: {
         label: 'View event',
@@ -40,6 +46,22 @@ export function HubQuickActionDocument({ tracks, hasTracks, userId }: HubQuickAc
         }
       }
     })
+  }
+
+  function handleLoadingChange(loading: boolean) {
+    setIsLoading(loading)
+    if (!loading && !isOpen) {
+      // Success case - dialog closed after loading
+      setIsHighlighted(true)
+      setTimeout(() => setIsHighlighted(false), 3000)
+    }
+  }
+
+  function handleOpenChange(open: boolean) {
+    setIsOpen(open)
+    if (!open) {
+      setIsLoading(false)
+    }
   }
 
   function renderDocumentMenuItems() {
@@ -88,12 +110,18 @@ export function HubQuickActionDocument({ tracks, hasTracks, userId }: HubQuickAc
         <DropdownMenuTrigger asChild>
           <Button
             variant='outline'
-            className='justify-between rounded-full px-5 sm:w-auto'
+            className={cn(
+              'justify-between rounded-full px-5 sm:w-auto transition-colors duration-300',
+              (isLoading || isHighlighted) &&
+                'bg-green-200 hover:bg-green-500 text-white border-green-500'
+            )}
             type='button'
             aria-haspopup='listbox'
+            disabled={isLoading}
           >
+            {isLoading && <Loader2 className='mr-2 size-4 animate-spin' />}
             <span>document</span>
-            <ArrowUpIcon className='size-4 text-muted-foreground' />
+            {!isLoading && <ArrowUpIcon className='size-4 text-muted-foreground' />}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='start' className='min-w-[12rem]'>
@@ -103,11 +131,12 @@ export function HubQuickActionDocument({ tracks, hasTracks, userId }: HubQuickAc
       {selectedTrack && (
         <DocumentUploadDialogue
           open={isOpen}
-          onOpenChange={setIsOpen}
+          onOpenChange={handleOpenChange}
           selectedTrackTitle={selectedTrack.title}
           selectedTrackSlug={selectedTrack.slug}
           userId={userId}
           onSuccess={handleSuccess}
+          onLoadingChange={handleLoadingChange}
         />
       )}
     </>

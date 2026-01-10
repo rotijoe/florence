@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Loader2 } from 'lucide-react'
 import { createTrack } from './helpers'
 import type { TrackCreateDialogProps } from './types'
 
@@ -20,7 +22,8 @@ export function TrackCreateDialog({
   userId,
   open,
   onOpenChange,
-  onSuccess
+  onSuccess,
+  onLoadingChange
 }: TrackCreateDialogProps) {
   const [trackTitle, setTrackTitle] = useState('')
   const [trackDescription, setTrackDescription] = useState('')
@@ -46,15 +49,21 @@ export function TrackCreateDialog({
     e.preventDefault()
     setIsCreating(true)
     setError(null)
+    onLoadingChange?.(true)
 
     try {
       await createTrack(userId, trackTitle.trim(), trackDescription.trim() || null)
+      toast.success('Track created successfully')
+      onLoadingChange?.(false)
       onOpenChange(false)
       setTrackTitle('')
       setTrackDescription('')
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create track')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create track'
+      setError(errorMessage)
+      toast.error(errorMessage)
+      onLoadingChange?.(false)
     } finally {
       setIsCreating(false)
     }
@@ -103,7 +112,8 @@ export function TrackCreateDialog({
               Cancel
             </Button>
             <Button type='submit' disabled={isCreating}>
-              {isCreating ? 'Creating...' : 'Create'}
+              {isCreating && <Loader2 className='mr-2 size-4 animate-spin' />}
+              Create
             </Button>
           </DialogFooter>
         </form>

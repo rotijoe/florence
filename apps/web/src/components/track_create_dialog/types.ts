@@ -3,6 +3,7 @@ export interface TrackCreateDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
+  onLoadingChange?: (loading: boolean) => void
 }
 
 export interface CreateTrackPayload {

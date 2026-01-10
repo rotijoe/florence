@@ -9,4 +9,5 @@ export interface SymptomDialogueProps {
   userId: string
   onSuccess?: () => void
   initialTrackSlug?: string
+  onLoadingChange?: (loading: boolean) => void
 }

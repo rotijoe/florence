@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,8 @@ export function DocumentUploadDialogue({
   selectedTrackTitle,
   selectedTrackSlug,
   userId,
-  onSuccess
+  onSuccess,
+  onLoadingChange
 }: DocumentUploadDialogueProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
@@ -53,12 +55,21 @@ export function DocumentUploadDialogue({
     userId,
     trackSlug: selectedTrackSlug,
     onComplete: (updatedEvent) => {
+      onLoadingChange?.(false)
       onSuccess?.({ eventId: updatedEvent.id, trackSlug: selectedTrackSlug })
       setTimeout(() => {
         onOpenChange(false)
       }, 500)
     }
   })
+
+  useEffect(() => {
+    if (isUploading || isCreatingEvent) {
+      onLoadingChange?.(true)
+    } else if (status === 'idle' || status === 'error') {
+      onLoadingChange?.(false)
+    }
+  }, [isUploading, isCreatingEvent, status, onLoadingChange])
 
   useEffect(() => {
     if (open) {
@@ -73,6 +84,13 @@ export function DocumentUploadDialogue({
       }
     }
   }, [open, reset])
+
+  useEffect(() => {
+    if (uploadError) {
+      toast.error(uploadError)
+      onLoadingChange?.(false)
+    }
+  }, [uploadError, onLoadingChange])
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -90,6 +108,7 @@ export function DocumentUploadDialogue({
 
     setValidationError(null)
     setIsCreatingEvent(true)
+    onLoadingChange?.(true)
 
     try {
       // Step 1: Create event
@@ -111,7 +130,9 @@ export function DocumentUploadDialogue({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
       setValidationError(errorMessage)
+      toast.error(errorMessage)
       setIsCreatingEvent(false)
+      onLoadingChange?.(false)
     }
   }
 

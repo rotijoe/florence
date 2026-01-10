@@ -87,12 +87,16 @@ describe('User API - Me Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique') as jest.MockedFunction<typeof prisma.user.findUnique>
+      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique') as jest.MockedFunction<
+        typeof prisma.user.findUnique
+      >
 
       getSessionSpy.mockResolvedValue(mockSession)
       // Mock should return only the fields selected in the query
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      findUniqueSpy.mockImplementation((async (args: Parameters<typeof prisma.user.findUnique>[0]): Promise<any> => {
+      findUniqueSpy.mockImplementation((async (
+        args: Parameters<typeof prisma.user.findUnique>[0]
+      ): Promise<any> => {
         if (args?.select) {
           // Return only selected fields
           return {
@@ -197,12 +201,16 @@ describe('User API - Me Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique') as jest.MockedFunction<typeof prisma.user.findUnique>
+      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique') as jest.MockedFunction<
+        typeof prisma.user.findUnique
+      >
 
       getSessionSpy.mockResolvedValue(mockSession)
       // Mock should return only the fields selected in the query
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      findUniqueSpy.mockImplementation((async (args: Parameters<typeof prisma.user.findUnique>[0]): Promise<any> => {
+      findUniqueSpy.mockImplementation((async (
+        args: Parameters<typeof prisma.user.findUnique>[0]
+      ): Promise<any> => {
         if (args?.select) {
           // Return only selected fields
           return {
