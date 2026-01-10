@@ -1,6 +1,6 @@
-import { trackNotFoundResponse } from '../helpers.js'
+import { trackNotFoundResponse } from '../http_responses.js'
 import type { Context } from 'hono'
-import type { AppVariables } from '../../../types/index.js'
+import type { AppVariables } from '@/types/index.js'
 
 describe('trackNotFoundResponse', () => {
   beforeEach(() => {

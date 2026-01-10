@@ -1,11 +1,16 @@
 'use server'
 
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { API_BASE_URL } from '@/constants/api'
 import { ApiResponse, EventResponse, EventType } from '@packages/types'
 
 export type CreateEventResult = {
   event?: EventResponse
+  error?: string
+}
+
+export type DeleteTrackResult = {
   error?: string
 }
 
@@ -75,4 +80,56 @@ export async function createEventAction(formData: FormData): Promise<CreateEvent
       error: `Failed to create event: ${errorMessage}`
     }
   }
+}
+
+export async function deleteTrackAction(
+  userId: string,
+  trackSlug: string
+): Promise<DeleteTrackResult> {
+  if (!userId || !trackSlug) {
+    return {
+      error: 'Missing required fields: userId and trackSlug are required'
+    }
+  }
+
+  try {
+    const cookieStore = await cookies()
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((cookie) => `${cookie.name}=${cookie.value}`)
+      .join('; ')
+
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/tracks/${trackSlug}`, {
+      method: 'DELETE',
+      headers: {
+        ...(cookieHeader && { Cookie: cookieHeader })
+      }
+    })
+
+    if (!response.ok) {
+      const errorData: ApiResponse<never> = await response.json().catch(() => ({
+        success: false,
+        error: `Failed to delete track: ${response.statusText}`
+      }))
+      return {
+        error: errorData.error || `Failed to delete track: ${response.statusText}`
+      }
+    }
+
+    const data: ApiResponse<never> = await response.json()
+
+    if (!data.success) {
+      return {
+        error: data.error || 'Failed to delete track'
+      }
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    return {
+      error: `Failed to delete track: ${errorMessage}`
+    }
+  }
+
+  // Redirect to tracks list page outside of try-catch block
+  redirect(`/${userId}/tracks`)
 }

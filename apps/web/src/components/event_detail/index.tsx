@@ -256,6 +256,7 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
         )}
         {renderFooter(optimisticEvent, isCreateMode)}
       </form>
+      /..{' '}
       {showUploadDialog && (
         <UploadDocument
           event={optimisticEvent}

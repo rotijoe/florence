@@ -2,11 +2,8 @@ import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
 import { prisma } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
-import {
-  badRequestFromZod,
-  trackNotFoundResponse
-} from '../helpers.js'
-import { verifyTrackExists, formatEvent } from '@/helpers/index.js'
+import { badRequestFromZod } from '../helpers.js'
+import { trackNotFoundResponse, verifyTrackExists, formatEvent } from '@/helpers/index.js'
 import { createEventSchema } from '../validators.js'
 import { EVENT_SELECT } from '../constants.js'
 

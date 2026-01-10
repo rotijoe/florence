@@ -12,16 +12,6 @@ export function badRequestFromZod(c: Context, error: z.ZodError): Response {
   )
 }
 
-export function trackNotFoundResponse(c: Context<{ Variables: AppVariables }>): Response {
-  return c.json(
-    {
-      success: false,
-      error: 'Track not found'
-    },
-    404
-  )
-}
-
 export function eventNotFoundResponse(c: Context<{ Variables: AppVariables }>): Response {
   return c.json(
     {

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TrackHeader } from '../index'
 import type { TrackHeaderProps } from '../types'
@@ -10,6 +10,16 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush
   })
+}))
+
+jest.mock('sonner', () => ({
+  toast: {
+    error: jest.fn()
+  }
+}))
+
+jest.mock('@/app/[userId]/tracks/[trackSlug]/actions', () => ({
+  deleteTrackAction: jest.fn()
 }))
 
 jest.mock('@/components/ui/dropdown-menu', () => ({
@@ -57,6 +67,26 @@ jest.mock('@/components/ui/button', () => ({
   )
 }))
 
+jest.mock('@/components/ui/dialog', () => ({
+  Dialog: ({
+    children,
+    open
+  }: {
+    children: React.ReactNode
+    open: boolean
+    onOpenChange: (open: boolean) => void
+  }) => (open ? <div role='dialog'>{children}</div> : null),
+  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+  DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}))
+
+import { deleteTrackAction } from '@/app/[userId]/tracks/[trackSlug]/actions'
+
+const mockDeleteTrackAction = deleteTrackAction as jest.MockedFunction<typeof deleteTrackAction>
+
 describe('TrackHeader', () => {
   const mockTrack: TrackResponse = {
     id: 'track-1',
@@ -93,12 +123,12 @@ describe('TrackHeader', () => {
     expect(screen.getByText('Create event')).toBeInTheDocument()
   })
 
-  it('renders "Delete track" menu item as disabled placeholder', () => {
+  it('renders "Delete track" menu item as enabled', () => {
     render(<TrackHeader {...defaultProps} />)
 
     const deleteItem = screen.getByText('Delete track')
     expect(deleteItem).toBeInTheDocument()
-    expect(deleteItem.closest('button')).toBeDisabled()
+    expect(deleteItem.closest('button')).not.toBeDisabled()
   })
 
   it('renders "Export track data" menu item as disabled placeholder', () => {
@@ -121,14 +151,12 @@ describe('TrackHeader', () => {
     )
   })
 
-  it('does not navigate when disabled items are clicked', async () => {
+  it('does not navigate when export item is clicked', async () => {
     const user = userEvent.setup()
     render(<TrackHeader {...defaultProps} />)
 
-    const deleteItem = screen.getByText('Delete track')
     const exportItem = screen.getByText('Export track data')
 
-    await user.click(deleteItem)
     await user.click(exportItem)
 
     expect(mockPush).not.toHaveBeenCalled()
@@ -138,5 +166,90 @@ describe('TrackHeader', () => {
     render(<TrackHeader {...defaultProps} />)
 
     expect(screen.getByTestId('dropdown-separator')).toBeInTheDocument()
+  })
+
+  describe('delete track', () => {
+    beforeEach(() => {
+      mockDeleteTrackAction.mockClear()
+    })
+
+    it('opens confirmation dialog when delete is clicked', async () => {
+      const user = userEvent.setup()
+      render(<TrackHeader {...defaultProps} />)
+
+      const deleteItem = screen.getByText('Delete track')
+      await user.click(deleteItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument()
+    })
+
+    it('calls deleteTrackAction when delete is confirmed', async () => {
+      const user = userEvent.setup()
+      mockDeleteTrackAction.mockResolvedValue({})
+
+      render(<TrackHeader {...defaultProps} />)
+
+      const deleteItem = screen.getByText('Delete track')
+      await user.click(deleteItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      const confirmButton = screen.getByRole('button', { name: /^delete$/i })
+      await user.click(confirmButton)
+
+      await waitFor(() => {
+        expect(mockDeleteTrackAction).toHaveBeenCalledWith('user-1', 'test-track')
+      })
+    })
+
+    it('shows toast error when delete fails', async () => {
+      const user = userEvent.setup()
+      const toast = (await import('sonner')).toast
+      mockDeleteTrackAction.mockResolvedValue({ error: 'Failed to delete track' })
+
+      render(<TrackHeader {...defaultProps} />)
+
+      const deleteItem = screen.getByText('Delete track')
+      await user.click(deleteItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      const confirmButton = screen.getByRole('button', { name: /^delete$/i })
+      await user.click(confirmButton)
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Failed to delete track')
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      })
+    })
+
+    it('closes dialog when cancel is clicked', async () => {
+      const user = userEvent.setup()
+      render(<TrackHeader {...defaultProps} />)
+
+      const deleteItem = screen.getByText('Delete track')
+      await user.click(deleteItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      })
+
+      expect(mockDeleteTrackAction).not.toHaveBeenCalled()
+    })
   })
 })
