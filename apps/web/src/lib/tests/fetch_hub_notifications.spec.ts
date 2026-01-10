@@ -21,9 +21,9 @@ describe('fetchHubNotifications', () => {
     const mockNotifications: Notification[] = [
       {
         id: 'notif-1',
-        type: 'reminder',
-        message: 'Test notification',
-        createdAt: new Date().toISOString()
+        type: 'appointmentDetails',
+        title: 'Test notification',
+        message: 'Test notification'
       }
     ]
 

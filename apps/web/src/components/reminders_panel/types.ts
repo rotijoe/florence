@@ -8,5 +8,6 @@ export interface RemindersPanelProps {
   title?: string
   description?: string
   emptyStateMessage?: string
+  addEventHref?: string
 }
 

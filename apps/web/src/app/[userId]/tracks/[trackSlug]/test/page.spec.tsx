@@ -24,7 +24,15 @@ jest.mock('@/components/track_events_timeline', () => ({
 }))
 
 jest.mock('@/components/reminders_panel', () => ({
-  RemindersPanel: () => <div data-testid='reminders-panel' />
+  RemindersPanel: ({ addEventHref }: { addEventHref?: string }) => (
+    <div data-testid='reminders-panel' data-add-event-href={addEventHref} />
+  )
+}))
+
+jest.mock('@/components/add_event_button', () => ({
+  AddEventButton: ({ userId, trackSlug }: { userId: string; trackSlug: string }) => (
+    <div data-testid='add-event-button' data-user-id={userId} data-track-slug={trackSlug} />
+  )
 }))
 
 jest.mock('@/components/upcoming_events_panel', () => ({
@@ -156,5 +164,35 @@ describe('TrackPage', () => {
 
     expect(screen.getByTestId('track-timeline')).toBeInTheDocument()
     expect(screen.getByTestId('track-timeline')).toHaveAttribute('data-past-count', '0')
+  })
+
+  it('renders AddEventButton with correct props', async () => {
+    mockFetchTrack.mockResolvedValueOnce(mockTrack)
+    mockFetchTrackEvents.mockResolvedValueOnce(mockEvents)
+
+    const params = Promise.resolve({ userId: 'user-1', trackSlug: 'test-track' })
+    const result = await TrackPage({ params })
+    render(result)
+
+    const addEventButton = screen.getByTestId('add-event-button')
+    expect(addEventButton).toBeInTheDocument()
+    expect(addEventButton).toHaveAttribute('data-user-id', 'user-1')
+    expect(addEventButton).toHaveAttribute('data-track-slug', 'test-track')
+  })
+
+  it('passes addEventHref to RemindersPanel', async () => {
+    mockFetchTrack.mockResolvedValueOnce(mockTrack)
+    mockFetchTrackEvents.mockResolvedValueOnce(mockEvents)
+
+    const params = Promise.resolve({ userId: 'user-1', trackSlug: 'test-track' })
+    const result = await TrackPage({ params })
+    render(result)
+
+    const remindersPanel = screen.getByTestId('reminders-panel')
+    expect(remindersPanel).toBeInTheDocument()
+    expect(remindersPanel).toHaveAttribute(
+      'data-add-event-href',
+      '/user-1/tracks/test-track/new?returnTo=%2Fuser-1%2Ftracks%2Ftest-track'
+    )
   })
 })

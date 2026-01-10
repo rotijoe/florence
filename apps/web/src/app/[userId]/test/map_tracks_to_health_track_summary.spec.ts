@@ -16,6 +16,7 @@ describe('mapTracksToHealthTrackSummary', () => {
     const tracks: TrackResponse[] = [
       {
         id: 'track-1',
+        userId: 'user-1',
         title: 'Test Track',
         slug: 'test-track',
         description: 'Test description',
@@ -41,6 +42,7 @@ describe('mapTracksToHealthTrackSummary', () => {
     const tracks: TrackResponse[] = [
       {
         id: 'track-1',
+        userId: 'user-1',
         title: 'Track 1',
         slug: 'track-1',
         description: 'Description 1',
@@ -49,6 +51,7 @@ describe('mapTracksToHealthTrackSummary', () => {
       },
       {
         id: 'track-2',
+        userId: 'user-1',
         title: 'Track 2',
         slug: 'track-2',
         description: 'Description 2',
@@ -76,6 +79,7 @@ describe('mapTracksToHealthTrackSummary', () => {
     const tracks: TrackResponse[] = [
       {
         id: 'track-1',
+        userId: 'user-1',
         title: 'Test Track',
         slug: 'test-track',
         description: 'Test description',

@@ -21,6 +21,7 @@ describe('fetchTracksWithCookies', () => {
     const mockTracks: TrackResponse[] = [
       {
         id: 'track-1',
+        userId: 'user-1',
         title: 'Test Track',
         slug: 'test-track',
         description: 'Test description',

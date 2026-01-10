@@ -2,7 +2,8 @@
 
 import { useState, useOptimistic, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { X } from 'lucide-react'
+import Link from 'next/link'
+import { X, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -18,7 +19,8 @@ export function RemindersPanel({
   userId,
   title = DEFAULT_TITLE,
   description = DEFAULT_DESCRIPTION,
-  emptyStateMessage = DEFAULT_EMPTY_STATE_MESSAGE
+  emptyStateMessage = DEFAULT_EMPTY_STATE_MESSAGE,
+  addEventHref
 }: RemindersPanelProps) {
   const router = useRouter()
   const [optimisticNotifications, updateOptimisticNotifications] = useOptimistic(
@@ -70,6 +72,16 @@ export function RemindersPanel({
           <CardTitle className='text-base font-semibold'>{title}</CardTitle>
           <CardDescription className='text-sm'>{emptyStateMessage}</CardDescription>
         </CardHeader>
+        {addEventHref && (
+          <CardContent>
+            <Button asChild variant='outline' className='w-full'>
+              <Link href={addEventHref}>
+                <Plus className='mr-2 size-4' />
+                Add event
+              </Link>
+            </Button>
+          </CardContent>
+        )}
       </Card>
     )
   }

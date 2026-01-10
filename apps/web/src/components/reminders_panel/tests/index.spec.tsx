@@ -54,6 +54,51 @@ describe('RemindersPanel', () => {
     ).toBeInTheDocument()
   })
 
+  it('renders Add event button in empty state when addEventHref is provided', () => {
+    render(
+      <RemindersPanel
+        notifications={[]}
+        {...defaultProps}
+        addEventHref='/user-123/tracks/test-track/new?returnTo=%2Fuser-123%2Ftracks%2Ftest-track'
+      />
+    )
+
+    expect(screen.getByRole('link', { name: /add event/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /add event/i })).toHaveAttribute(
+      'href',
+      '/user-123/tracks/test-track/new?returnTo=%2Fuser-123%2Ftracks%2Ftest-track'
+    )
+  })
+
+  it('does not render Add event button in empty state when addEventHref is not provided', () => {
+    render(<RemindersPanel notifications={[]} {...defaultProps} />)
+
+    expect(screen.queryByRole('link', { name: /add event/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /add event/i })).not.toBeInTheDocument()
+  })
+
+  it('does not render Add event button when notifications exist', () => {
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'appointmentDetails',
+        title: 'Test notification',
+        message: 'Test message',
+        ctaLabel: undefined
+      }
+    ]
+
+    render(
+      <RemindersPanel
+        notifications={notifications}
+        {...defaultProps}
+        addEventHref='/user-123/tracks/test-track/new'
+      />
+    )
+
+    expect(screen.queryByRole('link', { name: /add event/i })).not.toBeInTheDocument()
+  })
+
   it('uses custom title prop', () => {
     render(<RemindersPanel notifications={[]} {...defaultProps} title='Custom Title' />)
 
