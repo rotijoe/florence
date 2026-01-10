@@ -74,7 +74,7 @@ describe('UserLayout', () => {
     expect(mockRedirect).toHaveBeenCalledWith('/')
   })
 
-  it('should redirect to home when userId does not match session user id', async () => {
+  it('should redirect to correct user page when userId does not match session user id', async () => {
     mockGetServerSession.mockResolvedValue({
       user: { id: 'different-user', name: 'John' }
     })
@@ -82,7 +82,7 @@ describe('UserLayout', () => {
     const params = Promise.resolve({ userId: 'user-123' })
     await UserLayout({ children: <div>Content</div>, params })
 
-    expect(mockRedirect).toHaveBeenCalledWith('/')
+    expect(mockRedirect).toHaveBeenCalledWith('/different-user')
   })
 
   it('should render layout when user is authenticated and userId matches', async () => {

@@ -62,7 +62,7 @@ export function TrackHeader({ track, userId, trackSlug }: TrackHeaderProps) {
   return (
     <>
       <div className='flex items-center justify-between'>
-        <h1 className='text-3xl font-bold'>{track.name}</h1>
+        <h1 className='text-3xl font-bold'>{track.title}</h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline' size='sm'>
@@ -85,7 +85,7 @@ export function TrackHeader({ track, userId, trackSlug }: TrackHeaderProps) {
             <DialogHeader>
               <DialogTitle>Delete track</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete &quot;{track.name}&quot;? This will permanently
+                Are you sure you want to delete &quot;{track.title}&quot;? This will permanently
                 delete the track and all its events. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>

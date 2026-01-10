@@ -3,7 +3,7 @@ import type { AppVariables } from '../../../types/index.js'
 import { prisma } from '@packages/database'
 import type { ApiResponse, TrackResponse } from '@packages/types'
 import { formatTrack } from '../helpers.js'
-import { TRACK_SELECT } from '../constants.js'
+import { TRACK_FULL_SELECT } from '../constants.js'
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
@@ -12,7 +12,7 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     const track = await prisma.healthTrack.findFirst({
       where: { userId, slug },
-      select: TRACK_SELECT
+      select: TRACK_FULL_SELECT
     })
 
     if (!track) {
@@ -44,4 +44,3 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
     )
   }
 }
-

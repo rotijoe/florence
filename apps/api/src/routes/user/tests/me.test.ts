@@ -58,25 +58,14 @@ describe('User API - Me Handler', () => {
       getSessionSpy.mockRestore()
     })
 
-    it('returns user data when authenticated', async () => {
+    it('returns user profile data when authenticated', async () => {
       const mockUser = {
         id: 'user-1',
         name: 'Test User',
         email: 'test@example.com',
         emailVerified: false,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z'),
-        tracks: [
-          {
-            id: 'track-1',
-            title: 'Test Track',
-            description: 'Test Description',
-            createdAt: new Date('2024-01-01T00:00:00Z'),
-            updatedAt: new Date('2024-01-01T00:00:00Z'),
-            userId: 'user-1',
-            slug: 'test-track'
-          }
-        ]
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
 
       const mockSession = {
@@ -111,21 +100,19 @@ describe('User API - Me Handler', () => {
 
       const json = await res.json()
       expect(json.success).toBe(true)
-      expect(json.data).toMatchObject({
+      expect(json.data).toEqual({
         id: 'user-1',
         name: 'Test User',
-        email: 'test@example.com',
-        tracks: [
-          {
-            id: 'track-1',
-            title: 'Test Track',
-            description: 'Test Description',
-            createdAt: '2024-01-01T00:00:00.000Z',
-            updatedAt: '2024-01-01T00:00:00.000Z',
-            userId: 'user-1',
-            slug: 'test-track'
-          }
-        ]
+        email: 'test@example.com'
+      })
+
+      expect(findUniqueSpy).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
       })
 
       getSessionSpy.mockRestore()
@@ -171,15 +158,14 @@ describe('User API - Me Handler', () => {
       findUniqueSpy.mockRestore()
     })
 
-    it('returns user with empty tracks array', async () => {
+    it('returns user profile without tracks', async () => {
       const mockUser = {
         id: 'user-1',
         name: 'Test User',
         email: 'test@example.com',
         emailVerified: false,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z'),
-        tracks: []
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
 
       const mockSession = {
@@ -214,7 +200,12 @@ describe('User API - Me Handler', () => {
 
       const json = await res.json()
       expect(json.success).toBe(true)
-      expect(json.data.tracks).toEqual([])
+      expect(json.data).toEqual({
+        id: 'user-1',
+        name: 'Test User',
+        email: 'test@example.com'
+      })
+      expect(json.data).not.toHaveProperty('tracks')
 
       getSessionSpy.mockRestore()
       findUniqueSpy.mockRestore()

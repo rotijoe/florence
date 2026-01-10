@@ -2,19 +2,25 @@ import { z } from 'zod'
 import type { Context } from 'hono'
 import type { TrackResponse } from '@packages/types'
 
-type TrackSelectResult = {
+type TrackFullSelectResult = {
   id: string
+  userId: string
   title: string
   slug: string
+  description: string | null
   createdAt: Date
+  updatedAt: Date
 }
 
-export function formatTrack(track: TrackSelectResult): TrackResponse {
+export function formatTrack(track: TrackFullSelectResult): TrackResponse {
   return {
     id: track.id,
-    name: track.title,
+    userId: track.userId,
+    title: track.title,
     slug: track.slug,
-    createdAt: track.createdAt.toISOString()
+    description: track.description,
+    createdAt: track.createdAt.toISOString(),
+    updatedAt: track.updatedAt.toISOString()
   }
 }
 

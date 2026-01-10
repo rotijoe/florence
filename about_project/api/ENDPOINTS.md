@@ -49,7 +49,7 @@ See [Better Auth docs](https://better-auth.com) for details.
 
 #### GET /api/users/:userId
 
-Get user profile with tracks.
+Get user profile (profile-only, no tracks).
 
 **Auth:** Required (middleware enforces `userId` match)
 
@@ -61,11 +61,12 @@ Get user profile with tracks.
   "data": {
     "id": "user-id",
     "name": "User Name",
-    "email": "user@example.com",
-    "tracks": [...]
+    "email": "user@example.com"
   }
 }
 ```
+
+**Note:** To fetch tracks, use `GET /api/users/:userId/tracks` instead.
 
 #### GET /api/users/:userId/appointments/upcoming
 
@@ -91,6 +92,33 @@ Dismiss a hub notification.
 
 ### Tracks
 
+#### GET /api/users/:userId/tracks
+
+List all tracks for a user.
+
+**Auth:** Required (middleware enforces `userId` match)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "track-id",
+      "userId": "user-id",
+      "title": "Sleep",
+      "slug": "sleep",
+      "description": "...",
+      "createdAt": "...",
+      "updatedAt": "..."
+    }
+  ]
+}
+```
+
+**Ordering:** Tracks are returned in descending order by creation date (newest first).
+
 #### GET /api/users/:userId/tracks/:slug
 
 Get track metadata by slug.
@@ -104,6 +132,7 @@ Get track metadata by slug.
   "success": true,
   "data": {
     "id": "track-id",
+    "userId": "user-id",
     "title": "Sleep",
     "slug": "sleep",
     "description": "...",
@@ -135,6 +164,7 @@ Create a new health track.
   "success": true,
   "data": {
     "id": "track-id",
+    "userId": "user-id",
     "title": "Sleep",
     "slug": "sleep",
     "description": "...",

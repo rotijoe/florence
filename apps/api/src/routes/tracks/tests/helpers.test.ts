@@ -7,18 +7,24 @@ describe('Tracks Helpers', () => {
     it('formats track correctly', () => {
       const track = {
         id: 'track-1',
+        userId: 'user-1',
         title: 'Test Track',
         slug: 'test-track',
-        createdAt: new Date('2024-01-01T00:00:00Z')
+        description: 'Test description',
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-02T00:00:00Z')
       }
 
       const result = formatTrack(track)
 
       expect(result).toEqual({
         id: 'track-1',
-        name: 'Test Track',
+        userId: 'user-1',
+        title: 'Test Track',
         slug: 'test-track',
-        createdAt: '2024-01-01T00:00:00.000Z'
+        description: 'Test description',
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-02T00:00:00.000Z'
       })
     })
   })
@@ -49,4 +55,3 @@ describe('Tracks Helpers', () => {
     })
   })
 })
-

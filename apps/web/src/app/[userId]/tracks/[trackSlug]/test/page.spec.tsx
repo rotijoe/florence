@@ -46,12 +46,7 @@ jest.mock('@/components/upcoming_events_panel', () => ({
 
 jest.mock('@/app/[userId]/helpers', () => ({
   fetchHubNotifications: jest.fn(async () => []),
-  fetchUserMeWithCookies: jest.fn(async () => ({
-    id: 'user-1',
-    name: 'Test User',
-    email: 'test@example.com',
-    tracks: []
-  })),
+  fetchTracksWithCookies: jest.fn(async () => []),
   mapTracksToHealthTrackSummary: jest.fn(() => [])
 }))
 
@@ -63,7 +58,7 @@ jest.mock('@/components/hub_quick_actions/helpers', () => ({
 jest.mock('@/components/track_header', () => ({
   TrackHeader: ({ track }: { track: TrackResponse }) => (
     <div data-testid='track-header'>
-      <h1>{track.name}</h1>
+      <h1>{track.title}</h1>
     </div>
   )
 }))
@@ -74,9 +69,12 @@ const mockFetchTrackEvents = fetchTrackEvents as jest.MockedFunction<typeof fetc
 describe('TrackPage', () => {
   const mockTrack: TrackResponse = {
     id: 'track-1',
+    userId: 'user-1',
+    title: 'Test Track',
     slug: 'test-track',
-    name: 'Test Track',
-    createdAt: '2024-01-01T00:00:00.000Z'
+    description: 'Test description',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   }
 
   const mockEvents: EventResponse[] = [

@@ -90,9 +90,12 @@ const mockDeleteTrackAction = deleteTrackAction as jest.MockedFunction<typeof de
 describe('TrackHeader', () => {
   const mockTrack: TrackResponse = {
     id: 'track-1',
+    userId: 'user-1',
+    title: 'Test Track',
     slug: 'test-track',
-    name: 'Test Track',
-    createdAt: '2024-01-01T00:00:00.000Z'
+    description: 'Test description',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   }
 
   const defaultProps: TrackHeaderProps = {

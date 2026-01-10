@@ -1,35 +1,30 @@
-import { fetchUserData } from '../helpers'
-import type { UserWithTracks, ApiResponse } from '../types'
+import { fetchTracks } from '../helpers'
+import type { TrackResponse, ApiResponse } from '@packages/types'
 
 // Mock the global fetch
 global.fetch = jest.fn()
 
-describe('fetchUserData', () => {
+describe('fetchTracks', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it('should successfully fetch user data with health tracks', async () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: 'John Doe',
-      email: 'john@example.com',
-      tracks: [
-        {
-          id: 'track-1',
-          title: 'Diabetes Management',
-          slug: 'diabetes-management',
-          description: 'Tracking blood sugar',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-          userId: 'user-123'
-        }
-      ]
-    }
+  it('should successfully fetch tracks', async () => {
+    const mockTracks: TrackResponse[] = [
+      {
+        id: 'track-1',
+        userId: 'user-123',
+        title: 'Diabetes Management',
+        slug: 'diabetes-management',
+        description: 'Tracking blood sugar',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      }
+    ]
 
-    const mockResponse: ApiResponse<UserWithTracks> = {
+    const mockResponse: ApiResponse<TrackResponse[]> = {
       success: true,
-      data: mockUserData
+      data: mockTracks
     }
 
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -37,12 +32,12 @@ describe('fetchUserData', () => {
       json: async () => mockResponse
     })
 
-    const result = await fetchUserData('user-123')
+    const result = await fetchTracks('user-123')
 
-    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/users/user-123', {
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8787/api/users/user-123/tracks', {
       credentials: 'include'
     })
-    expect(result).toEqual(mockUserData)
+    expect(result).toEqual(mockTracks)
   })
 
   it('should handle 401 unauthorized error', async () => {
@@ -57,19 +52,19 @@ describe('fetchUserData', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(fetchUserData('user-123')).rejects.toThrow('Unauthorized')
+    await expect(fetchTracks('user-123')).rejects.toThrow('Unauthorized')
   })
 
   it('should handle network errors', async () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
-    await expect(fetchUserData('user-123')).rejects.toThrow('Network error')
+    await expect(fetchTracks('user-123')).rejects.toThrow('Network error')
   })
 
   it('should handle API errors with custom error messages', async () => {
     const mockErrorResponse: ApiResponse<never> = {
       success: false,
-      error: 'User not found'
+      error: 'Tracks not found'
     }
 
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -78,7 +73,7 @@ describe('fetchUserData', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(fetchUserData('user-123')).rejects.toThrow('User not found')
+    await expect(fetchTracks('user-123')).rejects.toThrow('Tracks not found')
   })
 
   it('should handle response.ok true but data.success false', async () => {
@@ -93,7 +88,7 @@ describe('fetchUserData', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(fetchUserData('user-123')).rejects.toThrow('Server error')
+    await expect(fetchTracks('user-123')).rejects.toThrow('Server error')
   })
 
   it('should use default error message when data.success is false and no error message', async () => {
@@ -107,11 +102,11 @@ describe('fetchUserData', () => {
       json: async () => mockErrorResponse
     })
 
-    await expect(fetchUserData('user-123')).rejects.toThrow('Failed to fetch user data')
+    await expect(fetchTracks('user-123')).rejects.toThrow('Failed to fetch tracks')
   })
 
   it('should throw error when response is ok but data.data is missing', async () => {
-    const mockResponse: ApiResponse<UserWithTracks> = {
+    const mockResponse: ApiResponse<TrackResponse[]> = {
       success: true,
       data: undefined
     }
@@ -121,13 +116,13 @@ describe('fetchUserData', () => {
       json: async () => mockResponse
     })
 
-    await expect(fetchUserData('user-123')).rejects.toThrow('No user data received')
+    await expect(fetchTracks('user-123')).rejects.toThrow('No tracks data received')
   })
 
   it('should throw error when response is ok but data.data is null', async () => {
-    const mockResponse: ApiResponse<UserWithTracks> = {
+    const mockResponse: ApiResponse<TrackResponse[]> = {
       success: true,
-      data: null as unknown as UserWithTracks
+      data: null as unknown as TrackResponse[]
     }
 
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -135,23 +130,18 @@ describe('fetchUserData', () => {
       json: async () => mockResponse
     })
 
-    await expect(fetchUserData('user-123')).rejects.toThrow('No user data received')
+    await expect(fetchTracks('user-123')).rejects.toThrow('No tracks data received')
   })
 
   it('should use custom API URL from environment variable', async () => {
     const originalEnv = process.env.NEXT_PUBLIC_API_URL
     process.env.NEXT_PUBLIC_API_URL = 'https://custom-api.example.com'
 
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: 'John Doe',
-      email: 'john@example.com',
-      tracks: []
-    }
+    const mockTracks: TrackResponse[] = []
 
-    const mockResponse: ApiResponse<UserWithTracks> = {
+    const mockResponse: ApiResponse<TrackResponse[]> = {
       success: true,
-      data: mockUserData
+      data: mockTracks
     }
 
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -159,11 +149,14 @@ describe('fetchUserData', () => {
       json: async () => mockResponse
     })
 
-    await fetchUserData('user-123')
+    await fetchTracks('user-123')
 
-    expect(global.fetch).toHaveBeenCalledWith('https://custom-api.example.com/api/users/user-123', {
-      credentials: 'include'
-    })
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://custom-api.example.com/api/users/user-123/tracks',
+      {
+        credentials: 'include'
+      }
+    )
 
     // Restore original env
     if (originalEnv) {
@@ -173,3 +166,4 @@ describe('fetchUserData', () => {
     }
   })
 })
+

@@ -1,10 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import userEvent from '@testing-library/user-event'
-import DashboardPage from '../page'
-import { useSession } from '@/lib/auth_client'
+import TracksPage from '../page'
 import * as helpers from '../helpers'
-import type { UserWithTracks } from '../types'
+import type { TrackResponse } from '@packages/types'
 
 jest.mock('next/link', () => {
   return function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
@@ -14,15 +13,11 @@ jest.mock('next/link', () => {
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
-}))
-
-jest.mock('@/lib/auth_client', () => ({
-  useSession: jest.fn()
+  useParams: jest.fn()
 }))
 
 jest.mock('../helpers', () => ({
-  fetchUserData: jest.fn(),
+  fetchTracks: jest.fn(),
   formatTrackDate: jest.fn((date) => new Date(date).toLocaleDateString()),
   buildAddEventHref: jest.fn((userId: string, trackSlug: string) => {
     return `/${userId}/tracks/${trackSlug}/new?returnTo=${encodeURIComponent(`/${userId}/tracks`)}`
@@ -43,108 +38,72 @@ jest.mock('@/components/track_create_dialog/helpers', () => ({
   createTrack: jest.fn().mockResolvedValue({})
 }))
 
-describe('DashboardPage', () => {
-  const mockRouter = {
-    push: jest.fn()
-  }
-
+describe('TracksPage', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(useRouter as jest.Mock).mockReturnValue(mockRouter)
+    ;(useParams as jest.Mock).mockReturnValue({ userId: 'user-123' })
   })
 
-  it('should redirect to home when user is not authenticated', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: null,
-      isPending: false,
-      error: null
-    })
-
-    render(<DashboardPage />)
-
-    await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/')
-    })
-  })
-
-  it('should display loading state while fetching user data', () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
-      },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockImplementation(
+  it('should display loading state while fetching tracks', () => {
+    ;(helpers.fetchTracks as jest.Mock).mockImplementation(
       () => new Promise(() => {}) // Never resolves to keep loading state
     )
 
-    render(<DashboardPage />)
+    render(<TracksPage />)
 
     expect(document.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(0)
   })
 
-  it('should display user name when authenticated and data is loaded', async () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: 'John Doe',
-      email: 'john@example.com',
-      tracks: []
-    }
+  it('should display page header when data is loaded', async () => {
+    const mockTracks: TrackResponse[] = []
 
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
-      },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+    ;(helpers.fetchTracks as jest.Mock).mockResolvedValue(mockTracks)
 
-    render(<DashboardPage />)
+    render(<TracksPage />)
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /your tracks/i })).toBeInTheDocument()
     })
   })
 
-  it('should display health tracks when user has tracks', async () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: 'John Doe',
-      email: 'john@example.com',
-      tracks: [
-        {
-          id: 'track-1',
-          title: 'Diabetes Management',
-          slug: 'diabetes-management',
-          description: 'Tracking blood sugar levels',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-          userId: 'user-123'
-        },
-        {
-          id: 'track-2',
-          title: 'Physical Therapy',
-          slug: 'physical-therapy',
-          description: 'Post-surgery rehabilitation',
-          createdAt: '2024-01-02T00:00:00Z',
-          updatedAt: '2024-01-02T00:00:00Z',
-          userId: 'user-123'
-        }
-      ]
-    }
+  it('should fetch tracks with userId from params', async () => {
+    const mockTracks: TrackResponse[] = []
 
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
-      },
-      isPending: false,
-      error: null
+    ;(useParams as jest.Mock).mockReturnValue({ userId: 'user-456' })
+    ;(helpers.fetchTracks as jest.Mock).mockResolvedValue(mockTracks)
+
+    render(<TracksPage />)
+
+    await waitFor(() => {
+      expect(helpers.fetchTracks).toHaveBeenCalledWith('user-456')
     })
-    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+  })
 
-    render(<DashboardPage />)
+  it('should display health tracks when user has tracks', async () => {
+    const mockTracks: TrackResponse[] = [
+      {
+        id: 'track-1',
+        userId: 'user-123',
+        title: 'Diabetes Management',
+        slug: 'diabetes-management',
+        description: 'Tracking blood sugar levels',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      },
+      {
+        id: 'track-2',
+        userId: 'user-123',
+        title: 'Physical Therapy',
+        slug: 'physical-therapy',
+        description: 'Post-surgery rehabilitation',
+        createdAt: '2024-01-02T00:00:00Z',
+        updatedAt: '2024-01-02T00:00:00Z'
+      }
+    ]
+
+    ;(helpers.fetchTracks as jest.Mock).mockResolvedValue(mockTracks)
+
+    render(<TracksPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Diabetes Management')).toBeInTheDocument()
@@ -155,23 +114,11 @@ describe('DashboardPage', () => {
   })
 
   it('should display empty state when user has no tracks', async () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: 'John Doe',
-      email: 'john@example.com',
-      tracks: []
-    }
+    const mockTracks: TrackResponse[] = []
 
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
-      },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+    ;(helpers.fetchTracks as jest.Mock).mockResolvedValue(mockTracks)
 
-    render(<DashboardPage />)
+    render(<TracksPage />)
 
     await waitFor(() => {
       expect(screen.getByText(/no tracks yet/i)).toBeInTheDocument()
@@ -179,50 +126,36 @@ describe('DashboardPage', () => {
   })
 
   it('should display error state when fetch fails', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
+    ;(helpers.fetchTracks as jest.Mock).mockRejectedValue(new Error('Failed to fetch tracks'))
+
+    render(<TracksPage />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/couldn.*load.*tracks/i)).toBeInTheDocument()
       },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockRejectedValue(new Error('Failed to fetch user data'))
+      { timeout: 3000 }
+    )
 
-    render(<DashboardPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/couldn’t load your tracks/i)).toBeInTheDocument()
-    })
+    expect(screen.getByText('Failed to fetch tracks')).toBeInTheDocument()
   })
 
   it('should have clickable links to track detail pages', async () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: 'John Doe',
-      email: 'john@example.com',
-      tracks: [
-        {
-          id: 'track-1',
-          title: 'Diabetes Management',
-          slug: 'diabetes-management',
-          description: 'Tracking blood sugar',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-          userId: 'user-123'
-        }
-      ]
-    }
+    const mockTracks: TrackResponse[] = [
+      {
+        id: 'track-1',
+        userId: 'user-123',
+        title: 'Diabetes Management',
+        slug: 'diabetes-management',
+        description: 'Tracking blood sugar',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      }
+    ]
 
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
-      },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+    ;(helpers.fetchTracks as jest.Mock).mockResolvedValue(mockTracks)
 
-    render(<DashboardPage />)
+    render(<TracksPage />)
 
     await waitFor(() => {
       const link = screen.getByRole('link', { name: /diabetes management/i })
@@ -230,126 +163,37 @@ describe('DashboardPage', () => {
     })
   })
 
-  it('should render page header when user name is null', async () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: null,
-      email: 'john@example.com',
-      tracks: []
-    }
-
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: null, email: 'john@example.com' }
-      },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
-
-    render(<DashboardPage />)
-
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /your tracks/i })).toBeInTheDocument()
-    })
-  })
-
-  it('should render page header when user name is undefined', async () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: undefined as unknown as null,
-      email: 'john@example.com',
-      tracks: []
-    }
-
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: undefined, email: 'john@example.com' }
-      },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
-
-    render(<DashboardPage />)
-
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /your tracks/i })).toBeInTheDocument()
-    })
-  })
-
   it('should handle error when error is not an Error instance', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
+    ;(helpers.fetchTracks as jest.Mock).mockRejectedValue('String error')
+
+    render(<TracksPage />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/couldn.*load.*tracks/i)).toBeInTheDocument()
       },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockRejectedValue('String error')
+      { timeout: 3000 }
+    )
 
-    render(<DashboardPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/couldn’t load your tracks/i)).toBeInTheDocument()
-      expect(screen.getByText('An error occurred')).toBeInTheDocument()
-    })
-  })
-
-  it('should not render when session is pending', () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: null,
-      isPending: true,
-      error: null
-    })
-
-    const { container } = render(<DashboardPage />)
-
-    expect(container.firstChild).toBeNull()
-  })
-
-  it('should not render when session is null and not pending', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: null,
-      isPending: false,
-      error: null
-    })
-
-    const { container } = render(<DashboardPage />)
-
-    await waitFor(() => {
-      expect(container.firstChild).toBeNull()
-    })
+    expect(screen.getByText(/an error occurred/i)).toBeInTheDocument()
   })
 
   it('should render track without description', async () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: 'John Doe',
-      email: 'john@example.com',
-      tracks: [
-        {
-          id: 'track-1',
-          title: 'Diabetes Management',
-          slug: 'diabetes-management',
-          description: undefined,
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-          userId: 'user-123'
-        }
-      ]
-    }
+    const mockTracks: TrackResponse[] = [
+      {
+        id: 'track-1',
+        userId: 'user-123',
+        title: 'Diabetes Management',
+        slug: 'diabetes-management',
+        description: null,
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      }
+    ]
 
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
-      },
-      isPending: false,
-      error: null
-    })
-    ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+    ;(helpers.fetchTracks as jest.Mock).mockResolvedValue(mockTracks)
 
-    render(<DashboardPage />)
+    render(<TracksPage />)
 
     await waitFor(() => {
       expect(screen.getByText('Diabetes Management')).toBeInTheDocument()
@@ -360,26 +204,14 @@ describe('DashboardPage', () => {
   })
 
   describe('Create health track', () => {
-    const mockUserData: UserWithTracks = {
-      id: 'user-123',
-      name: 'John Doe',
-      email: 'john@example.com',
-      tracks: []
-    }
+    const mockTracks: TrackResponse[] = []
 
     beforeEach(() => {
-      ;(useSession as jest.Mock).mockReturnValue({
-        data: {
-          user: { id: 'user-123', name: 'John Doe', email: 'john@example.com' }
-        },
-        isPending: false,
-        error: null
-      })
-      ;(helpers.fetchUserData as jest.Mock).mockResolvedValue(mockUserData)
+      ;(helpers.fetchTracks as jest.Mock).mockResolvedValue(mockTracks)
     })
 
-    it('should render create track button when authenticated', async () => {
-      render(<DashboardPage />)
+    it('should render create track button', async () => {
+      render(<TracksPage />)
 
       await waitFor(() => {
         expect(screen.getAllByRole('button', { name: /create track/i }).length).toBeGreaterThan(0)
@@ -388,7 +220,7 @@ describe('DashboardPage', () => {
 
     it('should open dialog when "Create track" button is clicked', async () => {
       const user = userEvent.setup()
-      render(<DashboardPage />)
+      render(<TracksPage />)
 
       await waitFor(() => {
         expect(screen.getAllByRole('button', { name: /create track/i }).length).toBeGreaterThan(0)
@@ -405,7 +237,7 @@ describe('DashboardPage', () => {
     })
 
     it('should render dialog with form fields when opened', async () => {
-      render(<DashboardPage />)
+      render(<TracksPage />)
 
       await waitFor(() => {
         expect(screen.getAllByRole('button', { name: /create track/i }).length).toBeGreaterThan(0)
@@ -423,7 +255,7 @@ describe('DashboardPage', () => {
     })
 
     it('should close dialog when cancel button is clicked', async () => {
-      render(<DashboardPage />)
+      render(<TracksPage />)
 
       await waitFor(() => {
         expect(screen.getAllByRole('button', { name: /create track/i }).length).toBeGreaterThan(0)

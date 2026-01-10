@@ -1,36 +1,25 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
 import { prisma } from '@packages/database'
-import type { ApiResponse, UserProfileResponse } from '@packages/types'
+import type { ApiResponse, TrackResponse } from '@packages/types'
+import { formatTrack } from '../helpers.js'
+import { TRACK_FULL_SELECT } from '../constants.js'
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
     const userId = c.req.param('userId')
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true
-      }
+    const tracks = await prisma.healthTrack.findMany({
+      where: { userId },
+      select: TRACK_FULL_SELECT,
+      orderBy: { createdAt: 'desc' }
     })
 
-    if (!user) {
-      return c.json(
-        {
-          success: false,
-          error: 'User not found'
-        },
-        404
-      )
-    }
+    const formattedTracks: TrackResponse[] = tracks.map((track) => formatTrack(track))
 
-    const response: ApiResponse<UserProfileResponse> = {
+    const response: ApiResponse<TrackResponse[]> = {
       success: true,
-      data: user
+      data: formattedTracks
     }
 
     return c.json(response)
@@ -45,3 +34,4 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
     )
   }
 }
+

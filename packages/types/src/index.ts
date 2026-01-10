@@ -50,9 +50,18 @@ export type ApiResponse<T> = {
 
 export type TrackResponse = {
   id: string
-  name: string
+  userId: string
+  title: string
   slug: string
+  description?: string | null
   createdAt: string
+  updatedAt: string
+}
+
+export type UserProfileResponse = {
+  id: string
+  name: string | null
+  email: string
 }
 
 export type EventResponse = {

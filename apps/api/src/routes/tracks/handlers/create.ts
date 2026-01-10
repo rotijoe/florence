@@ -1,10 +1,10 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
 import { prisma } from '@packages/database'
-import type { ApiResponse } from '@packages/types'
+import type { ApiResponse, TrackResponse } from '@packages/types'
 import { generateUniqueSlug } from '../../../helpers/index.js'
 import { createTrackSchema } from '../validators.js'
-import { badRequestFromZod } from '../helpers.js'
+import { badRequestFromZod, formatTrack } from '../helpers.js'
 import { TRACK_FULL_SELECT } from '../constants.js'
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
@@ -32,9 +32,11 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
       select: TRACK_FULL_SELECT
     })
 
-    const response: ApiResponse<typeof track> = {
+    const formattedTrack = formatTrack(track)
+
+    const response: ApiResponse<TrackResponse> = {
       success: true,
-      data: track
+      data: formattedTrack
     }
 
     return c.json(response, 201)

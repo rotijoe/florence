@@ -1,7 +1,7 @@
-import type { HealthTrack } from '@/app/[userId]/tracks/types'
+import type { TrackResponse } from '@packages/types'
 
 export type TrackTileTrack = Pick<
-  HealthTrack,
+  TrackResponse,
   'id' | 'title' | 'slug' | 'description' | 'createdAt' | 'updatedAt'
 >
 

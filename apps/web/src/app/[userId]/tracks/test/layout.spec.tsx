@@ -83,7 +83,7 @@ describe('UserLayout', () => {
   })
 
   describe('authorization', () => {
-    it('should redirect to home when userId does not match session user', async () => {
+    it('should redirect to session user page when userId does not match session user', async () => {
       mockGetServerSession.mockResolvedValueOnce({
         user: { id: 'user-2', name: 'Test User', email: 'test@test.com' },
         session: {}
@@ -94,7 +94,7 @@ describe('UserLayout', () => {
         params: createParams('user-1')
       })
 
-      expect(mockRedirect).toHaveBeenCalledWith('/')
+      expect(mockRedirect).toHaveBeenCalledWith('/user-2')
     })
 
     it('should not redirect when userId matches session user', async () => {

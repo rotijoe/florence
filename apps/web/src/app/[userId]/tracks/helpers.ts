@@ -1,20 +1,20 @@
-import type { UserWithTracks, ApiResponse } from './types'
+import type { TrackResponse, ApiResponse } from '@packages/types'
 
-export async function fetchUserData(userId: string): Promise<UserWithTracks> {
+export async function fetchTracks(userId: string): Promise<TrackResponse[]> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
 
-  const response = await fetch(`${apiUrl}/api/users/${userId}`, {
+  const response = await fetch(`${apiUrl}/api/users/${userId}/tracks`, {
     credentials: 'include'
   })
 
-  const data: ApiResponse<UserWithTracks> = await response.json()
+  const data: ApiResponse<TrackResponse[]> = await response.json()
 
   if (!response.ok || !data.success) {
-    throw new Error(data.error || 'Failed to fetch user data')
+    throw new Error(data.error || 'Failed to fetch tracks')
   }
 
   if (!data.data) {
-    throw new Error('No user data received')
+    throw new Error('No tracks data received')
   }
 
   return data.data

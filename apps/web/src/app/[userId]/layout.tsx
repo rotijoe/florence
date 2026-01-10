@@ -18,8 +18,9 @@ export default async function UserLayout({ children, params }: UserLayoutProps) 
     redirect('/')
   }
 
+  // If userId in URL doesn't match session, redirect to correct user's page
   if (sessionUserId !== userId) {
-    redirect('/')
+    redirect(`/${sessionUserId}`)
   }
 
   return (

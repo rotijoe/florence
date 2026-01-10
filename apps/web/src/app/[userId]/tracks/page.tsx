@@ -1,49 +1,41 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
-import { useSession } from '@/lib/auth_client'
-import { fetchUserData } from './helpers'
-import type { UserWithTracks } from './types'
+import { fetchTracks } from './helpers'
+import type { TrackResponse } from '@packages/types'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { TrackCreateDialog } from '@/components/track_create_dialog'
 import { TrackTiles } from '@/components/track_tile'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export default function DashboardPage() {
-  const router = useRouter()
-  const { data: session, isPending } = useSession()
-  const [userData, setUserData] = useState<UserWithTracks | null>(null)
+export default function TracksPage() {
+  const params = useParams<{ userId: string }>()
+  const userId = params.userId
+
+  const [tracks, setTracks] = useState<TrackResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const loadUserData = useCallback(async () => {
-    if (!session?.user?.id) return
+  const loadTracks = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
-      const data = await fetchUserData(session.user.id)
-      setUserData(data)
+      const data = await fetchTracks(userId)
+      setTracks(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setIsLoading(false)
     }
-  }, [session?.user?.id])
+  }, [userId])
 
   useEffect(() => {
-    if (!isPending && !session) {
-      router.push('/')
-      return
-    }
-
-    if (session) {
-      loadUserData()
-    }
-  }, [session, isPending, router, loadUserData])
+    loadTracks()
+  }, [loadTracks])
 
   function renderLoading() {
     return (
@@ -92,21 +84,20 @@ export default function DashboardPage() {
   }
 
   function renderHealthTracks() {
-    if (!userData?.tracks || userData.tracks.length === 0) {
+    if (!tracks || tracks.length === 0) {
       return renderEmptyState()
     }
 
-    return <TrackTiles userId={userData.id} tracks={userData.tracks} />
+    return <TrackTiles userId={userId} tracks={tracks} />
   }
 
   function renderCreateDialog() {
-    if (!session?.user?.id) return null
     return (
       <TrackCreateDialog
-        userId={session.user.id}
+        userId={userId}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onSuccess={loadUserData}
+        onSuccess={loadTracks}
       />
     )
   }
@@ -144,10 +135,6 @@ export default function DashboardPage() {
         {renderCreateDialog()}
       </div>
     )
-  }
-
-  if (isPending || !session) {
-    return null
   }
 
   return <div className='container mx-auto px-4 py-8 max-w-7xl'>{renderContent()}</div>

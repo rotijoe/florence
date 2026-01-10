@@ -12,7 +12,7 @@ import { UpcomingEventsPanel } from '@/components/upcoming_events_panel'
 import type { TrackPageProps } from './types'
 import {
   fetchHubNotifications,
-  fetchUserMeWithCookies,
+  fetchTracksWithCookies,
   mapTracksToHealthTrackSummary
 } from '@/app/[userId]/helpers'
 import { buildTrackOptions } from '@/components/hub_quick_actions/helpers'
@@ -20,16 +20,16 @@ import { buildTrackOptions } from '@/components/hub_quick_actions/helpers'
 export default async function TrackPage({ params }: TrackPageProps) {
   const { userId, trackSlug } = await params
 
-  const [track, events, hubNotifications, userData] = await Promise.all([
+  const [track, events, hubNotifications, tracksData] = await Promise.all([
     fetchTrack(userId, trackSlug),
     fetchTrackEvents(userId, trackSlug),
     fetchHubNotifications(userId),
-    fetchUserMeWithCookies(userId)
+    fetchTracksWithCookies(userId)
   ])
 
   const { futureEvents, pastEvents } = splitEventsByTime(events, new Date())
   const trackNotifications = filterNotificationsForTrack(hubNotifications, userId, trackSlug)
-  const tracks = mapTracksToHealthTrackSummary(userData.tracks)
+  const tracks = mapTracksToHealthTrackSummary(tracksData)
   const trackOptions = buildTrackOptions(tracks)
   const upcomingEvents = futureEvents.map((event) =>
     mapEventResponseToUpcomingEvent(event, userId, trackSlug)

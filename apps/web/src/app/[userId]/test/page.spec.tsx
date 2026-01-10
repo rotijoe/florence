@@ -1,17 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import UserHomePage from '../page'
-import { getServerSession } from '@/lib/auth_server'
 import * as helpers from '../helpers'
 
 // Mock dependencies
-jest.mock('@/lib/auth_server', () => ({
-  getServerSession: jest.fn()
-}))
-
 jest.mock('../helpers', () => ({
-  buildMockAccountOverviewData: jest.fn(),
   getGreetingForUser: jest.fn(),
-  fetchUserMeWithCookies: jest.fn(),
+  fetchUserProfileWithCookies: jest.fn(),
+  fetchTracksWithCookies: jest.fn(),
   mapTracksToHealthTrackSummary: jest.fn(),
   fetchUpcomingAppointmentsForHub: jest.fn(),
   fetchHubNotifications: jest.fn()
@@ -82,10 +77,9 @@ jest.mock('@/components/hub_welcome_header', () => ({
 }))
 
 describe('UserHomePage', () => {
-  const mockGetServerSession = getServerSession as jest.Mock
-  const mockBuildMockAccountOverviewData = helpers.buildMockAccountOverviewData as jest.Mock
   const mockGetGreetingForUser = helpers.getGreetingForUser as jest.Mock
-  const mockFetchUserMeWithCookies = helpers.fetchUserMeWithCookies as jest.Mock
+  const mockFetchUserProfileWithCookies = helpers.fetchUserProfileWithCookies as jest.Mock
+  const mockFetchTracksWithCookies = helpers.fetchTracksWithCookies as jest.Mock
   const mockMapTracksToHealthTrackSummary = helpers.mapTracksToHealthTrackSummary as jest.Mock
   const mockFetchUpcomingAppointmentsForHub = (
     helpers as unknown as { fetchUpcomingAppointmentsForHub: jest.Mock }
@@ -93,36 +87,23 @@ describe('UserHomePage', () => {
   const mockFetchHubNotifications = (helpers as unknown as { fetchHubNotifications: jest.Mock })
     .fetchHubNotifications
 
-  const mockOverviewData = {
-    user: { id: 'user-123', name: 'John Doe' },
-    notifications: [{ id: 'notif-1', type: 'symptomReminder', title: 'Test' }],
-    healthTracks: [
-      {
-        id: 'track-1',
-        title: 'Sleep',
-        slug: 'sleep',
-        lastUpdatedAt: new Date('2024-01-01')
-      }
-    ],
-    appointments: [{ id: 'appt-1', title: 'GP Visit' }],
-    recentActivity: []
+  const mockUserProfile = {
+    id: 'user-123',
+    name: 'John Doe',
+    email: 'john@example.com'
   }
 
-  const mockUserMeData = {
-    id: 'user-api-456',
-    name: 'API User',
-    email: 'api@example.com',
-    tracks: [
-      {
-        id: 'api-track-1',
-        title: 'API Sleep Track',
-        description: 'API description',
-        slug: 'api-sleep',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-15T10:00:00Z'
-      }
-    ]
-  }
+  const mockTracksData = [
+    {
+      id: 'api-track-1',
+      userId: 'user-123',
+      title: 'API Sleep Track',
+      description: 'API description',
+      slug: 'api-sleep',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-15T10:00:00Z'
+    }
+  ]
 
   const mockMappedTracks = [
     {
@@ -137,12 +118,9 @@ describe('UserHomePage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetServerSession.mockResolvedValue({
-      user: { id: 'user-123', name: 'John Doe' }
-    })
-    mockBuildMockAccountOverviewData.mockReturnValue(mockOverviewData)
     mockGetGreetingForUser.mockReturnValue('Welcome back, John Doe')
-    mockFetchUserMeWithCookies.mockResolvedValue(mockUserMeData)
+    mockFetchUserProfileWithCookies.mockResolvedValue(mockUserProfile)
+    mockFetchTracksWithCookies.mockResolvedValue(mockTracksData)
     mockMapTracksToHealthTrackSummary.mockReturnValue(mockMappedTracks)
     mockFetchUpcomingAppointmentsForHub.mockResolvedValue([])
     mockFetchHubNotifications.mockResolvedValue([])
@@ -163,35 +141,19 @@ describe('UserHomePage', () => {
     expect(screen.getByTestId('hub-footer')).toBeInTheDocument()
   })
 
-  it('should use session user name for building overview data', async () => {
-    mockGetServerSession.mockResolvedValue({
-      user: { id: 'user-123', name: 'Jane Smith' }
-    })
-
+  it('should fetch user profile and tracks with userId from params', async () => {
     const params = Promise.resolve({ userId: 'user-123' })
     await UserHomePage({ params })
 
-    expect(mockBuildMockAccountOverviewData).toHaveBeenCalledWith('Jane Smith')
+    expect(mockFetchUserProfileWithCookies).toHaveBeenCalledWith('user-123')
+    expect(mockFetchTracksWithCookies).toHaveBeenCalledWith('user-123')
   })
 
-  it('should use userId as fallback when session user name is null', async () => {
-    mockGetServerSession.mockResolvedValue({
-      user: { id: 'user-123', name: null }
-    })
-
+  it('should call getGreetingForUser with user name from profile data', async () => {
     const params = Promise.resolve({ userId: 'user-123' })
     await UserHomePage({ params })
 
-    expect(mockBuildMockAccountOverviewData).toHaveBeenCalledWith('user-123')
-  })
-
-  it('should use userId as fallback when session is null', async () => {
-    mockGetServerSession.mockResolvedValue(null)
-
-    const params = Promise.resolve({ userId: 'user-123' })
-    await UserHomePage({ params })
-
-    expect(mockBuildMockAccountOverviewData).toHaveBeenCalledWith('user-123')
+    expect(mockGetGreetingForUser).toHaveBeenCalledWith('John Doe')
   })
 
   it('should pass greeting to HubWelcomeHeader', async () => {
@@ -216,10 +178,7 @@ describe('UserHomePage', () => {
     expect(welcomeHeader).toHaveAttribute('data-subtitle', 'Test subtitle')
   })
 
-  it('should pass userId to HubQuickActions', async () => {
-    // Mock API to fail so it falls back to params userId
-    mockFetchUserMeWithCookies.mockRejectedValue(new Error('API Error'))
-
+  it('should pass userId from params to HubQuickActions', async () => {
     const params = Promise.resolve({ userId: 'user-456' })
     const result = await UserHomePage({ params })
 
@@ -231,27 +190,26 @@ describe('UserHomePage', () => {
 
   it('should pass health tracks to HubQuickActions with correct shape', async () => {
     // Mock API to return multiple tracks
-    const apiTracksWithMultiple = {
-      ...mockUserMeData,
-      tracks: [
-        {
-          id: 'api-track-1',
-          title: 'API Sleep Track',
-          description: 'API description',
-          slug: 'api-sleep',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-15T10:00:00Z'
-        },
-        {
-          id: 'api-track-2',
-          title: 'API Pain Track',
-          description: null,
-          slug: 'api-pain',
-          createdAt: '2024-01-02T00:00:00Z',
-          updatedAt: '2024-01-16T10:00:00Z'
-        }
-      ]
-    }
+    const apiTracksWithMultiple = [
+      {
+        id: 'api-track-1',
+        userId: 'user-123',
+        title: 'API Sleep Track',
+        description: 'API description',
+        slug: 'api-sleep',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-15T10:00:00Z'
+      },
+      {
+        id: 'api-track-2',
+        userId: 'user-123',
+        title: 'API Pain Track',
+        description: null,
+        slug: 'api-pain',
+        createdAt: '2024-01-02T00:00:00Z',
+        updatedAt: '2024-01-16T10:00:00Z'
+      }
+    ]
     const mappedTracksMultiple = [
       {
         id: 'api-track-1',
@@ -271,7 +229,7 @@ describe('UserHomePage', () => {
       }
     ]
 
-    mockFetchUserMeWithCookies.mockResolvedValue(apiTracksWithMultiple)
+    mockFetchTracksWithCookies.mockResolvedValue(apiTracksWithMultiple)
     mockMapTracksToHealthTrackSummary.mockReturnValue(mappedTracksMultiple)
 
     const params = Promise.resolve({ userId: 'user-123' })
@@ -339,32 +297,14 @@ describe('UserHomePage', () => {
     expect(appointments).toHaveAttribute('data-appointments-count', '3')
   })
 
-  it('should pass recent activity to HubRecentActivity', async () => {
-    const dataWithActivity = {
-      ...mockOverviewData,
-      recentActivity: [{ id: 'ra1', label: 'Activity 1' }]
-    }
-    mockBuildMockAccountOverviewData.mockReturnValue(dataWithActivity)
-
+  it('should pass empty recent activity to HubRecentActivity', async () => {
     const params = Promise.resolve({ userId: 'user-123' })
     const result = await UserHomePage({ params })
 
     render(result)
 
     const recentActivity = screen.getByTestId('hub-recent-activity')
-    expect(recentActivity).toHaveAttribute('data-items-count', '1')
-  })
-
-  it('should call getGreetingForUser with user name from overview data', async () => {
-    mockBuildMockAccountOverviewData.mockReturnValue({
-      ...mockOverviewData,
-      user: { id: 'user-123', name: 'Alice' }
-    })
-
-    const params = Promise.resolve({ userId: 'user-123' })
-    await UserHomePage({ params })
-
-    expect(mockGetGreetingForUser).toHaveBeenCalledWith('Alice')
+    expect(recentActivity).toHaveAttribute('data-items-count', '0')
   })
 
   it('should fetch tracks from API and pass to HubHealthTracks', async () => {
@@ -373,52 +313,29 @@ describe('UserHomePage', () => {
 
     render(result)
 
-    expect(mockFetchUserMeWithCookies).toHaveBeenCalledWith('user-123')
-    expect(mockMapTracksToHealthTrackSummary).toHaveBeenCalledWith(mockUserMeData.tracks)
+    expect(mockFetchTracksWithCookies).toHaveBeenCalledWith('user-123')
+    expect(mockMapTracksToHealthTrackSummary).toHaveBeenCalledWith(mockTracksData)
 
     const healthTracks = screen.getByTestId('hub-health-tracks')
     expect(healthTracks).toHaveAttribute('data-tracks-count', '1')
-    expect(healthTracks).toHaveAttribute('data-user-id', 'user-api-456')
-  })
-
-  it('should use API userId for HubQuickActions when API succeeds', async () => {
-    const params = Promise.resolve({ userId: 'user-123' })
-    const result = await UserHomePage({ params })
-
-    render(result)
-
-    const quickActions = screen.getByTestId('hub-quick-actions')
-    expect(quickActions).toHaveAttribute('data-user-id', 'user-api-456')
-  })
-
-  it('should handle API failure gracefully with empty tracks', async () => {
-    mockFetchUserMeWithCookies.mockRejectedValue(new Error('API Error'))
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
-
-    const params = Promise.resolve({ userId: 'user-123' })
-    const result = await UserHomePage({ params })
-
-    render(result)
-
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch user data:', expect.any(Error))
-
-    const healthTracks = screen.getByTestId('hub-health-tracks')
-    expect(healthTracks).toHaveAttribute('data-tracks-count', '0')
     expect(healthTracks).toHaveAttribute('data-user-id', 'user-123')
-
-    consoleSpy.mockRestore()
   })
 
-  it('should use API userId when API succeeds, even if different from params userId', async () => {
-    const params = Promise.resolve({ userId: 'param-user-789' })
+  it('should use userId from params consistently for all components', async () => {
+    const params = Promise.resolve({ userId: 'user-456' })
     const result = await UserHomePage({ params })
 
     render(result)
 
-    const healthTracks = screen.getByTestId('hub-health-tracks')
-    expect(healthTracks).toHaveAttribute('data-user-id', 'user-api-456')
+    expect(mockFetchUserProfileWithCookies).toHaveBeenCalledWith('user-456')
+    expect(mockFetchTracksWithCookies).toHaveBeenCalledWith('user-456')
+    expect(mockFetchUpcomingAppointmentsForHub).toHaveBeenCalledWith('user-456')
+    expect(mockFetchHubNotifications).toHaveBeenCalledWith('user-456')
 
     const quickActions = screen.getByTestId('hub-quick-actions')
-    expect(quickActions).toHaveAttribute('data-user-id', 'user-api-456')
+    expect(quickActions).toHaveAttribute('data-user-id', 'user-456')
+
+    const healthTracks = screen.getByTestId('hub-health-tracks')
+    expect(healthTracks).toHaveAttribute('data-user-id', 'user-456')
   })
 })

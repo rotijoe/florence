@@ -7,6 +7,13 @@ describe('Tracks API - Route Composition', () => {
     app = createTestApp()
   })
 
+  it('mounts GET /api/users/:userId/tracks route', async () => {
+    const res = await app.request('/api/users/user-1/tracks')
+    // Route exists (will return 401, but route is mounted)
+    expect(res.status).toBeGreaterThanOrEqual(200)
+    expect(res.status).toBeLessThan(500)
+  })
+
   it('mounts GET /api/users/:userId/tracks/:slug route', async () => {
     const res = await app.request('/api/users/user-1/tracks/test-slug')
     // Route exists (will return 404 for non-existent track, but route is mounted)
