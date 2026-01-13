@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { EventType } from '@packages/types'
 import { s3Client } from '@/lib/s3/index.js'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
@@ -76,8 +76,8 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing track', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
@@ -97,8 +97,8 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing event', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
@@ -140,7 +140,7 @@ describe('Events API - Detail Handler', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
@@ -168,7 +168,7 @@ describe('Events API - Detail Handler', () => {
 
     it('handles database errors gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
@@ -224,8 +224,8 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing track', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
@@ -249,8 +249,8 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing event', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
@@ -285,7 +285,7 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 400 for invalid title', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue({
@@ -339,8 +339,8 @@ describe('Events API - Detail Handler', () => {
         updatedAt: new Date('2024-01-02T00:00:00Z')
       }
 
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const updateSpy = jest.spyOn(prisma.event, 'update')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
@@ -385,8 +385,8 @@ describe('Events API - Detail Handler', () => {
         updatedAt: new Date('2024-01-02T00:00:00Z')
       }
 
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const updateSpy = jest.spyOn(prisma.event, 'update')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
@@ -431,8 +431,8 @@ describe('Events API - Detail Handler', () => {
         updatedAt: new Date('2024-01-02T00:00:00Z')
       }
 
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const updateSpy = jest.spyOn(prisma.event, 'update')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
@@ -456,7 +456,7 @@ describe('Events API - Detail Handler', () => {
 
     it('handles database errors gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
@@ -512,8 +512,8 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing track', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
@@ -537,8 +537,8 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing event', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(null)
@@ -587,12 +587,12 @@ describe('Events API - Detail Handler', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const deleteSpy = jest.spyOn(prisma.event, 'delete')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const deleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
+      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.delete>>)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -628,12 +628,12 @@ describe('Events API - Detail Handler', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const deleteSpy = jest.spyOn(prisma.event, 'delete')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const deleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
+      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.delete>>)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -671,12 +671,12 @@ describe('Events API - Detail Handler', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const deleteSpy = jest.spyOn(prisma.event, 'delete')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const deleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
+      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.delete>>)
       mockS3Send.mockReset()
       mockS3Send.mockRejectedValue(new Error('S3 deletion failed'))
 
@@ -713,12 +713,12 @@ describe('Events API - Detail Handler', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
 
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const deleteSpy = jest.spyOn(prisma.event, 'delete')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const deleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.delete>>)
+      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.delete>>)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -740,7 +740,7 @@ describe('Events API - Detail Handler', () => {
 
     it('handles database errors gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))

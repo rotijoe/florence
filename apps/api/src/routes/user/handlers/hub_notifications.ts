@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import { z } from 'zod'
 import { EventType, type ApiResponse } from '@packages/types'
 
@@ -17,14 +17,13 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
     // Fetch dismissals for this user
-    const dismissals = await prisma.hubDismissal.findMany({
-      where: {
-        userId
-      },
-      select: {
-        type: true,
-        entityId: true
-      }
+    const dismissals = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return tx.hubDismissal.findMany({
+        select: {
+          type: true,
+          entityId: true
+        }
+      })
     })
 
     const dismissedSet = new Set(dismissals.map((d) => `${d.type}:${d.entityId}`))
@@ -42,37 +41,36 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     }> = []
 
     // Find events missing details (past 7 days, no note, no upload)
-    const eventsMissingDetails = await prisma.event.findMany({
-      where: {
-        track: {
-          userId
-        },
-        date: {
-          gte: sevenDaysAgo,
-          lt: now
-        },
-        AND: [
-          {
-            OR: [{ notes: null }, { notes: '' }]
+    const eventsMissingDetails = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return tx.event.findMany({
+        where: {
+          date: {
+            gte: sevenDaysAgo,
+            lt: now
           },
-          { fileUrl: null }
-        ]
-      },
-      select: {
-        id: true,
-        trackId: true,
-        date: true,
-        title: true,
-        track: {
-          select: {
-            slug: true,
-            title: true
+          AND: [
+            {
+              OR: [{ notes: null }, { notes: '' }]
+            },
+            { fileUrl: null }
+          ]
+        },
+        select: {
+          id: true,
+          trackId: true,
+          date: true,
+          title: true,
+          track: {
+            select: {
+              slug: true,
+              title: true
+            }
           }
+        },
+        orderBy: {
+          date: 'desc'
         }
-      },
-      orderBy: {
-        date: 'desc'
-      }
+      })
     })
 
     for (const event of eventsMissingDetails) {
@@ -92,15 +90,14 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     }
 
     // Find tracks missing symptoms (no symptom logged in last 7 days)
-    const tracks = await prisma.healthTrack.findMany({
-      where: {
-        userId
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true
-      }
+    const tracks = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return tx.healthTrack.findMany({
+        select: {
+          id: true,
+          title: true,
+          slug: true
+        }
+      })
     })
 
     for (const track of tracks) {
@@ -110,17 +107,19 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
       }
 
       // Find most recent symptom event for this track
-      const lastSymptomEvent = await prisma.event.findFirst({
-        where: {
-          trackId: track.id,
-          type: EventType.SYMPTOM
-        },
-        orderBy: {
-          date: 'desc'
-        },
-        select: {
-          date: true
-        }
+      const lastSymptomEvent = await withUserRls(prismaRuntime, userId, async (tx) => {
+        return tx.event.findFirst({
+          where: {
+            trackId: track.id,
+            type: EventType.SYMPTOM
+          },
+          orderBy: {
+            date: 'desc'
+          },
+          select: {
+            date: true
+          }
+        })
       })
 
       const hasRecentSymptom = lastSymptomEvent && lastSymptomEvent.date >= sevenDaysAgo
@@ -145,17 +144,19 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
       eligibleEntityIds.add(`EVENT_MISSING_DETAILS:${e.id}`)
     })
     for (const track of tracks) {
-      const lastSymptomEvent = await prisma.event.findFirst({
-        where: {
-          trackId: track.id,
-          type: EventType.SYMPTOM
-        },
-        orderBy: {
-          date: 'desc'
-        },
-        select: {
-          date: true
-        }
+      const lastSymptomEvent = await withUserRls(prismaRuntime, userId, async (tx) => {
+        return tx.event.findFirst({
+          where: {
+            trackId: track.id,
+            type: EventType.SYMPTOM
+          },
+          orderBy: {
+            date: 'desc'
+          },
+          select: {
+            date: true
+          }
+        })
       })
       const hasRecentSymptom = lastSymptomEvent && lastSymptomEvent.date >= sevenDaysAgo
       if (!hasRecentSymptom) {
@@ -169,14 +170,15 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     )
 
     if (dismissalsToDelete.length > 0) {
-      await prisma.hubDismissal.deleteMany({
-        where: {
-          userId,
-          OR: dismissalsToDelete.map((d) => ({
-            type: d.type,
-            entityId: d.entityId
-          }))
-        }
+      await withUserRls(prismaRuntime, userId, async (tx) => {
+        await tx.hubDismissal.deleteMany({
+          where: {
+            OR: dismissalsToDelete.map((d) => ({
+              type: d.type,
+              entityId: d.entityId
+            }))
+          }
+        })
       })
     }
 
@@ -219,25 +221,27 @@ export async function dismissHubNotification(c: Context<{ Variables: AppVariable
 
     const dismissedAt = new Date()
 
-    await prisma.hubDismissal.upsert({
-      where: {
-        // eslint-disable-next-line camelcase
-        userId_type_entityId: {
+    await withUserRls(prismaRuntime, userId, async (tx) => {
+      await tx.hubDismissal.upsert({
+        where: {
+          // eslint-disable-next-line camelcase
+          userId_type_entityId: {
+            userId,
+            type,
+            entityId
+          }
+        },
+        update: {
+          dismissedAt,
+          updatedAt: dismissedAt
+        },
+        create: {
           userId,
           type,
-          entityId
+          entityId,
+          dismissedAt
         }
-      },
-      update: {
-        dismissedAt,
-        updatedAt: dismissedAt
-      },
-      create: {
-        userId,
-        type,
-        entityId,
-        dismissedAt
-      }
+      })
     })
 
     const response: ApiResponse<{ ok: true }> = {

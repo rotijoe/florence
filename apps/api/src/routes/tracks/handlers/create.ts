@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse, TrackResponse } from '@packages/types'
 import { generateUniqueSlug } from '../../../helpers/index.js'
 import { createTrackSchema } from '../validators.js'
@@ -20,16 +20,18 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     const { title, description } = parseResult.data
 
-    const slug = await generateUniqueSlug(userId, title.trim())
+    const track = await withUserRls(prismaRuntime, userId, async (tx) => {
+      const slug = await generateUniqueSlug(tx, title.trim())
 
-    const track = await prisma.healthTrack.create({
-      data: {
-        userId,
-        title: title.trim(),
-        slug,
-        description: description === '' ? null : description
-      },
-      select: TRACK_FULL_SELECT
+      return tx.healthTrack.create({
+        data: {
+          userId,
+          title: title.trim(),
+          slug,
+          description: description === '' ? null : description
+        },
+        select: TRACK_FULL_SELECT
+      })
     })
 
     const formattedTrack = formatTrack(track)

@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { EventType } from '@packages/types'
 import { auth } from '@/auth'
 
@@ -95,7 +95,7 @@ describe('Events API - Create Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
@@ -162,12 +162,12 @@ describe('Events API - Create Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const createSpy = jest.spyOn(prisma.event, 'create')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const createSpy = jest.spyOn(prismaRuntime.event, 'create')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
-      createSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.create>>)
+      createSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.create>>)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events', {
         method: 'POST',
@@ -238,12 +238,12 @@ describe('Events API - Create Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const createSpy = jest.spyOn(prisma.event, 'create')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const createSpy = jest.spyOn(prismaRuntime.event, 'create')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
-      createSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prisma.event.create>>)
+      createSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.create>>)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events', {
         method: 'POST',
@@ -304,7 +304,7 @@ describe('Events API - Create Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
@@ -349,7 +349,7 @@ describe('Events API - Create Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))

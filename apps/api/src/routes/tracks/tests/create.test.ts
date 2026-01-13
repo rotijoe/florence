@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { auth } from '@/auth'
 
 describe('Tracks API - Create Handler', () => {
@@ -156,13 +156,13 @@ describe('Tracks API - Create Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const createSpy = jest.spyOn(prisma.healthTrack, 'create')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const createSpy = jest.spyOn(prismaRuntime.healthTrack, 'create')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null) // No existing track with this slug
       createSpy.mockResolvedValue(
-        mockCreatedTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.create>>
+        mockCreatedTrack as unknown as Awaited<ReturnType<typeof prismaRuntime.healthTrack.create>>
       )
 
       const res = await app.request('/api/users/user-1/tracks', {
@@ -236,14 +236,14 @@ describe('Tracks API - Create Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const createSpy = jest.spyOn(prisma.healthTrack, 'create')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const createSpy = jest.spyOn(prismaRuntime.healthTrack, 'create')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       // First call finds existing track with slug 'sleep', second call finds nothing (for 'sleep-2')
       findFirstSpy.mockResolvedValueOnce(existingTrack).mockResolvedValueOnce(null)
       createSpy.mockResolvedValue(
-        mockCreatedTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.create>>
+        mockCreatedTrack as unknown as Awaited<ReturnType<typeof prismaRuntime.healthTrack.create>>
       )
 
       const res = await app.request('/api/users/user-1/tracks', {
@@ -290,8 +290,8 @@ describe('Tracks API - Create Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const createSpy = jest.spyOn(prisma.healthTrack, 'create')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const createSpy = jest.spyOn(prismaRuntime.healthTrack, 'create')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)

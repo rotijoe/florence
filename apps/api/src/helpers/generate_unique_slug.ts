@@ -1,15 +1,17 @@
-import { prisma } from '@packages/database'
+import type { Prisma } from '@prisma/client'
 import { generateSlug } from './generate_slug'
 
-export async function generateUniqueSlug(userId: string, title: string): Promise<string> {
+export async function generateUniqueSlug(
+  tx: Prisma.TransactionClient,
+  title: string
+): Promise<string> {
   const baseSlug = generateSlug(title)
   let slug = baseSlug
   let counter = 2
 
   while (true) {
-    const existing = await prisma.healthTrack.findFirst({
+    const existing = await tx.healthTrack.findFirst({
       where: {
-        userId,
         slug
       }
     })

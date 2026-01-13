@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { auth } from '@/auth'
 import { s3Client } from '@/lib/s3/index.js'
 
@@ -93,7 +93,7 @@ describe('Tracks API - Delete Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
@@ -146,15 +146,15 @@ describe('Tracks API - Delete Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const deleteSpy = jest.spyOn(prisma.healthTrack, 'delete')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const deleteSpy = jest.spyOn(prismaRuntime.healthTrack, 'delete')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(
-        mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>
+        mockTrack as unknown as Awaited<ReturnType<typeof prismaRuntime.healthTrack.findFirst>>
       )
       deleteSpy.mockResolvedValue(
-        mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.delete>>
+        mockTrack as unknown as Awaited<ReturnType<typeof prismaRuntime.healthTrack.delete>>
       )
 
       const res = await app.request('/api/users/user-1/tracks/test-track', {
@@ -167,7 +167,7 @@ describe('Tracks API - Delete Handler', () => {
       expect(json.success).toBe(true)
 
       expect(findFirstSpy).toHaveBeenCalledWith({
-        where: { userId: 'user-1', slug: 'test-track' },
+        where: { slug: 'test-track' },
         include: {
           events: {
             select: {
@@ -231,16 +231,16 @@ describe('Tracks API - Delete Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const deleteSpy = jest.spyOn(prisma.healthTrack, 'delete')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const deleteSpy = jest.spyOn(prismaRuntime.healthTrack, 'delete')
       const s3SendSpy = jest.spyOn(s3Client, 'send').mockResolvedValue({} as never)
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(
-        mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>
+        mockTrack as unknown as Awaited<ReturnType<typeof prismaRuntime.healthTrack.findFirst>>
       )
       deleteSpy.mockResolvedValue(
-        mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.delete>>
+        mockTrack as unknown as Awaited<ReturnType<typeof prismaRuntime.healthTrack.delete>>
       )
 
       const res = await app.request('/api/users/user-1/tracks/test-track', {
@@ -295,12 +295,12 @@ describe('Tracks API - Delete Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const deleteSpy = jest.spyOn(prisma.healthTrack, 'delete')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const deleteSpy = jest.spyOn(prismaRuntime.healthTrack, 'delete')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(
-        mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>
+        mockTrack as unknown as Awaited<ReturnType<typeof prismaRuntime.healthTrack.findFirst>>
       )
       deleteSpy.mockRejectedValue(new Error('Database connection failed'))
 

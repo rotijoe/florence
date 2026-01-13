@@ -1,5 +1,5 @@
 import { generateUniqueSlug } from '../generate_unique_slug'
-import { prisma } from '@packages/database'
+import type { Prisma } from '@prisma/client'
 
 describe('generateUniqueSlug', () => {
   beforeEach(() => {
@@ -7,20 +7,21 @@ describe('generateUniqueSlug', () => {
   })
 
   it('should return base slug when no existing track found', async () => {
-    const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-    findFirstSpy.mockResolvedValue(null)
+    const mockTx = {
+      healthTrack: {
+        findFirst: jest.fn().mockResolvedValue(null)
+      }
+    } as unknown as Prisma.TransactionClient
 
-    const slug = await generateUniqueSlug('user-1', 'Sleep')
+    const slug = await generateUniqueSlug(mockTx, 'Sleep')
 
     expect(slug).toBe('sleep')
-    expect(findFirstSpy).toHaveBeenCalledTimes(1)
-    expect(findFirstSpy).toHaveBeenCalledWith({
+    expect(mockTx.healthTrack.findFirst).toHaveBeenCalledTimes(1)
+    expect(mockTx.healthTrack.findFirst).toHaveBeenCalledWith({
       where: {
-        userId: 'user-1',
         slug: 'sleep'
       }
     })
-    findFirstSpy.mockRestore()
   })
 
   it('should append numeric suffix when slug exists', async () => {
@@ -34,16 +35,19 @@ describe('generateUniqueSlug', () => {
       updatedAt: new Date()
     }
 
-    const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-    findFirstSpy
-      .mockResolvedValueOnce(existingTrack) // First call finds existing
-      .mockResolvedValueOnce(null) // Second call finds nothing
+    const mockTx = {
+      healthTrack: {
+        findFirst: jest
+          .fn()
+          .mockResolvedValueOnce(existingTrack) // First call finds existing
+          .mockResolvedValueOnce(null) // Second call finds nothing
+      }
+    } as unknown as Prisma.TransactionClient
 
-    const slug = await generateUniqueSlug('user-1', 'Sleep')
+    const slug = await generateUniqueSlug(mockTx, 'Sleep')
 
     expect(slug).toBe('sleep-2')
-    expect(findFirstSpy).toHaveBeenCalledTimes(2)
-    findFirstSpy.mockRestore()
+    expect(mockTx.healthTrack.findFirst).toHaveBeenCalledTimes(2)
   })
 
   it('should increment counter until unique slug found', async () => {
@@ -67,36 +71,43 @@ describe('generateUniqueSlug', () => {
       updatedAt: new Date()
     }
 
-    const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-    findFirstSpy
-      .mockResolvedValueOnce(existingTrack1) // 'sleep' exists
-      .mockResolvedValueOnce(existingTrack2) // 'sleep-2' exists
-      .mockResolvedValueOnce(null) // 'sleep-3' is available
+    const mockTx = {
+      healthTrack: {
+        findFirst: jest
+          .fn()
+          .mockResolvedValueOnce(existingTrack1) // 'sleep' exists
+          .mockResolvedValueOnce(existingTrack2) // 'sleep-2' exists
+          .mockResolvedValueOnce(null) // 'sleep-3' is available
+      }
+    } as unknown as Prisma.TransactionClient
 
-    const slug = await generateUniqueSlug('user-1', 'Sleep')
+    const slug = await generateUniqueSlug(mockTx, 'Sleep')
 
     expect(slug).toBe('sleep-3')
-    expect(findFirstSpy).toHaveBeenCalledTimes(3)
-    findFirstSpy.mockRestore()
+    expect(mockTx.healthTrack.findFirst).toHaveBeenCalledTimes(3)
   })
 
   it('should handle titles with special characters', async () => {
-    const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-    findFirstSpy.mockResolvedValue(null)
+    const mockTx = {
+      healthTrack: {
+        findFirst: jest.fn().mockResolvedValue(null)
+      }
+    } as unknown as Prisma.TransactionClient
 
-    const slug = await generateUniqueSlug('user-1', 'Sleep & Hydration!')
+    const slug = await generateUniqueSlug(mockTx, 'Sleep & Hydration!')
 
     expect(slug).toBe('sleep-hydration')
-    findFirstSpy.mockRestore()
   })
 
   it('should handle titles with multiple spaces', async () => {
-    const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-    findFirstSpy.mockResolvedValue(null)
+    const mockTx = {
+      healthTrack: {
+        findFirst: jest.fn().mockResolvedValue(null)
+      }
+    } as unknown as Prisma.TransactionClient
 
-    const slug = await generateUniqueSlug('user-1', 'Sleep   Tracking')
+    const slug = await generateUniqueSlug(mockTx, 'Sleep   Tracking')
 
     expect(slug).toBe('sleep-tracking')
-    findFirstSpy.mockRestore()
   })
 })

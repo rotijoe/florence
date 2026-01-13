@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
 import { eventNotFoundResponse } from '../helpers.js'
 import { trackNotFoundResponse, verifyEventInTrack, formatEvent } from '@/helpers/index.js'
@@ -13,7 +13,13 @@ export async function remove(c: Context<{ Variables: AppVariables }>) {
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
-    const { event: existingEvent, trackExists } = await verifyEventInTrack(userId, slug, eventId)
+    const { event: existingEvent, trackExists } = await withUserRls(
+      prismaRuntime,
+      userId,
+      async (tx) => {
+        return verifyEventInTrack(tx, slug, eventId)
+      }
+    )
 
     if (!trackExists) {
       return trackNotFoundResponse(c)
@@ -46,15 +52,17 @@ export async function remove(c: Context<{ Variables: AppVariables }>) {
 
     await deleteFile(key)
 
-    const updatedEvent = await prisma.event.update({
-      where: {
-        id: eventId
-      },
-      data: {
-        fileUrl: null,
-        updatedAt: new Date()
-      },
-      select: EVENT_SELECT
+    const updatedEvent = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return tx.event.update({
+        where: {
+          id: eventId
+        },
+        data: {
+          fileUrl: null,
+          updatedAt: new Date()
+        },
+        select: EVENT_SELECT
+      })
     })
 
     const formattedEvent = await formatEvent(updatedEvent)

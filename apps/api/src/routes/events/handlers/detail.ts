@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
 import { badRequestFromZod, eventNotFoundResponse } from '../helpers.js'
 import { trackNotFoundResponse, verifyEventInTrack, formatEvent } from '@/helpers/index.js'
@@ -13,7 +13,9 @@ export async function get(c: Context<{ Variables: AppVariables }>) {
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
-    const { event, trackExists } = await verifyEventInTrack(userId, slug, eventId)
+    const { event, trackExists } = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return verifyEventInTrack(tx, slug, eventId)
+    })
 
     if (!trackExists) {
       return trackNotFoundResponse(c)
@@ -49,16 +51,6 @@ export async function update(c: Context<{ Variables: AppVariables }>) {
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
-    const { event: existingEvent, trackExists } = await verifyEventInTrack(userId, slug, eventId)
-
-    if (!trackExists) {
-      return trackNotFoundResponse(c)
-    }
-
-    if (!existingEvent) {
-      return eventNotFoundResponse(c)
-    }
-
     const body = await c.req.json().catch(() => ({}))
     const parseResult = updateEventSchema.safeParse(body)
 
@@ -82,13 +74,33 @@ export async function update(c: Context<{ Variables: AppVariables }>) {
       updateData.notes = parseResult.data.notes === '' ? null : parseResult.data.notes
     }
 
-    const updatedEvent = await prisma.event.update({
-      where: {
-        id: eventId
-      },
-      data: updateData,
-      select: EVENT_SELECT
+    const updatedEvent = await withUserRls(prismaRuntime, userId, async (tx) => {
+      const { event: existingEvent, trackExists } = await verifyEventInTrack(tx, slug, eventId)
+
+      if (!trackExists || !existingEvent) {
+        return null
+      }
+
+      return tx.event.update({
+        where: {
+          id: eventId
+        },
+        data: updateData,
+        select: EVENT_SELECT
+      })
     })
+
+    if (!updatedEvent) {
+      const { trackExists } = await withUserRls(prismaRuntime, userId, async (tx) => {
+        return verifyEventInTrack(tx, slug, eventId)
+      })
+
+      if (!trackExists) {
+        return trackNotFoundResponse(c)
+      }
+
+      return eventNotFoundResponse(c)
+    }
 
     const formattedEvent = await formatEvent(updatedEvent)
 
@@ -116,7 +128,13 @@ export async function remove(c: Context<{ Variables: AppVariables }>) {
     const slug = c.req.param('slug')
     const eventId = c.req.param('eventId')
 
-    const { event: existingEvent, trackExists } = await verifyEventInTrack(userId, slug, eventId)
+    const { event: existingEvent, trackExists } = await withUserRls(
+      prismaRuntime,
+      userId,
+      async (tx) => {
+        return verifyEventInTrack(tx, slug, eventId)
+      }
+    )
 
     if (!trackExists) {
       return trackNotFoundResponse(c)
@@ -138,10 +156,12 @@ export async function remove(c: Context<{ Variables: AppVariables }>) {
       }
     }
 
-    await prisma.event.delete({
-      where: {
-        id: eventId
-      }
+    await withUserRls(prismaRuntime, userId, async (tx) => {
+      await tx.event.delete({
+        where: {
+          id: eventId
+        }
+      })
     })
 
     const response: ApiResponse<never> = {

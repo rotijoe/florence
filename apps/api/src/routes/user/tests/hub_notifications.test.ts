@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { auth } from '@/auth'
 import { createMockSession } from '@/test-helpers'
 
@@ -101,10 +101,10 @@ describe('User API - Hub Notifications', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
-      const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
-      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
-      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findManyEventsSpy = jest.spyOn(prismaRuntime.event, 'findMany')
+      const findManyDismissalsSpy = jest.spyOn(prismaRuntime.hubDismissal, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -151,10 +151,10 @@ describe('User API - Hub Notifications', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
-      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
-      const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
-      const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const findManyDismissalsSpy = jest.spyOn(prismaRuntime.hubDismissal, 'findMany')
+      const findManyEventsSpy = jest.spyOn(prismaRuntime.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManyTracksSpy.mockResolvedValue([mockTrack])
@@ -232,10 +232,10 @@ describe('User API - Hub Notifications', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
-      const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
-      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
-      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findManyEventsSpy = jest.spyOn(prismaRuntime.event, 'findMany')
+      const findManyDismissalsSpy = jest.spyOn(prismaRuntime.hubDismissal, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -277,10 +277,10 @@ describe('User API - Hub Notifications', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
-      const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
-      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
-      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findManyEventsSpy = jest.spyOn(prismaRuntime.event, 'findMany')
+      const findManyDismissalsSpy = jest.spyOn(prismaRuntime.hubDismissal, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManyEventsSpy.mockResolvedValue([]) // Event has notes, so not returned
@@ -320,10 +320,10 @@ describe('User API - Hub Notifications', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
-      const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
-      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
-      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findManyEventsSpy = jest.spyOn(prismaRuntime.event, 'findMany')
+      const findManyDismissalsSpy = jest.spyOn(prismaRuntime.hubDismissal, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManyEventsSpy.mockResolvedValue([]) // Event has upload, so not returned
@@ -380,10 +380,10 @@ describe('User API - Hub Notifications', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManyTracksSpy = jest.spyOn(prisma.healthTrack, 'findMany')
-      const findFirstEventSpy = jest.spyOn(prisma.event, 'findFirst')
-      const findManyDismissalsSpy = jest.spyOn(prisma.hubDismissal, 'findMany')
-      const findManyEventsSpy = jest.spyOn(prisma.event, 'findMany')
+      const findManyTracksSpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
+      const findFirstEventSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const findManyDismissalsSpy = jest.spyOn(prismaRuntime.hubDismissal, 'findMany')
+      const findManyEventsSpy = jest.spyOn(prismaRuntime.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManyTracksSpy.mockResolvedValue([mockTrack])
@@ -443,7 +443,7 @@ describe('User API - Hub Notifications', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const upsertSpy = jest.spyOn(prisma.hubDismissal, 'upsert')
+      const upsertSpy = jest.spyOn(prismaRuntime.hubDismissal, 'upsert')
 
       getSessionSpy.mockResolvedValue(mockSession)
       upsertSpy.mockResolvedValue(mockDismissal)
@@ -502,7 +502,7 @@ describe('User API - Hub Notifications', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const upsertSpy = jest.spyOn(prisma.hubDismissal, 'upsert')
+      const upsertSpy = jest.spyOn(prismaRuntime.hubDismissal, 'upsert')
 
       getSessionSpy.mockResolvedValue(mockSession)
       upsertSpy.mockResolvedValue(updatedDismissal)

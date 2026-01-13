@@ -1,5 +1,5 @@
 import { verifyTrackExists } from '../verify_track_exists.js'
-import { prisma } from '@packages/database'
+import type { Prisma } from '@prisma/client'
 
 describe('verifyTrackExists', () => {
   beforeEach(() => {
@@ -8,31 +8,31 @@ describe('verifyTrackExists', () => {
 
   it('returns track when it exists', async () => {
     const mockTrack = { id: 'track-1' }
-    const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-    findFirstSpy.mockResolvedValue(
-      mockTrack as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findFirst>>
-    )
+    const mockTx = {
+      healthTrack: {
+        findFirst: jest.fn().mockResolvedValue(mockTrack)
+      }
+    } as unknown as Prisma.TransactionClient
 
-    const result = await verifyTrackExists('user-1', 'test-slug')
+    const result = await verifyTrackExists(mockTx, 'test-slug')
 
     expect(result).toEqual(mockTrack)
-    expect(findFirstSpy).toHaveBeenCalledWith({
-      where: { userId: 'user-1', slug: 'test-slug' },
+    expect(mockTx.healthTrack.findFirst).toHaveBeenCalledWith({
+      where: { slug: 'test-slug' },
       select: { id: true }
     })
-
-    findFirstSpy.mockRestore()
   })
 
   it('returns null when track does not exist', async () => {
-    const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-    findFirstSpy.mockResolvedValue(null)
+    const mockTx = {
+      healthTrack: {
+        findFirst: jest.fn().mockResolvedValue(null)
+      }
+    } as unknown as Prisma.TransactionClient
 
-    const result = await verifyTrackExists('user-1', 'nonexistent-slug')
+    const result = await verifyTrackExists(mockTx, 'nonexistent-slug')
 
     expect(result).toBeNull()
-
-    findFirstSpy.mockRestore()
   })
 })
 

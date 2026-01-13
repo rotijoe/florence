@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse, TrackResponse } from '@packages/types'
 import { formatTrack } from '../helpers.js'
 import { TRACK_FULL_SELECT } from '../constants.js'
@@ -9,10 +9,11 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
     const userId = c.req.param('userId')
 
-    const tracks = await prisma.healthTrack.findMany({
-      where: { userId },
-      select: TRACK_FULL_SELECT,
-      orderBy: { createdAt: 'desc' }
+    const tracks = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return tx.healthTrack.findMany({
+        select: TRACK_FULL_SELECT,
+        orderBy: { createdAt: 'desc' }
+      })
     })
 
     const formattedTracks: TrackResponse[] = tracks.map((track) => formatTrack(track))

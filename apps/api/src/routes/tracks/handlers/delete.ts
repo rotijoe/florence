@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '@/types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse } from '@packages/types'
 import { getObjectKeyFromUrl, deleteFile } from '@/lib/s3/index.js'
 import { trackNotFoundResponse } from '@/helpers/index.js'
@@ -10,15 +10,17 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
     const userId = c.req.param('userId')
     const slug = c.req.param('slug')
 
-    const track = await prisma.healthTrack.findFirst({
-      where: { userId, slug },
-      include: {
-        events: {
-          select: {
-            fileUrl: true
+    const track = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return tx.healthTrack.findFirst({
+        where: { slug },
+        include: {
+          events: {
+            select: {
+              fileUrl: true
+            }
           }
         }
-      }
+      })
     })
 
     if (!track) {
@@ -41,10 +43,12 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
     }
 
     // Delete track (cascades to delete all events automatically)
-    await prisma.healthTrack.delete({
-      where: {
-        id: track.id
-      }
+    await withUserRls(prismaRuntime, userId, async (tx) => {
+      await tx.healthTrack.delete({
+        where: {
+          id: track.id
+        }
+      })
     })
 
     const response: ApiResponse<never> = {

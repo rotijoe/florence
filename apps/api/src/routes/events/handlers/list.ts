@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '@/types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
 import {
   trackNotFoundResponse,
@@ -32,27 +32,34 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     const limit = queryResult.data.limit
 
-    const events = await prisma.event.findMany({
-      where: {
-        track: {
-          userId,
-          slug
+    const events = await withUserRls(prismaRuntime, userId, async (tx) => {
+      const events = await tx.event.findMany({
+        where: {
+          track: {
+            slug
+          }
+        },
+        orderBy: { date: 'desc' },
+        take: limit,
+        select: EVENT_SELECT
+      })
+
+      if (events.length === 0) {
+        const trackExists = await verifyTrackExists(tx, slug)
+        if (!trackExists) {
+          return { events: [], trackNotFound: true }
         }
-      },
-      orderBy: { date: 'desc' },
-      take: limit,
-      select: EVENT_SELECT
+      }
+
+      return { events, trackNotFound: false }
     })
 
-    if (events.length === 0) {
-      const trackExists = await verifyTrackExists(userId, slug)
-      if (!trackExists) {
-        return trackNotFoundResponse(c)
-      }
+    if (events.trackNotFound) {
+      return trackNotFoundResponse(c)
     }
 
     const formattedEvents: EventResponse[] = await Promise.all(
-      events.map((event: EventSelectResult) => formatEvent(event))
+      events.events.map((event: EventSelectResult) => formatEvent(event))
     )
 
     const response: ApiResponse<EventResponse[]> = {

@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { EventType } from '@packages/types'
 import { auth } from '@/auth'
 
@@ -87,8 +87,8 @@ describe('Events API - List Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManySpy.mockResolvedValue([])
@@ -154,8 +154,8 @@ describe('Events API - List Handler', () => {
       ]
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
@@ -232,8 +232,8 @@ describe('Events API - List Handler', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }))
 
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
@@ -247,7 +247,7 @@ describe('Events API - List Handler', () => {
       expect(json.data).toHaveLength(5)
 
       expect(findManySpy).toHaveBeenCalledWith({
-        where: { track: { userId: 'user-1', slug: 'test-track' } },
+        where: { track: { slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 3,
         select: expect.any(Object)
@@ -290,8 +290,8 @@ describe('Events API - List Handler', () => {
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
@@ -301,7 +301,7 @@ describe('Events API - List Handler', () => {
       expect(res.status).toBe(200)
 
       expect(findManySpy).toHaveBeenCalledWith({
-        where: { track: { userId: 'user-1', slug: 'test-track' } },
+        where: { track: { slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 1000,
         select: expect.any(Object)
@@ -344,8 +344,8 @@ describe('Events API - List Handler', () => {
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
-      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
@@ -355,7 +355,7 @@ describe('Events API - List Handler', () => {
       expect(res.status).toBe(200)
 
       expect(findManySpy).toHaveBeenCalledWith({
-        where: { track: { userId: 'user-1', slug: 'test-track' } },
+        where: { track: { slug: 'test-track' } },
         orderBy: { date: 'desc' },
         take: 1,
         select: expect.any(Object)
@@ -389,10 +389,10 @@ describe('Events API - List Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
-      findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
+      findManySpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events')
       expect(res.status).toBe(500)
@@ -402,7 +402,7 @@ describe('Events API - List Handler', () => {
       expect(json.error).toBe('Database connection failed')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      findManySpy.mockRestore()
     })
   })
 })

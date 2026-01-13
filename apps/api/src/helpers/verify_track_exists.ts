@@ -1,11 +1,11 @@
-import { prisma } from '@packages/database'
+import type { Prisma } from '@prisma/client'
 
 export async function verifyTrackExists(
-  userId: string,
+  tx: Prisma.TransactionClient,
   slug: string
 ): Promise<{ id: string } | null> {
-  return await prisma.healthTrack.findFirst({
-    where: { userId, slug },
+  return await tx.healthTrack.findFirst({
+    where: { slug },
     select: { id: true }
   })
 }

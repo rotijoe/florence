@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { auth } from '@/auth'
 import { EventType } from '@packages/types'
 
@@ -84,7 +84,7 @@ describe('User API - Upcoming Appointments Handler', () => {
         }
       }
 
-      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
 
       getSessionSpy.mockResolvedValue(mockSession)
@@ -101,7 +101,7 @@ describe('User API - Upcoming Appointments Handler', () => {
           date: new Date('2025-01-02T12:00:00.000Z'),
           track: { slug: 'pain' }
         }
-      ] as unknown as Awaited<ReturnType<typeof prisma.event.findMany>>)
+      ] as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findMany>>)
 
       const res = await app.request('/api/users/user-1/appointments/upcoming?limit=5')
       expect(res.status).toBe(200)
@@ -109,8 +109,7 @@ describe('User API - Upcoming Appointments Handler', () => {
       expect(findManySpy).toHaveBeenCalledWith({
         where: {
           type: EventType.APPOINTMENT,
-          date: { gt: now },
-          track: { userId: 'user-1' }
+          date: { gt: now }
         },
         orderBy: { date: 'asc' },
         take: 6, // limit + 1 to check for hasMore
@@ -172,12 +171,12 @@ describe('User API - Upcoming Appointments Handler', () => {
         }
       }
 
-      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManySpy.mockResolvedValue(
-        [] as unknown as Awaited<ReturnType<typeof prisma.event.findMany>>
+        [] as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findMany>>
       )
 
       const res = await app.request('/api/users/user-1/appointments/upcoming')
@@ -226,7 +225,7 @@ describe('User API - Upcoming Appointments Handler', () => {
         }
       }
 
-      const findManySpy = jest.spyOn(prisma.event, 'findMany')
+      const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
 
       getSessionSpy.mockResolvedValue(mockSession)
@@ -256,7 +255,7 @@ describe('User API - Upcoming Appointments Handler', () => {
           date: new Date('2025-01-04T12:00:00.000Z'),
           track: { slug: 'pain' }
         }
-      ] as unknown as Awaited<ReturnType<typeof prisma.event.findMany>>)
+      ] as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findMany>>)
 
       const res = await app.request('/api/users/user-1/appointments/upcoming?limit=3')
       expect(res.status).toBe(200)
@@ -264,8 +263,7 @@ describe('User API - Upcoming Appointments Handler', () => {
       expect(findManySpy).toHaveBeenCalledWith({
         where: {
           type: EventType.APPOINTMENT,
-          date: { gt: now },
-          track: { userId: 'user-1' }
+          date: { gt: now }
         },
         orderBy: { date: 'asc' },
         take: 4, // limit (3) + 1

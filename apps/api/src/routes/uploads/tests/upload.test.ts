@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { EventType } from '@packages/types'
 import { auth } from '@/auth'
 import { s3Client } from '@/lib/s3/index.js'
@@ -256,8 +256,8 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
@@ -309,13 +309,13 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<
-        ReturnType<typeof prisma.healthTrack.findFirst>
+        ReturnType<typeof prismaRuntime.healthTrack.findFirst>
       >)
 
       const res = await app.request(
@@ -369,11 +369,11 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(
-        mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
+        mockEvent as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findFirst>>
       )
 
       // Mock S3 send to simulate successful presigned URL generation
@@ -595,11 +595,11 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(
-        mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
+        mockEvent as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findFirst>>
       )
       mockS3Send.mockRejectedValueOnce(new Error('Not found'))
 
@@ -666,15 +666,15 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const updateSpy = jest.spyOn(prisma.event, 'update')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(
-        mockEvent as unknown as Awaited<ReturnType<typeof prisma.event.findFirst>>
+        mockEvent as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findFirst>>
       )
       updateSpy.mockResolvedValue(
-        updatedEvent as unknown as Awaited<ReturnType<typeof prisma.event.update>>
+        updatedEvent as unknown as Awaited<ReturnType<typeof prismaRuntime.event.update>>
       )
 
       const res = await app.request(
@@ -722,8 +722,8 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
@@ -774,13 +774,13 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
-      const trackFindFirstSpy = jest.spyOn(prisma.healthTrack, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(null)
       trackFindFirstSpy.mockResolvedValue({ id: 'track-1' } as unknown as Awaited<
-        ReturnType<typeof prisma.healthTrack.findFirst>
+        ReturnType<typeof prismaRuntime.healthTrack.findFirst>
       >)
 
       const res = await app.request(
@@ -828,7 +828,7 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
@@ -877,7 +877,7 @@ describe('Uploads API - Upload Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prisma.event, 'findFirst')
+      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockRejectedValue(new Error('Database connection failed'))

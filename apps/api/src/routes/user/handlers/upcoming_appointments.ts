@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import {
   EventType,
   type ApiResponse,
@@ -22,20 +22,21 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
     const now = new Date()
 
     // Fetch limit+1 to check if there are more appointments
-    const events = await prisma.event.findMany({
-      where: {
-        type: EventType.APPOINTMENT,
-        date: { gt: now },
-        track: { userId }
-      },
-      orderBy: { date: 'asc' },
-      take: limit + 1,
-      select: {
-        id: true,
-        title: true,
-        date: true,
-        track: { select: { slug: true } }
-      }
+    const events = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return tx.event.findMany({
+        where: {
+          type: EventType.APPOINTMENT,
+          date: { gt: now }
+        },
+        orderBy: { date: 'asc' },
+        take: limit + 1,
+        select: {
+          id: true,
+          title: true,
+          date: true,
+          track: { select: { slug: true } }
+        }
+      })
     })
 
     // Determine if there are more appointments

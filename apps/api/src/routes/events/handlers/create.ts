@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '../../../types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
 import { badRequestFromZod } from '../helpers.js'
 import { trackNotFoundResponse, verifyTrackExists, formatEvent } from '@/helpers/index.js'
@@ -13,11 +13,6 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
     const userId = c.req.param('userId')
     const slug = c.req.param('slug')
 
-    const track = await verifyTrackExists(userId, slug)
-    if (!track) {
-      return trackNotFoundResponse(c)
-    }
-
     const body = await c.req.json().catch(() => ({}))
     const parseResult = createEventSchema.safeParse(body)
 
@@ -27,18 +22,29 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     const { title, type, date, notes, symptomType, severity } = parseResult.data
 
-    const newEvent = await prisma.event.create({
-      data: {
-        trackId: track.id,
-        title: title.trim(),
-        type,
-        date,
-        notes,
-        symptomType,
-        severity
-      },
-      select: EVENT_SELECT
+    const newEvent = await withUserRls(prismaRuntime, userId, async (tx) => {
+      const track = await verifyTrackExists(tx, slug)
+      if (!track) {
+        return null
+      }
+
+      return tx.event.create({
+        data: {
+          trackId: track.id,
+          title: title.trim(),
+          type,
+          date,
+          notes,
+          symptomType,
+          severity
+        },
+        select: EVENT_SELECT
+      })
     })
+
+    if (!newEvent) {
+      return trackNotFoundResponse(c)
+    }
 
     const formattedEvent = await formatEvent(newEvent)
 

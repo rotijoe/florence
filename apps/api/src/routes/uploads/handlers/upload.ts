@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { AppVariables } from '@/types/index.js'
-import { prisma } from '@packages/database'
+import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse, EventResponse } from '@packages/types'
 import { PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
@@ -36,7 +36,9 @@ export async function uploadUrl(c: Context<{ Variables: AppVariables }>) {
 
     const { fileName, contentType } = parseResult.data
 
-    const { event, trackExists } = await verifyEventInTrack(userId, slug, eventId)
+    const { event, trackExists } = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return verifyEventInTrack(tx, slug, eventId)
+    })
 
     if (!trackExists) {
       return c.json(
@@ -119,7 +121,9 @@ export async function uploadConfirm(c: Context<{ Variables: AppVariables }>) {
 
     const { fileUrl, key } = parseResult.data
 
-    const { event, trackExists } = await verifyEventInTrack(userId, slug, eventId)
+    const { event, trackExists } = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return verifyEventInTrack(tx, slug, eventId)
+    })
 
     if (!trackExists) {
       return c.json(
@@ -158,15 +162,17 @@ export async function uploadConfirm(c: Context<{ Variables: AppVariables }>) {
       )
     }
 
-    const updatedEvent = await prisma.event.update({
-      where: {
-        id: eventId
-      },
-      data: {
-        fileUrl,
-        updatedAt: new Date()
-      },
-      select: EVENT_SELECT
+    const updatedEvent = await withUserRls(prismaRuntime, userId, async (tx) => {
+      return tx.event.update({
+        where: {
+          id: eventId
+        },
+        data: {
+          fileUrl,
+          updatedAt: new Date()
+        },
+        select: EVENT_SELECT
+      })
     })
 
     const formattedEvent = await formatEvent(updatedEvent)

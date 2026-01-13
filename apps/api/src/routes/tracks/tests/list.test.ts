@@ -1,5 +1,5 @@
 import { createTestApp } from '@/test-setup'
-import { prisma } from '@packages/database'
+import { prismaRuntime } from '@packages/database'
 import { auth } from '@/auth'
 
 describe('Tracks API - List Handler', () => {
@@ -86,7 +86,7 @@ describe('Tracks API - List Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManySpy = jest.spyOn(prisma.healthTrack, 'findMany')
+      const findManySpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManySpy.mockResolvedValue([])
@@ -99,7 +99,6 @@ describe('Tracks API - List Handler', () => {
       expect(json.data).toEqual([])
 
       expect(findManySpy).toHaveBeenCalledWith({
-        where: { userId: 'user-1' },
         select: {
           id: true,
           userId: true,
@@ -160,11 +159,11 @@ describe('Tracks API - List Handler', () => {
       ]
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManySpy = jest.spyOn(prisma.healthTrack, 'findMany')
+      const findManySpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManySpy.mockResolvedValue(
-        mockTracks as unknown as Awaited<ReturnType<typeof prisma.healthTrack.findMany>>
+        mockTracks as unknown as Awaited<ReturnType<typeof prismaRuntime.healthTrack.findMany>>
       )
 
       const res = await app.request('/api/users/user-1/tracks')
@@ -219,7 +218,7 @@ describe('Tracks API - List Handler', () => {
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findManySpy = jest.spyOn(prisma.healthTrack, 'findMany')
+      const findManySpy = jest.spyOn(prismaRuntime.healthTrack, 'findMany')
 
       getSessionSpy.mockResolvedValue(mockSession)
       findManySpy.mockRejectedValue(new Error('Database connection failed'))
@@ -236,4 +235,3 @@ describe('Tracks API - List Handler', () => {
     })
   })
 })
-
