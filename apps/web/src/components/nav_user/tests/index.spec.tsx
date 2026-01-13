@@ -317,9 +317,8 @@ describe('NavUser', () => {
       isPending: false,
       error: null
     } as unknown as ReturnType<typeof useSession>)
-    mockHandleSignOut.mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ success: true }), 100))
-    )
+    // Use never-resolving promise to prevent router.push from being called
+    mockHandleSignOut.mockImplementation(() => new Promise(() => {}))
 
     render(<NavUser />)
 
@@ -405,6 +404,7 @@ describe('NavUser', () => {
   it('does not redirect when sign out fails', async () => {
     const user = userEvent.setup()
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    mockPush.mockClear()
     mockUseSession.mockReturnValue({
       data: {
         user: {
@@ -433,6 +433,7 @@ describe('NavUser', () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith('Sign out error:', 'Sign out failed')
     })
 
+    // Verify router.push was not called after sign out failure
     expect(mockPush).not.toHaveBeenCalled()
 
     consoleErrorSpy.mockRestore()

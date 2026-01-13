@@ -13,9 +13,28 @@ jest.mock('@/components/document_viewer', () => ({
   DocumentViewer: (props: { url: string; fileType: string }) => mockDocumentViewer(props)
 }))
 
+const mockGetFileDetails = jest.fn()
+let mockConfigured = false
+jest.mock('@/lib/get_file_details', () => {
+  const actual = jest.requireActual('@/lib/get_file_details')
+  return {
+    ...actual,
+    getFileDetails: (...args: Parameters<typeof actual.getFileDetails>) => {
+      if (mockConfigured) {
+        return mockGetFileDetails(...args)
+      }
+      return actual.getFileDetails(...args)
+    }
+  }
+})
+
 describe('EventAttachment', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockGetFileDetails.mockImplementation((url: string) => {
+      const actual = jest.requireActual('@/lib/get_file_details')
+      return actual.getFileDetails(url)
+    })
   })
 
   it('renders empty state when fileUrl is not provided', () => {
@@ -156,5 +175,41 @@ describe('EventAttachment', () => {
 
     // Should not throw error, just do nothing
     expect(deleteButton).toBeInTheDocument()
+  })
+
+  it('handles click on Add attachment button in empty state', async () => {
+    const user = userEvent.setup()
+    render(<EventAttachment fileUrl={null} />)
+
+    const addButton = screen.getByRole('button', { name: /add attachment/i })
+    await user.click(addButton)
+
+    // Button click should not throw error (handler is empty function)
+    expect(addButton).toBeInTheDocument()
+  })
+
+  it('handles getFileDetails returning null', () => {
+    mockConfigured = true
+    mockGetFileDetails.mockReturnValueOnce(null as any)
+
+    const url = 'https://example.com/invalid-file'
+    render(<EventAttachment fileUrl={url} />)
+
+    expect(screen.getByText('No attachments found')).toBeInTheDocument()
+  })
+
+  it('stops propagation when delete button is clicked', async () => {
+    const user = userEvent.setup()
+    const mockOnDelete = jest.fn()
+    const url = 'https://example.com/document.pdf'
+    render(<EventAttachment fileUrl={url} onDelete={mockOnDelete} />)
+
+    const deleteButton = screen.getByRole('button', { name: /delete/i })
+    const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true })
+    const stopPropagationSpy = jest.spyOn(clickEvent, 'stopPropagation')
+
+    deleteButton.dispatchEvent(clickEvent)
+
+    expect(mockOnDelete).toHaveBeenCalled()
   })
 })

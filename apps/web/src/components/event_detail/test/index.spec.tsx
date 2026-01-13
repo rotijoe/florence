@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { EventDetail } from '../index'
 import { EventType, type EventResponse } from '@packages/types'
@@ -28,14 +28,60 @@ jest.mock('@/app/[userId]/tracks/[trackSlug]/new/actions', () => ({
   createEventOnSaveAction: jest.fn()
 }))
 
+jest.mock('@/components/event_attachment', () => ({
+  EventAttachment: ({
+    fileUrl,
+    onDelete
+  }: {
+    fileUrl: string | null | undefined
+    onDelete?: () => void
+  }) => (
+    <div data-testid='event-attachment'>
+      <h3>Attachments</h3>
+      {fileUrl ? (
+        <>
+          <span>{fileUrl.split('/').pop()}</span>
+          {onDelete && (
+            <button type='button' onClick={onDelete} aria-label='Delete attachment'>
+              Delete attachment
+            </button>
+          )}
+        </>
+      ) : (
+        <span>No attachments found</span>
+      )}
+    </div>
+  )
+}))
+
+jest.mock('@/components/upload_document', () => ({
+  UploadDocument: ({
+    onUploadComplete,
+    onCancel
+  }: {
+    onUploadComplete: (event: EventResponse) => void
+    onCancel: () => void
+  }) => (
+    <div role='dialog' data-testid='upload-dialog'>
+      <div>Upload Document</div>
+      <button onClick={() => onUploadComplete(mockEvent)}>Upload</button>
+      <button onClick={onCancel}>Cancel</button>
+    </div>
+  )
+}))
+
 import {
   updateEventAction,
-  deleteEventAction
+  deleteEventAction,
+  deleteEventAttachmentAction
 } from '@/app/[userId]/tracks/[trackSlug]/[eventId]/actions'
 import { createEventOnSaveAction } from '@/app/[userId]/tracks/[trackSlug]/new/actions'
 
 const mockUpdateEventAction = updateEventAction as jest.MockedFunction<typeof updateEventAction>
 const mockDeleteEventAction = deleteEventAction as jest.MockedFunction<typeof deleteEventAction>
+const mockDeleteEventAttachmentAction = deleteEventAttachmentAction as jest.MockedFunction<
+  typeof deleteEventAttachmentAction
+>
 
 describe('EventDetail', () => {
   const mockEvent: EventResponse = {
@@ -57,6 +103,7 @@ describe('EventDetail', () => {
     jest.clearAllMocks()
     mockUpdateEventAction.mockResolvedValue({ event: undefined, error: undefined })
     mockDeleteEventAction.mockResolvedValue({})
+    mockDeleteEventAttachmentAction.mockResolvedValue({ event: undefined, error: undefined })
   })
 
   describe('basic rendering', () => {
@@ -684,6 +731,179 @@ describe('EventDetail', () => {
         const formData = mockCreateEventAction.mock.calls[0][0]
         expect(formData.get('type')).toBe(EventType.APPOINTMENT)
         expect(formData.get('date')).toBeTruthy()
+      })
+    })
+
+    it('navigates back when cancel is clicked in create mode', async () => {
+      const user = userEvent.setup()
+      const mockPush = jest.fn()
+      jest.spyOn(require('next/navigation'), 'useRouter').mockReturnValue({
+        push: mockPush
+      })
+
+      const placeholderEvent: EventResponse = {
+        ...mockEvent,
+        id: 'new',
+        title: '',
+        notes: null
+      }
+
+      render(
+        <EventDetail
+          event={placeholderEvent}
+          trackSlug={trackSlug}
+          userId={userId}
+          mode='create'
+          returnTo={`/${userId}/tracks/${trackSlug}`}
+        />
+      )
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith(`/${userId}/tracks/${trackSlug}`)
+      })
+    })
+
+    it('uses fallback URL when cancel is clicked in create mode without returnTo', async () => {
+      const user = userEvent.setup()
+      const mockPush = jest.fn()
+      jest.spyOn(require('next/navigation'), 'useRouter').mockReturnValue({
+        push: mockPush
+      })
+
+      const placeholderEvent: EventResponse = {
+        ...mockEvent,
+        id: 'new',
+        title: '',
+        notes: null
+      }
+
+      render(
+        <EventDetail event={placeholderEvent} trackSlug={trackSlug} userId={userId} mode='create' />
+      )
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await user.click(cancelButton)
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith(`/${userId}/tracks/${trackSlug}`)
+      })
+    })
+  })
+
+  describe('error handling and rollback', () => {
+    it('rolls back optimistic update when updateEventAction returns error', async () => {
+      const user = userEvent.setup()
+      const toast = (await import('sonner')).toast
+      mockUpdateEventAction.mockResolvedValue({ error: 'Failed to update event' })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} mode='edit' />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const editMenuItem = await screen.findByRole('menuitem', { name: /edit event/i })
+      await user.click(editMenuItem)
+
+      const textarea = screen.getByLabelText(/notes/i)
+      await user.clear(textarea)
+      await user.type(textarea, 'Updated Description')
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Failed to update event')
+        // Verify that the original notes are restored
+        expect(screen.getByText('Test Description')).toBeInTheDocument()
+      })
+    })
+
+    it('shows toast error when createEventOnSaveAction returns error in create mode', async () => {
+      const user = userEvent.setup()
+      const toast = (await import('sonner')).toast
+      const mockCreateEventAction = createEventOnSaveAction as jest.MockedFunction<
+        typeof createEventOnSaveAction
+      >
+      mockCreateEventAction.mockResolvedValue({ error: 'Failed to create event' })
+
+      const placeholderEvent: EventResponse = {
+        ...mockEvent,
+        id: 'new',
+        title: '',
+        notes: null
+      }
+
+      render(
+        <EventDetail event={placeholderEvent} trackSlug={trackSlug} userId={userId} mode='create' />
+      )
+
+      const titleInput = screen.getByLabelText(/title/i)
+      await user.type(titleInput, 'New Event')
+
+      const saveButton = screen.getByRole('button', { name: /save/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Failed to create event')
+      })
+    })
+  })
+
+  describe('delete attachment', () => {
+    it('deletes attachment successfully', async () => {
+      const user = userEvent.setup()
+      const updatedEvent: EventResponse = {
+        ...mockEvent,
+        fileUrl: null,
+        updatedAt: '2025-10-22T10:00:00.000Z'
+      }
+      mockDeleteEventAttachmentAction.mockResolvedValue({ event: updatedEvent })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} mode='edit' />)
+
+      const deleteButton = screen.getByRole('button', { name: /delete attachment/i })
+
+      await act(async () => {
+        await user.click(deleteButton)
+      })
+
+      await waitFor(() => {
+        expect(mockDeleteEventAttachmentAction).toHaveBeenCalledWith(
+          userId,
+          trackSlug,
+          mockEvent.id
+        )
+      })
+    })
+  })
+
+  describe('delete event', () => {
+    it('shows toast error when delete event fails', async () => {
+      const user = userEvent.setup()
+      const toast = (await import('sonner')).toast
+      mockDeleteEventAction.mockResolvedValue({ error: 'Failed to delete event' })
+
+      render(<EventDetail event={mockEvent} trackSlug={trackSlug} userId={userId} mode='edit' />)
+
+      const menuButton = screen.getByRole('button', { name: /event actions/i })
+      await user.click(menuButton)
+
+      const deleteMenuItem = await screen.findByRole('menuitem', { name: /delete event/i })
+      await user.click(deleteMenuItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+      })
+
+      const confirmDeleteButton = screen.getByRole('button', { name: /^delete$/i })
+      await user.click(confirmDeleteButton)
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Failed to delete event')
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
       })
     })
   })

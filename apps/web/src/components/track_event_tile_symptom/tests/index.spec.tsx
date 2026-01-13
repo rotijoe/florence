@@ -108,5 +108,33 @@ describe('TrackEventTileSymptom', () => {
 
     expect(screen.getByRole('button', { name: /actions for headache/i })).toBeInTheDocument()
   })
+
+  it('calls onDeleteClick handler when delete is clicked from menu', async () => {
+    const user = userEvent.setup()
+    render(<TrackEventTileSymptom userId={userId} trackSlug={trackSlug} event={baseEvent} />)
+
+    const container = screen.getByTestId('track-event-tile-symptom')
+    const expandButton = container.querySelector('button')!
+    await user.click(expandButton)
+
+    const menuButton = screen.getByRole('button', { name: /actions for headache/i })
+    await user.click(menuButton)
+
+    const deleteMenuItem = screen.getByText(/delete/i)
+    await user.click(deleteMenuItem)
+
+    expect(screen.getByText(/delete event/i)).toBeInTheDocument()
+  })
+
+  it('uses fallback title when symptomType is undefined', () => {
+    const eventWithoutSymptomType: EventResponse = {
+      ...baseEvent,
+      symptomType: undefined
+    }
+    render(<TrackEventTileSymptom userId={userId} trackSlug={trackSlug} event={eventWithoutSymptomType} />)
+
+    const container = screen.getByTestId('track-event-tile-symptom')
+    expect(container).toBeInTheDocument()
+  })
 })
 

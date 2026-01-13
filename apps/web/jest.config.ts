@@ -9,6 +9,12 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jsdom',
+  testEnvironmentOptions: {
+    customExportConditions: [''],
+  },
+  globals: {
+    IS_REACT_ACT_ENVIRONMENT: true,
+  },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
@@ -31,10 +37,10 @@ const customJestConfig = {
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
     global: {
-      branches: 83,
-      functions: 87,
-      lines: 89,
-      statements: 88
+      branches: 93,
+      functions: 95,
+      lines: 97,
+      statements: 96
     }
   }
 }

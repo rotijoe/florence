@@ -37,5 +37,6 @@ describe('HubQuickActionSymptom', () => {
     const button = screen.getByRole('button', { name: /log symptom/i })
     expect(button).toHaveClass('justify-between', 'rounded-full', 'px-5', 'sm:w-auto')
   })
+
 })
 

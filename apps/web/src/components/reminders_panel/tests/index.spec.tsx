@@ -4,10 +4,26 @@ import { RemindersPanel } from '../index'
 import type { Notification } from '@/app/[userId]/types'
 import type { TrackOption } from '@/components/hub_quick_actions/types'
 
+const mockOnSymptomSuccess = jest.fn()
+
 jest.mock('@/components/hub_quick_actions/symptom_dialogue', () => ({
-  SymptomDialogue: ({ open, initialTrackSlug }: { open: boolean; initialTrackSlug?: string }) => {
+  SymptomDialogue: ({
+    open,
+    initialTrackSlug,
+    onSuccess
+  }: {
+    open: boolean
+    initialTrackSlug?: string
+    onSuccess?: () => void
+  }) => {
     if (!open) return null
-    return <div data-testid='symptom-dialogue' data-track-slug={initialTrackSlug} />
+    return (
+      <div data-testid='symptom-dialogue' data-track-slug={initialTrackSlug}>
+        <button onClick={onSuccess} data-testid='symptom-success-button'>
+          Complete
+        </button>
+      </div>
+    )
   }
 }))
 
@@ -434,6 +450,110 @@ describe('RemindersPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Add details' }))
 
     expect(window.location.hash).toBe('#details')
+  })
+
+  it('calls handleSymptomSuccess when symptom dialogue completes successfully', async () => {
+    const user = userEvent.setup()
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'symptomReminder',
+        title: 'Log a symptom in Pain',
+        message: 'Test message',
+        ctaLabel: 'Log symptom',
+        trackSlug: 'pain'
+      }
+    ]
+
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
+
+    // Open symptom dialogue
+    const logButton = screen.getByRole('button', { name: 'Log symptom' })
+    await user.click(logButton)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('symptom-dialogue')).toBeInTheDocument()
+    }, { timeout: 3000 })
+
+    // Complete symptom logging
+    const completeButton = screen.getByTestId('symptom-success-button')
+    await user.click(completeButton)
+
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled()
+    }, { timeout: 3000 })
+  })
+
+  it('handles handleSymptomSuccess when symptom dialogue completes', async () => {
+    const user = userEvent.setup()
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'symptomReminder',
+        title: 'Log a symptom in Pain',
+        message: 'Test message',
+        ctaLabel: 'Log symptom',
+        trackSlug: 'pain'
+      }
+    ]
+
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
+
+    // Open symptom dialogue
+    await user.click(screen.getByRole('button', { name: 'Log symptom' }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('symptom-dialogue')).toBeInTheDocument()
+    })
+
+    // Complete symptom logging
+    const completeButton = screen.getByTestId('symptom-success-button')
+    await user.click(completeButton)
+
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled()
+    })
+  })
+
+  it('handles notification without ctaLabel', () => {
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'symptomReminder',
+        title: 'Test notification',
+        message: 'Test message',
+        ctaLabel: undefined,
+        trackSlug: 'pain'
+      }
+    ]
+
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
+
+    expect(screen.getByText('Test notification')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /log symptom/i })).not.toBeInTheDocument()
+  })
+
+  it('handles appointmentDetails notification without href', async () => {
+    const user = userEvent.setup()
+    const originalHash = window.location.hash
+    const notifications: Notification[] = [
+      {
+        id: '1',
+        type: 'appointmentDetails',
+        title: 'Add details',
+        message: 'Test message',
+        ctaLabel: 'Add details',
+        href: undefined
+      }
+    ]
+
+    render(<RemindersPanel notifications={notifications} {...defaultProps} />)
+
+    const button = screen.getByRole('button', { name: 'Add details' })
+    await user.click(button)
+
+    // Should not navigate if href is undefined - restore original hash
+    window.location.hash = originalHash
   })
 })
 

@@ -105,5 +105,25 @@ describe('TrackEventTileActionMenu', () => {
     const button = screen.getByRole('button', { name: /actions for test event/i })
     expect(button).toHaveClass('bg-red-500', 'text-white')
   })
+
+  it('calls stopLinkNavigation when Edit menu item is selected', async () => {
+    const user = userEvent.setup()
+    const { stopLinkNavigation } = require('@/lib/stop_link_navigation')
+    render(
+      <TrackEventTileActionMenu
+        href={href}
+        eventTitle={eventTitle}
+        onDeleteClick={onDeleteClick}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name: /actions for test event/i }))
+    const editMenuItem = screen.getByText(/edit/i).closest('[role="menuitem"]')
+    if (editMenuItem) {
+      await user.click(editMenuItem)
+    }
+
+    expect(stopLinkNavigation).toHaveBeenCalled()
+  })
 })
 

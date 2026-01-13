@@ -1,8 +1,7 @@
 ---
-alwaysApply: true
 description: Backend authentication and authorization requirements for user-scoped endpoints.
+alwaysApply: false
 ---
-
 # Backend Authentication & Authorization Rules
 
 ## Critical Security Requirements

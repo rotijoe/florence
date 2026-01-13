@@ -2,7 +2,8 @@ import {
   updateEventAction,
   createEventUploadIntentAction,
   confirmEventUploadAction,
-  deleteEventAction
+  deleteEventAction,
+  deleteEventAttachmentAction
 } from '../actions'
 import { API_BASE_URL } from '@/constants/api'
 import { EventType, type EventResponse, type ApiResponse } from '@packages/types'
@@ -986,5 +987,214 @@ describe('deleteEventAction', () => {
         })
       })
     )
+  })
+})
+
+describe('deleteEventAttachmentAction', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(cookies as jest.Mock).mockResolvedValue({
+      getAll: jest.fn().mockReturnValue([
+        { name: 'session', value: 'session-value' }
+      ])
+    })
+  })
+
+  it('successfully deletes attachment and revalidates paths', async () => {
+    const mockEvent: EventResponse = {
+      id: 'event-1',
+      trackId: 'track-1',
+      date: '2024-01-01T00:00:00.000Z',
+      type: EventType.NOTE,
+      title: 'Test Event',
+      notes: null,
+      fileUrl: null,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z'
+    }
+
+    const mockResponse: ApiResponse<EventResponse> = {
+      success: true,
+      data: mockEvent
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    })
+
+    const result = await deleteEventAttachmentAction('user-1', 'track-slug', 'event-1')
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${API_BASE_URL}/api/users/user-1/tracks/track-slug/events/event-1/attachment`,
+      expect.objectContaining({
+        method: 'DELETE',
+        headers: expect.objectContaining({
+          Cookie: 'session=session-value'
+        })
+      })
+    )
+    expect(result.event).toEqual(mockEvent)
+    expect(result.error).toBeUndefined()
+    expect(revalidatePath).toHaveBeenCalledWith('/user-1/tracks/track-slug/event-1')
+    expect(revalidatePath).toHaveBeenCalledWith('/user-1/tracks/track-slug')
+  })
+
+  it('returns error when userId is missing', async () => {
+    const result = await deleteEventAttachmentAction('', 'track-slug', 'event-1')
+
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
+    expect(result.event).toBeUndefined()
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('returns error when trackSlug is missing', async () => {
+    const result = await deleteEventAttachmentAction('user-1', '', 'event-1')
+
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
+    expect(result.event).toBeUndefined()
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('returns error when eventId is missing', async () => {
+    const result = await deleteEventAttachmentAction('user-1', 'track-slug', '')
+
+    expect(result.error).toBe('Missing required fields: userId, eventId and trackSlug are required')
+    expect(result.event).toBeUndefined()
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('handles API error response', async () => {
+    const errorResponse: ApiResponse<never> = {
+      success: false,
+      error: 'Attachment not found'
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Not Found',
+      json: async () => errorResponse
+    })
+
+    const result = await deleteEventAttachmentAction('user-1', 'track-slug', 'event-1')
+
+    expect(result.error).toBe('Attachment not found')
+    expect(result.event).toBeUndefined()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('handles API error when json parsing fails', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Internal Server Error',
+      json: async () => {
+        throw new Error('Invalid JSON')
+      }
+    })
+
+    const result = await deleteEventAttachmentAction('user-1', 'track-slug', 'event-1')
+
+    expect(result.error).toBe('Failed to delete attachment: Internal Server Error')
+    expect(result.event).toBeUndefined()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('handles network error', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
+
+    const result = await deleteEventAttachmentAction('user-1', 'track-slug', 'event-1')
+
+    expect(result.error).toBe('Failed to delete attachment: Network error')
+    expect(result.event).toBeUndefined()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('handles non-Error exception', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValueOnce('String error')
+
+    const result = await deleteEventAttachmentAction('user-1', 'track-slug', 'event-1')
+
+    expect(result.error).toBe('Failed to delete attachment: Unknown error occurred')
+    expect(result.event).toBeUndefined()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('handles response with success=false', async () => {
+    const mockResponse: ApiResponse<EventResponse> = {
+      success: false,
+      error: 'Server error'
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    })
+
+    const result = await deleteEventAttachmentAction('user-1', 'track-slug', 'event-1')
+
+    expect(result.error).toBe('Server error')
+    expect(result.event).toBeUndefined()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('handles response with missing data', async () => {
+    const mockResponse: ApiResponse<EventResponse> = {
+      success: true,
+      data: undefined as unknown as EventResponse
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    })
+
+    const result = await deleteEventAttachmentAction('user-1', 'track-slug', 'event-1')
+
+    expect(result.error).toBe('Failed to delete attachment')
+    expect(result.event).toBeUndefined()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('handles empty cookie header', async () => {
+    ;(cookies as jest.Mock).mockResolvedValueOnce({
+      getAll: jest.fn().mockReturnValue([])
+    })
+
+    const mockEvent: EventResponse = {
+      id: 'event-1',
+      trackId: 'track-1',
+      date: '2024-01-01T00:00:00.000Z',
+      type: EventType.NOTE,
+      title: 'Test Event',
+      notes: null,
+      fileUrl: null,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z'
+    }
+
+    const mockResponse: ApiResponse<EventResponse> = {
+      success: true,
+      data: mockEvent
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    })
+
+    await deleteEventAttachmentAction('user-1', 'track-slug', 'event-1')
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.not.objectContaining({
+          Cookie: expect.anything()
+        })
+      })
+    )
+    expect(revalidatePath).toHaveBeenCalledTimes(2)
   })
 })

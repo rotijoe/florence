@@ -187,5 +187,67 @@ describe('TracksPageClient', () => {
     const trackTiles = screen.getByTestId('track-tiles')
     expect(trackTiles).toHaveAttribute('data-user-id', 'user-456')
   })
+
+  it('should render empty state when tracks array is empty', () => {
+    const tracks: TrackResponse[] = []
+
+    render(<TracksPageClient userId='user-123' tracks={tracks} />)
+
+    expect(screen.getByText(/no tracks yet/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        /create your first track to keep notes, uploads, and events in one place/i
+      )
+    ).toBeInTheDocument()
+  })
+
+  it('should call handleSuccess which closes dialog and refreshes router', async () => {
+    const user = userEvent.setup()
+    const tracks: TrackResponse[] = []
+
+    render(<TracksPageClient userId='user-123' tracks={tracks} />)
+
+    const createButtons = screen.getAllByRole('button', { name: /create track/i })
+    await user.click(createButtons[0])
+
+    await waitFor(() => {
+      expect(screen.getByText(/create new health track/i)).toBeInTheDocument()
+    })
+
+    const createButton = screen.getByRole('button', { name: /^create$/i })
+    await user.click(createButton)
+
+    await waitFor(() => {
+      expect(mockRouter.refresh).toHaveBeenCalledTimes(1)
+      expect(screen.queryByText(/create new health track/i)).not.toBeInTheDocument()
+    })
+  })
+
+  it('should render empty state when tracks is null', () => {
+    render(<TracksPageClient userId='user-123' tracks={null as unknown as TrackResponse[]} />)
+
+    expect(screen.getByText(/no tracks yet/i)).toBeInTheDocument()
+  })
+
+  it('should open dialog from empty state button', async () => {
+    const user = userEvent.setup()
+    const tracks: TrackResponse[] = []
+
+    render(<TracksPageClient userId='user-123' tracks={tracks} />)
+
+    const buttons = screen.getAllByRole('button', { name: /create track/i })
+    // Click the button in the empty state card footer
+    const emptyStateButton = buttons.find((btn) =>
+      btn.closest('[data-slot="card-footer"]')
+    )
+    expect(emptyStateButton).toBeDefined()
+    if (emptyStateButton) {
+      await user.click(emptyStateButton)
+    }
+
+    await waitFor(() => {
+      expect(screen.getByText(/create new health track/i)).toBeInTheDocument()
+    })
+  })
 })
 

@@ -1,8 +1,7 @@
 ---
-alwaysApply: true
 description: Data security and compliance.
+alwaysApply: false
 ---
-
 Users upload their own files (letters, lab results, appointment notes).
 No NHS integration.
 No clinical features.

@@ -83,5 +83,27 @@ describe('TrackEventTileStandard', () => {
 
     expect(screen.getByText(longNotes)).toBeInTheDocument()
   })
+
+  it('applies active ring styling when isActive is true', () => {
+    render(<TrackEventTileStandard userId={userId} trackSlug={trackSlug} event={baseEvent} isActive />)
+
+    const tile = screen.getByTestId('track-event-tile-standard')
+    expect(tile).toHaveClass('ring-2', 'ring-primary')
+  })
+
+  it('applies upcoming ring styling when isUpcoming is true', () => {
+    render(<TrackEventTileStandard userId={userId} trackSlug={trackSlug} event={baseEvent} isUpcoming />)
+
+    const tile = screen.getByTestId('track-event-tile-standard')
+    expect(tile).toHaveClass('ring-2', 'ring-indigo-500/30')
+  })
+
+  it('does not apply ring styling when neither isActive nor isUpcoming', () => {
+    render(<TrackEventTileStandard userId={userId} trackSlug={trackSlug} event={baseEvent} />)
+
+    const tile = screen.getByTestId('track-event-tile-standard')
+    expect(tile).not.toHaveClass('ring-2', 'ring-primary')
+    expect(tile).not.toHaveClass('ring-2', 'ring-indigo-500/30')
+  })
 })
 
