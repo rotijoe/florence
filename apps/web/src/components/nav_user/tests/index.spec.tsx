@@ -12,6 +12,13 @@ jest.mock('../helpers', () => ({
   handleSignOut: jest.fn()
 }))
 
+const mockPush = jest.fn()
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush
+  })
+}))
+
 jest.mock('@/components/auth_dialog', () => ({
   AuthDialog: ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) =>
     open ? (
@@ -142,6 +149,7 @@ describe('NavUser', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUseSidebar.mockReturnValue({ isMobile: false })
+    mockPush.mockClear()
   })
 
   it('renders loading state when session is pending', () => {
@@ -359,6 +367,73 @@ describe('NavUser', () => {
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith('Sign out error:', 'Sign out failed')
     })
+
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('redirects to root route after successful logout', async () => {
+    const user = userEvent.setup()
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+    mockHandleSignOut.mockResolvedValue({ success: true })
+
+    render(<NavUser />)
+
+    const nameElements = screen.getAllByText('John Doe')
+    const trigger = nameElements[0].closest('button')
+    if (trigger) {
+      await user.click(trigger)
+    }
+
+    const signOutButton = screen.getByRole('button', { name: /sign out/i })
+    await user.click(signOutButton)
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/')
+    })
+  })
+
+  it('does not redirect when sign out fails', async () => {
+    const user = userEvent.setup()
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    mockUseSession.mockReturnValue({
+      data: {
+        user: {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com'
+        }
+      },
+      isPending: false,
+      error: null
+    } as unknown as ReturnType<typeof useSession>)
+    mockHandleSignOut.mockResolvedValue({ success: false, error: 'Sign out failed' })
+
+    render(<NavUser />)
+
+    const nameElements = screen.getAllByText('John Doe')
+    const trigger = nameElements[0].closest('button')
+    if (trigger) {
+      await user.click(trigger)
+    }
+
+    const signOutButton = screen.getByRole('button', { name: /sign out/i })
+    await user.click(signOutButton)
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Sign out error:', 'Sign out failed')
+    })
+
+    expect(mockPush).not.toHaveBeenCalled()
 
     consoleErrorSpy.mockRestore()
   })

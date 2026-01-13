@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth_client'
 import { MoreVertical, LogOut, User, LogIn } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -23,6 +24,7 @@ import { AuthDialog } from '@/components/auth_dialog'
 import { handleSignOut } from './helpers'
 
 export function NavUser() {
+  const router = useRouter()
   const { data: session, isPending } = useSession()
   const { isMobile } = useSidebar()
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
@@ -34,6 +36,9 @@ export function NavUser() {
 
     if (!result.success) {
       console.error('Sign out error:', result.error)
+    } else {
+      // Redirect to root route after successful logout
+      router.push('/')
     }
 
     setIsSigningOut(false)
