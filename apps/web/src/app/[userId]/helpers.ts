@@ -1,6 +1,5 @@
-import type { HealthTrackSummary, AppointmentSummary, Notification } from './types'
+import type { HealthTrackSummary, AppointmentSummary } from './types'
 import type {
-  ApiResponse,
   UpcomingAppointmentResponse,
   TrackResponse
 } from '@packages/types'

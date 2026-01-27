@@ -30,9 +30,7 @@ describe('Error', () => {
     render(<TracksError error={error} reset={mockReset} />)
 
     expect(screen.getByText("Couldn't load your tracks")).toBeInTheDocument()
-    expect(
-      screen.getByText('An error occurred while loading your tracks')
-    ).toBeInTheDocument()
+    expect(screen.getByText('An error occurred while loading your tracks')).toBeInTheDocument()
   })
 
   it('calls reset function on button click', async () => {

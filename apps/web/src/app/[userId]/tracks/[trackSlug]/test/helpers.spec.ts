@@ -89,12 +89,14 @@ describe('fetchTrack helpers', () => {
           id: '1',
           type: 'symptomReminder',
           trackSlug: 'track-1',
+          title: 'Reminder 1',
           message: 'Reminder 1'
         },
         {
           id: '2',
           type: 'symptomReminder',
           trackSlug: 'track-2',
+          title: 'Reminder 2',
           message: 'Reminder 2'
         }
       ]
@@ -111,12 +113,14 @@ describe('fetchTrack helpers', () => {
           id: '1',
           type: 'appointmentDetails',
           href: '/user-1/tracks/track-1/event-1',
+          title: 'Appointment 1',
           message: 'Appointment 1'
         },
         {
           id: '2',
           type: 'appointmentDetails',
           href: '/user-1/tracks/track-2/event-2',
+          title: 'Appointment 2',
           message: 'Appointment 2'
         }
       ]
@@ -133,6 +137,7 @@ describe('fetchTrack helpers', () => {
           id: '1',
           type: 'appointmentDetails',
           href: '/user-1/tracks/track-2/event-1',
+          title: 'Appointment 1',
           message: 'Appointment 1'
         }
       ]
@@ -148,6 +153,7 @@ describe('fetchTrack helpers', () => {
           id: '1',
           type: 'appointmentDetails',
           href: undefined,
+          title: 'Appointment 1',
           message: 'Appointment 1'
         }
       ]
@@ -163,6 +169,7 @@ describe('fetchTrack helpers', () => {
           id: '1',
           type: 'appointmentDetails',
           href: 'not-a-valid-url',
+          title: 'Appointment 1',
           message: 'Appointment 1'
         }
       ]
@@ -179,11 +186,13 @@ describe('fetchTrack helpers', () => {
           id: '1',
           type: 'symptomReminder',
           trackSlug: 'track-1',
+          title: 'Reminder',
           message: 'Reminder'
         },
         {
           id: '2',
           type: 'unknownType' as Notification['type'],
+          title: 'Unknown',
           message: 'Unknown'
         }
       ]

@@ -1,7 +1,4 @@
-import {
-  createEventAction,
-  deleteTrackAction
-} from '../actions'
+import { createEventAction, deleteTrackAction } from '../actions'
 import { API_BASE_URL } from '@/constants/api'
 import { EventType, type EventResponse, type ApiResponse } from '@packages/types'
 
@@ -425,9 +422,7 @@ describe('deleteTrackAction', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     ;(cookies as jest.Mock).mockResolvedValue({
-      getAll: jest.fn().mockReturnValue([
-        { name: 'session', value: 'session-value' }
-      ])
+      getAll: jest.fn().mockReturnValue([{ name: 'session', value: 'session-value' }])
     })
   })
 

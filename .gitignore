@@ -1,9 +1,13 @@
 node_modules
-.env
 dist
 .next
 .DS_Store
 .turbo
-*.log
-.env*.local
 .pnpm-store/
+*.log
+coverage
+*.tsbuildinfo
+
+# env files
+.env*
+!.env.example

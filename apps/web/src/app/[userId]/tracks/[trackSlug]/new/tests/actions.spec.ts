@@ -21,9 +21,7 @@ describe('createEventOnSaveAction', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     ;(cookies as jest.Mock).mockResolvedValue({
-      getAll: jest.fn().mockReturnValue([
-        { name: 'session', value: 'session-value' }
-      ])
+      getAll: jest.fn().mockReturnValue([{ name: 'session', value: 'session-value' }])
     })
   })
 
@@ -202,9 +200,7 @@ describe('createEventOnSaveAction', () => {
 
     await createEventOnSaveAction(formData)
 
-    const callBody = JSON.parse(
-      (global.fetch as jest.Mock).mock.calls[0][1].body
-    )
+    const callBody = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)
     expect(callBody.date).toBeDefined()
     expect(new Date(callBody.date).toISOString()).toBe(callBody.date)
   })
@@ -240,9 +236,7 @@ describe('createEventOnSaveAction', () => {
 
     await createEventOnSaveAction(formData)
 
-    const callBody = JSON.parse(
-      (global.fetch as jest.Mock).mock.calls[0][1].body
-    )
+    const callBody = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)
     expect(callBody.type).toBe(EventType.RESULT)
   })
 
@@ -276,9 +270,7 @@ describe('createEventOnSaveAction', () => {
 
     await createEventOnSaveAction(formData)
 
-    const callBody = JSON.parse(
-      (global.fetch as jest.Mock).mock.calls[0][1].body
-    )
+    const callBody = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)
     expect(callBody.type).toBeUndefined()
   })
 
@@ -313,9 +305,7 @@ describe('createEventOnSaveAction', () => {
 
     await createEventOnSaveAction(formData)
 
-    const callBody = JSON.parse(
-      (global.fetch as jest.Mock).mock.calls[0][1].body
-    )
+    const callBody = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)
     expect(callBody.notes).toBeNull()
   })
 
@@ -458,7 +448,7 @@ describe('createEventOnSaveAction', () => {
     })
 
     const redirectError = new Error('NEXT_REDIRECT')
-    ;(redirect as jest.Mock).mockImplementationOnce(() => {
+    ;(redirect as unknown as jest.Mock).mockImplementationOnce(() => {
       throw redirectError
     })
 
@@ -500,9 +490,7 @@ describe('createEventOnSaveAction', () => {
 
     await createEventOnSaveAction(formData)
 
-    const callBody = JSON.parse(
-      (global.fetch as jest.Mock).mock.calls[0][1].body
-    )
+    const callBody = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)
     expect(callBody.title).toBe('Test Event')
   })
 

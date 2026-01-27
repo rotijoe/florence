@@ -28,6 +28,19 @@ jest.mock('@/app/[userId]/tracks/[trackSlug]/new/actions', () => ({
   createEventOnSaveAction: jest.fn()
 }))
 
+// Define mockEvent before mocks that use it
+const mockEvent: EventResponse = {
+  id: '1',
+  trackId: 'track-1',
+  date: '2025-10-21T14:30:00.000Z',
+  title: 'Test Event',
+  notes: 'Test Description',
+  type: EventType.NOTE,
+  fileUrl: 'https://example.com/file.pdf',
+  createdAt: '2025-10-21T14:30:00.000Z',
+  updatedAt: '2025-10-21T14:30:00.000Z'
+}
+
 jest.mock('@/components/event_attachment', () => ({
   EventAttachment: ({
     fileUrl,
@@ -84,18 +97,6 @@ const mockDeleteEventAttachmentAction = deleteEventAttachmentAction as jest.Mock
 >
 
 describe('EventDetail', () => {
-  const mockEvent: EventResponse = {
-    id: '1',
-    trackId: 'track-1',
-    date: '2025-10-21T14:30:00.000Z',
-    title: 'Test Event',
-    notes: 'Test Description',
-    type: EventType.NOTE,
-    fileUrl: 'https://example.com/file.pdf',
-    createdAt: '2025-10-21T14:30:00.000Z',
-    updatedAt: '2025-10-21T14:30:00.000Z'
-  }
-
   const trackSlug = 'test-track'
   const userId = 'user-1'
 
@@ -754,7 +755,6 @@ describe('EventDetail', () => {
           trackSlug={trackSlug}
           userId={userId}
           mode='create'
-          returnTo={`/${userId}/tracks/${trackSlug}`}
         />
       )
 

@@ -9,12 +9,13 @@ import eventsRoute from '@/routes/events/index'
 import uploadsRoute from '@/routes/uploads/index'
 
 export const app = new Hono<{ Variables: AppVariables }>()
+const corsOrigin = process.env.CORS_ORIGIN || process.env.TRUSTED_ORIGIN || 'http://localhost:3000'
 
 // CORS middleware for all API routes
 app.use(
   '/api/*',
   cors({
-    origin: 'http://localhost:3000', // Next.js frontend URL
+    origin: corsOrigin,
     allowHeaders: ['Content-Type', 'Authorization'],
     allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE', 'PATCH'],
     exposeHeaders: ['Content-Length'],
