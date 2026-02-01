@@ -1,22 +1,42 @@
 import { EventType, type EventResponse } from '@packages/types'
 import { getPresignedDownloadUrl, getObjectKeyFromUrl } from '@/lib/s3/index.js'
+import { decryptEventContent } from '@/lib/crypto/index.js'
 
 export type EventSelectResult = {
   id: string
   trackId: string
   date: Date
   type: string
-  title: string
-  notes: string | null
-  fileUrl: string | null
-  symptomType: string | null
-  severity: number | null
   createdAt: Date
   updatedAt: Date
+  content: {
+    contentEnc: Uint8Array
+  } | null
 }
 
 export async function formatEvent(event: EventSelectResult): Promise<EventResponse> {
-  let fileUrl = event.fileUrl
+  // Decrypt content if present
+  let title = 'Untitled event'
+  let notes: string | null = null
+  let fileUrl: string | null = null
+  let symptomType: string | null = null
+  let severity: number | null = null
+
+  if (event.content?.contentEnc) {
+    try {
+      const content = decryptEventContent(event.content.contentEnc)
+      title = content.title
+      notes = content.notes
+      fileUrl = content.fileUrl
+      symptomType = content.symptomType
+      severity = content.severity
+    } catch (error) {
+      console.error('Error decrypting event content:', error)
+      // Fall back to defaults if decryption fails
+    }
+  }
+
+  // Convert fileUrl to presigned URL if present
   if (fileUrl) {
     const key = getObjectKeyFromUrl(fileUrl)
     if (key) {
@@ -33,11 +53,11 @@ export async function formatEvent(event: EventSelectResult): Promise<EventRespon
     trackId: event.trackId,
     date: event.date.toISOString(),
     type: event.type as EventType,
-    title: event.title,
-    notes: event.notes,
+    title,
+    notes,
     fileUrl,
-    symptomType: event.symptomType,
-    severity: event.severity,
+    symptomType,
+    severity,
     createdAt: event.createdAt.toISOString(),
     updatedAt: event.updatedAt.toISOString()
   }

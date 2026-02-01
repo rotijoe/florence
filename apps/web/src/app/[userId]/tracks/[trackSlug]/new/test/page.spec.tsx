@@ -22,7 +22,8 @@ describe('NewEventPage', () => {
 
   it('prefills the event type when searchParams.type is provided', async () => {
     const params = Promise.resolve({ userId: 'user-1', trackSlug: 'test-track' })
-    const result = await NewEventPage({ params, searchParams: { type: 'APPOINTMENT' } })
+    const searchParams = Promise.resolve({ type: 'APPOINTMENT' })
+    const result = await NewEventPage({ params, searchParams })
     render(result)
 
     expect(screen.getByTestId('event-detail')).toHaveAttribute('data-event-type', 'APPOINTMENT')

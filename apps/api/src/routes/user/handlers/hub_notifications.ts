@@ -3,6 +3,7 @@ import type { AppVariables } from '../../../types/index.js'
 import { prismaRuntime, withUserRls } from '@packages/database'
 import { z } from 'zod'
 import { EventType, type ApiResponse } from '@packages/types'
+import { decryptEventContent } from '@/lib/crypto/index.js'
 
 const dismissSchema = z.object({
   type: z.enum(['EVENT_MISSING_DETAILS', 'TRACK_MISSING_SYMPTOM']),
@@ -47,23 +48,21 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
           date: {
             gte: sevenDaysAgo,
             lt: now
-          },
-          AND: [
-            {
-              OR: [{ notes: null }, { notes: '' }]
-            },
-            { fileUrl: null }
-          ]
+          }
         },
         select: {
           id: true,
           trackId: true,
           date: true,
-          title: true,
           track: {
             select: {
               slug: true,
               title: true
+            }
+          },
+          content: {
+            select: {
+              contentEnc: true
             }
           }
         },
@@ -74,12 +73,33 @@ export async function getHubNotifications(c: Context<{ Variables: AppVariables }
     })
 
     for (const event of eventsMissingDetails) {
+      // Decrypt content to check for notes and fileUrl
+      let hasNotes = false
+      let hasFileUrl = false
+      let title = 'Untitled event'
+
+      if (event.content?.contentEnc) {
+        try {
+          const content = decryptEventContent(event.content.contentEnc)
+          title = content.title
+          hasNotes = !!content.notes && content.notes.trim() !== ''
+          hasFileUrl = !!content.fileUrl
+        } catch (error) {
+          console.error('Error decrypting event content:', error)
+        }
+      }
+
+      // Skip if event has notes or fileUrl
+      if (hasNotes || hasFileUrl) {
+        continue
+      }
+
       const dismissalKey = `EVENT_MISSING_DETAILS:${event.id}`
       if (!dismissedSet.has(dismissalKey)) {
         notifications.push({
           id: `event-missing-details-${event.id}`,
           type: 'appointmentDetails',
-          title: `Add details to "${event.title}"`,
+          title: `Add details to "${title}"`,
           message: `Capture key points from this event in your ${event.track.title} track while they are still fresh.`,
           ctaLabel: 'Add details',
           href: `/${userId}/tracks/${event.track.slug}/${event.id}`,

@@ -25,9 +25,15 @@ export async function withUserRls<T>(
     throw new Error('withUserRls requires a valid userId')
   }
 
-  return prisma.$transaction(async (tx) => {
-    // Set user context for this transaction (local = true means transaction-scoped)
-    await tx.$executeRaw`SELECT set_config('app.user_id', ${userId}, true)`
-    return fn(tx)
-  })
+  return prisma.$transaction(
+    async (tx) => {
+      // Set user context for this transaction (local = true means transaction-scoped)
+      await tx.$executeRaw`SELECT set_config('app.user_id', ${userId}, true)`
+      return fn(tx)
+    },
+    {
+      maxWait: 5000,
+      timeout: 10000
+    }
+  )
 }

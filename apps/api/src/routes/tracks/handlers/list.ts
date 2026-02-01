@@ -35,4 +35,3 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
     )
   }
 }
-

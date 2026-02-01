@@ -11,6 +11,7 @@
     "lint:fix": "eslint . --fix",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs --watch",
+    "test:file": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.cjs --coverage",
     "typecheck": "tsc --noEmit --pretty"
   },

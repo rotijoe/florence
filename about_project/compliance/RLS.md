@@ -28,6 +28,7 @@ RLS is enabled on domain tables that contain user-scoped data:
 - `health_tracks` - Direct `userId` column
 - `hub_dismissals` - Direct `userId` column
 - `events` - Indirect via `trackId` → `health_tracks.userId`
+- `event_contents` - Indirect via `eventId` → `events.trackId` → `health_tracks.userId`
 
 ### Tables Without RLS
 
@@ -39,6 +40,7 @@ Auth tables are excluded from RLS because they require access before user contex
 - `verifications` - Email verification/password reset tokens
 
 These tables are protected by:
+
 - Application-level authentication (Better Auth)
 - Middleware (`userScopeGuard`) enforcing ownership
 - Cascade deletes ensuring data consistency
@@ -96,6 +98,33 @@ WITH CHECK (
 );
 ```
 
+#### Event Contents Policy
+
+Event contents are scoped indirectly through their parent event:
+
+```sql
+CREATE POLICY "event_contents_user_isolation"
+ON "event_contents"
+FOR ALL
+TO app_runtime
+USING (
+  EXISTS (
+    SELECT 1 FROM "events" e
+    JOIN "health_tracks" ht ON ht."id" = e."trackId"
+    WHERE e."id" = "event_contents"."eventId"
+      AND ht."userId" = current_setting('app.user_id', true)
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM "events" e
+    JOIN "health_tracks" ht ON ht."id" = e."trackId"
+    WHERE e."id" = "event_contents"."eventId"
+      AND ht."userId" = current_setting('app.user_id', true)
+  )
+);
+```
+
 ### Prisma Integration
 
 We use a transaction wrapper `withUserRls` to set user context before executing queries:
@@ -109,6 +138,7 @@ const tracks = await withUserRls(prismaRuntime, userId, async (tx) => {
 ```
 
 The wrapper:
+
 1. Starts a transaction
 2. Sets `app.user_id` using `set_config` (transaction-local)
 3. Executes the query function
@@ -143,8 +173,8 @@ CREATE ROLE app_runtime WITH LOGIN PASSWORD 'your-secure-password';
 -- Grant permissions
 GRANT CONNECT ON DATABASE neondb TO app_runtime;
 GRANT USAGE ON SCHEMA public TO app_runtime;
-GRANT SELECT, INSERT, UPDATE, DELETE ON 
-  health_tracks, events, hub_dismissals 
+GRANT SELECT, INSERT, UPDATE, DELETE ON
+  health_tracks, events, hub_dismissals, event_contents
 TO app_runtime;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO app_runtime;
 ```
@@ -158,11 +188,13 @@ Run in Neon SQL Editor:
 ALTER TABLE "health_tracks" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "events" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "hub_dismissals" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "event_contents" ENABLE ROW LEVEL SECURITY;
 
 -- IMPORTANT: Force RLS even for table owners
 ALTER TABLE "health_tracks" FORCE ROW LEVEL SECURITY;
 ALTER TABLE "events" FORCE ROW LEVEL SECURITY;
 ALTER TABLE "hub_dismissals" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "event_contents" FORCE ROW LEVEL SECURITY;
 
 -- Policy: health_tracks
 CREATE POLICY "health_tracks_user_isolation"
@@ -196,6 +228,27 @@ WITH CHECK (
       AND ht."userId" = current_setting('app.user_id', true)
   )
 );
+
+-- Policy: event_contents (scoped via event → track ownership)
+CREATE POLICY "event_contents_user_isolation"
+ON "event_contents"
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM "events" e
+    JOIN "health_tracks" ht ON ht."id" = e."trackId"
+    WHERE e."id" = "event_contents"."eventId"
+      AND ht."userId" = current_setting('app.user_id', true)
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM "events" e
+    JOIN "health_tracks" ht ON ht."id" = e."trackId"
+    WHERE e."id" = "event_contents"."eventId"
+      AND ht."userId" = current_setting('app.user_id', true)
+  )
+);
 ```
 
 ### 3. Configure Environment
@@ -218,21 +271,21 @@ Run these queries in Neon SQL Editor to verify:
 
 ```sql
 -- Check RLS is enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
-WHERE schemaname = 'public' 
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public'
 AND tablename IN ('health_tracks', 'events', 'hub_dismissals');
 -- All should show 't' (true)
 
 -- Check policies exist
-SELECT tablename, policyname 
-FROM pg_policies 
+SELECT tablename, policyname
+FROM pg_policies
 WHERE schemaname = 'public';
 -- Should show 3 policies
 
 -- Check runtime role exists
-SELECT rolname, rolbypassrls 
-FROM pg_roles 
+SELECT rolname, rolbypassrls
+FROM pg_roles
 WHERE rolname = 'app_runtime';
 -- Should show rolbypassrls = 'f' (false)
 ```
@@ -250,16 +303,19 @@ import { prismaRuntime, withUserRls } from '@packages/database'
 When adding a new user-scoped table:
 
 1. **Grant privileges** to `app_runtime` role:
+
    ```sql
    GRANT SELECT, INSERT, UPDATE, DELETE ON new_table TO app_runtime;
    ```
 
 2. **Enable RLS**:
+
    ```sql
    ALTER TABLE "new_table" ENABLE ROW LEVEL SECURITY;
    ```
 
 3. **Create policy**:
+
    ```sql
    CREATE POLICY "new_table_user_isolation"
    ON "new_table"
@@ -285,6 +341,7 @@ Consider adding integration tests to verify RLS enforcement:
 - Cross-user data access is prevented
 
 These tests would require:
+
 - Test database with RLS enabled
 - Ability to switch between different user contexts
 - Verification that policies correctly filter rows
@@ -292,6 +349,7 @@ These tests would require:
 ### Monitoring
 
 Consider monitoring:
+
 - Failed queries due to missing RLS context
 - Performance impact of RLS policies (especially EXISTS subqueries)
 - Policy effectiveness through query logs
@@ -299,6 +357,7 @@ Consider monitoring:
 ### Policy Optimization
 
 The events policy uses an EXISTS subquery which may impact performance on large datasets. Consider:
+
 - Adding indexes on `health_tracks.id` and `events.trackId` (already present)
 - Monitoring query performance
 - Optimizing policy if needed (e.g., denormalizing `userId` on events table)

@@ -4,6 +4,14 @@ import { EventType } from '@packages/types'
 import { s3Client } from '@/lib/s3/index.js'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { auth } from '@/auth'
+import { encryptEventContent } from '@/lib/crypto/index.js'
+
+const mockFormatEvent = jest.fn()
+
+jest.mock('@/helpers/index.js', () => ({
+  ...jest.requireActual('@/helpers/index.js'),
+  formatEvent: (...args: unknown[]) => mockFormatEvent(...args)
+}))
 
 let mockS3Send: jest.Mock
 
@@ -150,32 +158,70 @@ describe('Events API - Attachment Handler', () => {
 
     it('successfully deletes attachment when event has fileUrl', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const fileUrl = 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf'
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
+      }
+
+      const updatedContentEnc = encryptEventContent({
         title: 'Test Event',
         notes: 'Test Description',
-        fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
+        fileUrl: null,
         symptomType: null,
-        severity: null,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
-      }
+        severity: null
+      })
 
       const updatedEvent = {
         ...mockEvent,
-        fileUrl: null,
-        updatedAt: new Date('2024-01-02T00:00:00Z')
+        updatedAt: new Date('2024-01-02T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(updatedContentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
+      const formattedEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-02T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-02T00:00:00.000Z'
+      }
+
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindUniqueSpy = jest.spyOn(prismaRuntime.event, 'findUnique')
+      const eventUpdateSpy = jest.spyOn(prismaRuntime.event, 'update')
+      const eventContentUpsertSpy = jest.spyOn(prismaRuntime.eventContent, 'upsert')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
-      updateSpy.mockResolvedValue(updatedEvent)
+      // First call: verifyEventInTrack
+      eventFindFirstSpy.mockResolvedValueOnce(mockEvent)
+      // Second call: findUnique, upsert, update
+      eventFindUniqueSpy.mockResolvedValue({ content: { contentEnc: new Uint8Array(contentEnc) } } as any)
+      eventContentUpsertSpy.mockResolvedValue({ eventId: 'event-1', contentEnc: new Uint8Array(contentEnc) } as any)
+      eventUpdateSpy.mockResolvedValue(updatedEvent)
+      mockFormatEvent.mockResolvedValue(formattedEvent)
 
       const res = await app.request(
         '/api/users/user-1/tracks/test-track/events/event-1/attachment',
@@ -192,37 +238,40 @@ describe('Events API - Attachment Handler', () => {
       expect(mockS3Send).toHaveBeenCalledTimes(1)
       const deleteCommand = mockS3Send.mock.calls[0][0] as DeleteObjectCommand
       expect(deleteCommand.input.Key).toBe('events/event-1/file.pdf')
-      expect(updateSpy).toHaveBeenCalledWith({
-        where: { id: 'event-1' },
-        data: { fileUrl: null, updatedAt: expect.any(Date) },
-        select: expect.any(Object)
-      })
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      updateSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
+      eventFindUniqueSpy.mockRestore()
+      eventUpdateSpy.mockRestore()
+      eventContentUpsertSpy.mockRestore()
     })
 
     it('handles event with no attachment gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Test Event',
-        notes: 'Test Description',
-        fileUrl: null,
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
+      eventFindFirstSpy.mockResolvedValue(mockEvent)
 
       const res = await app.request(
         '/api/users/user-1/tracks/test-track/events/event-1/attachment',
@@ -239,15 +288,15 @@ describe('Events API - Attachment Handler', () => {
       expect(mockS3Send).not.toHaveBeenCalled()
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
+      eventFindFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request(
         '/api/users/user-1/tracks/test-track/events/event-1/attachment',
@@ -262,7 +311,7 @@ describe('Events API - Attachment Handler', () => {
       expect(json.error).toBe('Database connection failed')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
     })
 
     // Note: Testing invalid fileUrl (key extraction fails) requires mocking ESM modules
@@ -270,24 +319,32 @@ describe('Events API - Attachment Handler', () => {
 
     it('handles S3 deletion errors gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const fileUrl = 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf'
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Test Event',
-        notes: 'Test Description',
-        fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
+      eventFindFirstSpy.mockResolvedValue(mockEvent)
+
       mockS3Send.mockReset()
       mockS3Send.mockRejectedValue(new Error('S3 deletion failed'))
 
@@ -304,7 +361,7 @@ describe('Events API - Attachment Handler', () => {
       expect(json.error).toBe('S3 deletion failed')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
     })
   })
 })

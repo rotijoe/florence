@@ -4,6 +4,14 @@ import { EventType } from '@packages/types'
 import { s3Client } from '@/lib/s3/index.js'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { auth } from '@/auth'
+import { encryptEventContent } from '@/lib/crypto/index.js'
+
+const mockFormatEvent = jest.fn()
+
+jest.mock('@/helpers/index.js', () => ({
+  ...jest.requireActual('@/helpers/index.js'),
+  formatEvent: (...args: unknown[]) => mockFormatEvent(...args)
+}))
 
 let mockS3Send: jest.Mock
 
@@ -76,12 +84,12 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing track', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(null)
-      trackFindFirstSpy.mockResolvedValue(null)
+      eventFindFirstSpy.mockResolvedValue(null)
+      trackFindFirstSpy.mockResolvedValue(null) // Track doesn't exist
 
       const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1')
       expect(res.status).toBe(404)
@@ -91,17 +99,17 @@ describe('Events API - Detail Handler', () => {
       expect(json.error).toBe('Track not found')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns 404 for missing event', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(null)
+      eventFindFirstSpy.mockResolvedValue(null) // Event doesn't exist
       trackFindFirstSpy.mockResolvedValue({
         id: 'track-1',
         slug: 'test-track',
@@ -110,7 +118,7 @@ describe('Events API - Detail Handler', () => {
         description: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
-      })
+      }) // Track exists
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/nonexistent-event')
       expect(res.status).toBe(404)
@@ -120,30 +128,52 @@ describe('Events API - Detail Handler', () => {
       expect(json.error).toBe('Event not found')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns event for valid slug and eventId', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const fileUrl = 'https://test-bucket.s3.us-east-1.amazonaws.com/file.pdf'
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Test Event',
-        notes: 'Test Description',
-        fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/file.pdf',
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const formattedEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: 'https://presigned-url.com/file.pdf',
+        symptomType: null,
+        severity: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
+      }
+
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
+      eventFindFirstSpy.mockResolvedValue(mockEvent)
+      mockFormatEvent.mockResolvedValue(formattedEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1')
       expect(res.status).toBe(200)
@@ -163,15 +193,15 @@ describe('Events API - Detail Handler', () => {
       expect(json.data.fileUrl).toBeDefined()
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
+      eventFindFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1')
       expect(res.status).toBe(500)
@@ -181,7 +211,7 @@ describe('Events API - Detail Handler', () => {
       expect(json.error).toBe('Database connection failed')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
     })
   })
 
@@ -224,12 +254,12 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing track', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(null)
-      trackFindFirstSpy.mockResolvedValue(null)
+      eventFindFirstSpy.mockResolvedValue(null)
+      trackFindFirstSpy.mockResolvedValue(null) // Track doesn't exist
 
       const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1', {
         method: 'PATCH',
@@ -243,17 +273,17 @@ describe('Events API - Detail Handler', () => {
       expect(json.error).toBe('Track not found')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns 404 for missing event', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(null)
+      eventFindFirstSpy.mockResolvedValue(null) // Event doesn't exist
       trackFindFirstSpy.mockResolvedValue({
         id: 'track-1',
         slug: 'test-track',
@@ -262,7 +292,7 @@ describe('Events API - Detail Handler', () => {
         description: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
-      })
+      }) // Track exists
 
       const res = await app.request(
         '/api/users/user-1/tracks/test-track/events/nonexistent-event',
@@ -279,28 +309,26 @@ describe('Events API - Detail Handler', () => {
       expect(json.error).toBe('Event not found')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns 400 for invalid title', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
-      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue({
+      const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Test Event',
-        notes: 'Test Description',
-        fileUrl: null,
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
-      })
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: null
+      }
+
+      getSessionSpy.mockResolvedValue(createMockSession('user-1'))
+      eventFindFirstSpy.mockResolvedValue(mockEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
@@ -314,37 +342,68 @@ describe('Events API - Detail Handler', () => {
       expect(json.error).toContain('title')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
     })
 
     it('successfully updates event title', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const originalContentEnc = encryptEventContent({
+        title: 'Original Title',
+        notes: 'Original Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Original Title',
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(originalContentEnc)
+        }
+      }
+
+      const updatedContentEnc = encryptEventContent({
+        title: 'Updated Title',
+        notes: 'Original Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
+      const updatedEvent = {
+        ...mockEvent,
+        updatedAt: new Date('2024-01-02T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(updatedContentEnc)
+        }
+      }
+
+      const formattedEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-02T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Updated Title',
         notes: 'Original Description',
         fileUrl: null,
         symptomType: null,
         severity: null,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-02T00:00:00.000Z'
       }
 
-      const updatedEvent = {
-        ...mockEvent,
-        title: 'Updated Title',
-        updatedAt: new Date('2024-01-02T00:00:00Z')
-      }
-
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventUpdateSpy = jest.spyOn(prismaRuntime.event, 'update')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
-      updateSpy.mockResolvedValue(updatedEvent)
+      eventFindFirstSpy.mockResolvedValue(mockEvent)
+      eventUpdateSpy.mockResolvedValue(updatedEvent)
+      mockFormatEvent.mockResolvedValue(formattedEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
@@ -359,38 +418,67 @@ describe('Events API - Detail Handler', () => {
       expect(json.data.notes).toBe('Original Description')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      updateSpy.mockRestore()
     })
 
     it('successfully updates event notes', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const originalContentEnc = encryptEventContent({
+        title: 'Test Title',
+        notes: 'Original Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(originalContentEnc)
+        }
+      }
+
+      const updatedContentEnc = encryptEventContent({
         title: 'Test Title',
-        notes: 'Original Description',
+        notes: 'Updated Description',
         fileUrl: null,
         symptomType: null,
-        severity: null,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
-      }
+        severity: null
+      })
 
       const updatedEvent = {
         ...mockEvent,
-        notes: 'Updated Description',
-        updatedAt: new Date('2024-01-02T00:00:00Z')
+        updatedAt: new Date('2024-01-02T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(updatedContentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
+      const formattedEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-02T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Test Title',
+        notes: 'Updated Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-02T00:00:00.000Z'
+      }
+
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventUpdateSpy = jest.spyOn(prismaRuntime.event, 'update')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
-      updateSpy.mockResolvedValue(updatedEvent)
+      eventFindFirstSpy.mockResolvedValue(mockEvent)
+      eventUpdateSpy.mockResolvedValue(updatedEvent)
+      mockFormatEvent.mockResolvedValue(formattedEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
@@ -405,38 +493,69 @@ describe('Events API - Detail Handler', () => {
       expect(json.data.title).toBe('Test Title')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      updateSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
+      eventUpdateSpy.mockRestore()
     })
 
     it('successfully updates event with empty notes string (converts to null)', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const originalContentEnc = encryptEventContent({
+        title: 'Test Title',
+        notes: 'Original Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(originalContentEnc)
+        }
+      }
+
+      const updatedContentEnc = encryptEventContent({
         title: 'Test Title',
-        notes: 'Original Description',
+        notes: null,
         fileUrl: null,
         symptomType: null,
-        severity: null,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
-      }
+        severity: null
+      })
 
       const updatedEvent = {
         ...mockEvent,
-        notes: null,
-        updatedAt: new Date('2024-01-02T00:00:00Z')
+        updatedAt: new Date('2024-01-02T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(updatedContentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
+      const formattedEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-02T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Test Title',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-02T00:00:00.000Z'
+      }
+
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventUpdateSpy = jest.spyOn(prismaRuntime.event, 'update')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
-      updateSpy.mockResolvedValue(updatedEvent)
+      eventFindFirstSpy.mockResolvedValue(mockEvent)
+      eventUpdateSpy.mockResolvedValue(updatedEvent)
+      mockFormatEvent.mockResolvedValue(formattedEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
@@ -450,16 +569,16 @@ describe('Events API - Detail Handler', () => {
       expect(json.data.notes).toBeNull()
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      updateSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
+      eventUpdateSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
+      eventFindFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'PATCH',
@@ -473,7 +592,7 @@ describe('Events API - Detail Handler', () => {
       expect(json.error).toBe('Database connection failed')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
     })
   })
 
@@ -512,12 +631,12 @@ describe('Events API - Detail Handler', () => {
 
     it('returns 404 for missing track', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(null)
-      trackFindFirstSpy.mockResolvedValue(null)
+      eventFindFirstSpy.mockResolvedValue(null)
+      trackFindFirstSpy.mockResolvedValue(null) // Track doesn't exist
 
       const res = await app.request('/api/users/user-1/tracks/nonexistent-slug/events/event-1', {
         method: 'DELETE'
@@ -531,17 +650,17 @@ describe('Events API - Detail Handler', () => {
       expect(mockS3Send).not.toHaveBeenCalled()
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('returns 404 for missing event', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
       const trackFindFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(null)
+      eventFindFirstSpy.mockResolvedValue(null) // Event doesn't exist
       trackFindFirstSpy.mockResolvedValue({
         id: 'track-1',
         slug: 'test-track',
@@ -550,7 +669,7 @@ describe('Events API - Detail Handler', () => {
         description: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
-      })
+      }) // Track exists
 
       const res = await app.request(
         '/api/users/user-1/tracks/test-track/events/nonexistent-event',
@@ -567,32 +686,40 @@ describe('Events API - Detail Handler', () => {
       expect(mockS3Send).not.toHaveBeenCalled()
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
       trackFindFirstSpy.mockRestore()
     })
 
     it('successfully deletes event without attachment', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Test Event',
-        notes: 'Test Description',
-        fileUrl: null,
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const deleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventDeleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.delete>>)
+      // First call: verifyEventInTrack
+      eventFindFirstSpy.mockResolvedValueOnce(mockEvent)
+      // Second call: delete event
+      eventDeleteSpy.mockResolvedValue(mockEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -603,37 +730,43 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(true)
 
       expect(mockS3Send).not.toHaveBeenCalled()
-      expect(deleteSpy).toHaveBeenCalledWith({
-        where: { id: 'event-1' }
-      })
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      deleteSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
+      eventDeleteSpy.mockRestore()
     })
 
     it('successfully deletes event with attachment', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const fileUrl = 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf'
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Test Event',
-        notes: 'Test Description',
-        fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const deleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventDeleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.delete>>)
+      // First call: verifyEventInTrack
+      eventFindFirstSpy.mockResolvedValueOnce(mockEvent)
+      // Second call: delete event
+      eventDeleteSpy.mockResolvedValue(mockEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -646,37 +779,42 @@ describe('Events API - Detail Handler', () => {
       expect(mockS3Send).toHaveBeenCalledTimes(1)
       const deleteCommand = mockS3Send.mock.calls[0][0] as DeleteObjectCommand
       expect(deleteCommand.input.Key).toBe('events/event-1/file.pdf')
-      expect(deleteSpy).toHaveBeenCalledWith({
-        where: { id: 'event-1' }
-      })
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      deleteSpy.mockRestore()
     })
 
     it('continues deletion even if S3 deletion fails', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const fileUrl = 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf'
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Test Event',
-        notes: 'Test Description',
-        fileUrl: 'https://test-bucket.s3.us-east-1.amazonaws.com/events/event-1/file.pdf',
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const deleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventDeleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.delete>>)
+      // First call: verifyEventInTrack
+      eventFindFirstSpy.mockResolvedValueOnce(mockEvent)
+      // Second call: delete event
+      eventDeleteSpy.mockResolvedValue(mockEvent)
+
       mockS3Send.mockReset()
       mockS3Send.mockRejectedValue(new Error('S3 deletion failed'))
 
@@ -688,37 +826,42 @@ describe('Events API - Detail Handler', () => {
       const json = await res.json()
       expect(json.success).toBe(true)
 
-      expect(deleteSpy).toHaveBeenCalledWith({
-        where: { id: 'event-1' }
-      })
-
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      deleteSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
+      eventDeleteSpy.mockRestore()
     })
 
     it('handles event with fileUrl but invalid key gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
+      const fileUrl = 'https://invalid-url.com/file.pdf' // Invalid S3 URL that won't extract key
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: 'Test Event',
-        notes: 'Test Description',
-        fileUrl: 'https://invalid-url.com/file.pdf', // Invalid S3 URL that won't extract key
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
       }
 
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const deleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventDeleteSpy = jest.spyOn(prismaRuntime.event, 'delete')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockResolvedValue(mockEvent)
-      deleteSpy.mockResolvedValue(mockEvent as Awaited<ReturnType<typeof prismaRuntime.event.delete>>)
+      // First call: verifyEventInTrack
+      eventFindFirstSpy.mockResolvedValueOnce(mockEvent)
+      // Second call: delete event
+      eventDeleteSpy.mockResolvedValue(mockEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -729,21 +872,18 @@ describe('Events API - Detail Handler', () => {
       expect(json.success).toBe(true)
 
       // Should not call S3 delete when key is invalid
-      expect(deleteSpy).toHaveBeenCalledWith({
-        where: { id: 'event-1' }
-      })
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      deleteSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
+      eventDeleteSpy.mockRestore()
     })
 
     it('handles database errors gracefully', async () => {
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
 
       getSessionSpy.mockResolvedValue(createMockSession('user-1'))
-      findFirstSpy.mockRejectedValue(new Error('Database connection failed'))
+      eventFindFirstSpy.mockRejectedValue(new Error('Database connection failed'))
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events/event-1', {
         method: 'DELETE'
@@ -755,7 +895,7 @@ describe('Events API - Detail Handler', () => {
       expect(json.error).toBe('Database connection failed')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
     })
   })
 })

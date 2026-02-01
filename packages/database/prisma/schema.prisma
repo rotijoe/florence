@@ -93,23 +93,29 @@ model HealthTrack {
 }
 
 model Event {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   trackId     String
   date        DateTime
   type        EventType
-  title       String
-  notes       String?
-  fileUrl     String?
-  symptomType String?
-  severity    Int?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   
-  track HealthTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  track   HealthTrack   @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  content EventContent?
   
   @@index([trackId, date(sort: Desc)])
   @@index([trackId])
   @@map("events")
+}
+
+model EventContent {
+  eventId  String @id
+  contentEnc Bytes
+  
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@map("event_contents")
 }
 
 enum EventType {

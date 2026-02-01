@@ -2,6 +2,13 @@ import { createTestApp } from '@/test-setup'
 import { prismaRuntime } from '@packages/database'
 import { EventType } from '@packages/types'
 import { auth } from '@/auth'
+import { encryptEventContent } from '@/lib/crypto/index.js'
+
+const mockFormatEvent = jest.fn()
+jest.mock('@/helpers/index.js', () => ({
+  ...jest.requireActual('@/helpers/index.js'),
+  formatEvent: () => mockFormatEvent()
+}))
 
 describe('Events API - List Handler', () => {
   let app: ReturnType<typeof createTestApp>
@@ -137,21 +144,41 @@ describe('Events API - List Handler', () => {
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvents = [
         {
           id: 'event-1',
           trackId: 'track-1',
           date: new Date('2024-01-01T00:00:00Z'),
           type: EventType.NOTE,
-          title: 'Test Event',
-          notes: 'Test Description',
-          fileUrl: null,
-          symptomType: null,
-          severity: null,
           createdAt: new Date('2024-01-01T00:00:00Z'),
-          updatedAt: new Date('2024-01-01T00:00:00Z')
+          updatedAt: new Date('2024-01-01T00:00:00Z'),
+          content: {
+            contentEnc: new Uint8Array(contentEnc)
+          }
         }
       ]
+
+      const formattedEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
+      }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
       const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
@@ -160,6 +187,7 @@ describe('Events API - List Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
       findManySpy.mockResolvedValue(mockEvents)
+      mockFormatEvent.mockResolvedValue(formattedEvent)
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events')
       expect(res.status).toBe(200)
@@ -184,6 +212,7 @@ describe('Events API - List Handler', () => {
       getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       findManySpy.mockRestore()
+      mockFormatEvent.mockReset()
     })
 
     it('respects limit query parameter', async () => {
@@ -218,18 +247,24 @@ describe('Events API - List Handler', () => {
         createdAt: new Date('2024-01-01T00:00:00Z'),
         updatedAt: new Date('2024-01-01T00:00:00Z')
       }
+      const contentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       const mockEvents = Array.from({ length: 5 }, (_, i) => ({
         id: `event-${i + 1}`,
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
-        title: `Test Event ${i + 1}`,
-        notes: 'Test Description',
-        fileUrl: null,
-        symptomType: null,
-        severity: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(contentEnc)
+        }
       }))
 
       const findFirstSpy = jest.spyOn(prismaRuntime.healthTrack, 'findFirst')
@@ -238,6 +273,19 @@ describe('Events API - List Handler', () => {
       getSessionSpy.mockResolvedValue(mockSession)
       findFirstSpy.mockResolvedValue(mockTrack)
       findManySpy.mockResolvedValue(mockEvents)
+      mockFormatEvent.mockResolvedValue({
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-01T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Test Event',
+        notes: 'Test Description',
+        fileUrl: null,
+        symptomType: null,
+        severity: null,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
+      })
 
       const res = await app.request('/api/users/user-1/tracks/test-track/events?limit=3')
       expect(res.status).toBe(200)
@@ -256,6 +304,7 @@ describe('Events API - List Handler', () => {
       getSessionSpy.mockRestore()
       findFirstSpy.mockRestore()
       findManySpy.mockRestore()
+      mockFormatEvent.mockReset()
     })
 
     it('enforces maximum limit of 1000', async () => {

@@ -4,6 +4,7 @@ import { prismaRuntime, withUserRls } from '@packages/database'
 import type { ApiResponse } from '@packages/types'
 import { getObjectKeyFromUrl, deleteFile } from '@/lib/s3/index.js'
 import { trackNotFoundResponse } from '@/helpers/index.js'
+import { decryptEventContent } from '@/lib/crypto/index.js'
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
@@ -16,7 +17,11 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
         include: {
           events: {
             select: {
-              fileUrl: true
+              content: {
+                select: {
+                  contentEnc: true
+                }
+              }
             }
           }
         }
@@ -29,15 +34,22 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     // Delete S3 files for all events with attachments
     for (const event of track.events) {
-      if (event.fileUrl) {
-        const key = getObjectKeyFromUrl(event.fileUrl)
-        if (key) {
-          try {
-            await deleteFile(key)
-          } catch (error) {
-            console.error('Error deleting file from S3:', error)
-            // Continue with deletion even if S3 delete fails
+      if (event.content?.contentEnc) {
+        try {
+          const content = decryptEventContent(event.content.contentEnc)
+          if (content.fileUrl) {
+            const key = getObjectKeyFromUrl(content.fileUrl)
+            if (key) {
+              try {
+                await deleteFile(key)
+              } catch (error) {
+                console.error('Error deleting file from S3:', error)
+                // Continue with deletion even if S3 delete fails
+              }
+            }
           }
+        } catch (error) {
+          console.error('Error decrypting event content for S3 deletion:', error)
         }
       }
     }

@@ -2,6 +2,7 @@ import { createTestApp } from '@/test-setup'
 import { prismaRuntime } from '@packages/database'
 import { auth } from '@/auth'
 import { s3Client } from '@/lib/s3/index.js'
+import { encryptEventContent } from '@/lib/crypto/index.js'
 
 describe('Tracks API - Delete Handler', () => {
   let app: ReturnType<typeof createTestApp>
@@ -171,7 +172,11 @@ describe('Tracks API - Delete Handler', () => {
         include: {
           events: {
             select: {
-              fileUrl: true
+              content: {
+                select: {
+                  contentEnc: true
+                }
+              }
             }
           }
         }
@@ -209,6 +214,33 @@ describe('Tracks API - Delete Handler', () => {
         }
       }
 
+      const fileUrl1 = 'https://bucket.s3.region.amazonaws.com/events/event-1/file.pdf'
+      const fileUrl2 = 'https://bucket.s3.region.amazonaws.com/events/event-2/document.pdf'
+      
+      const contentEnc1 = encryptEventContent({
+        title: 'Event 1',
+        notes: null,
+        fileUrl: fileUrl1,
+        symptomType: null,
+        severity: null
+      })
+
+      const contentEnc2 = encryptEventContent({
+        title: 'Event 2',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
+      const contentEnc3 = encryptEventContent({
+        title: 'Event 3',
+        notes: null,
+        fileUrl: fileUrl2,
+        symptomType: null,
+        severity: null
+      })
+
       const mockTrack = {
         id: 'track-1',
         userId: 'user-1',
@@ -219,13 +251,19 @@ describe('Tracks API - Delete Handler', () => {
         updatedAt: new Date('2024-01-01T00:00:00Z'),
         events: [
           {
-            fileUrl: 'https://bucket.s3.region.amazonaws.com/events/event-1/file.pdf'
+            content: {
+              contentEnc: new Uint8Array(contentEnc1)
+            }
           },
           {
-            fileUrl: null
+            content: {
+              contentEnc: new Uint8Array(contentEnc2)
+            }
           },
           {
-            fileUrl: 'https://bucket.s3.region.amazonaws.com/events/event-2/document.pdf'
+            content: {
+              contentEnc: new Uint8Array(contentEnc3)
+            }
           }
         ]
       }

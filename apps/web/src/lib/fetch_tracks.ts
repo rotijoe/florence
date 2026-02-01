@@ -28,4 +28,3 @@ export async function fetchTracksWithCookies(userId: string): Promise<TrackRespo
 
   return data.data
 }
-

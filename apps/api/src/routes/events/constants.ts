@@ -3,13 +3,13 @@ export const EVENT_SELECT = {
   trackId: true,
   date: true,
   type: true,
-  title: true,
-  notes: true,
-  fileUrl: true,
-  symptomType: true,
-  severity: true,
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
+  content: {
+    select: {
+      contentEnc: true
+    }
+  }
 } as const
 
 export const DEFAULT_LIMIT = 100

@@ -44,10 +44,12 @@ const mockEvent: EventResponse = {
 jest.mock('@/components/event_attachment', () => ({
   EventAttachment: ({
     fileUrl,
-    onDelete
+    onDelete,
+    onAdd
   }: {
     fileUrl: string | null | undefined
     onDelete?: () => void
+    onAdd?: () => void
   }) => (
     <div data-testid='event-attachment'>
       <h3>Attachments</h3>
@@ -61,7 +63,14 @@ jest.mock('@/components/event_attachment', () => ({
           )}
         </>
       ) : (
-        <span>No attachments found</span>
+        <>
+          <span>No attachments found</span>
+          {onAdd && (
+            <button type='button' onClick={onAdd} aria-label='Add attachment'>
+              Add attachment
+            </button>
+          )}
+        </>
       )}
     </div>
   )
@@ -750,12 +759,7 @@ describe('EventDetail', () => {
       }
 
       render(
-        <EventDetail
-          event={placeholderEvent}
-          trackSlug={trackSlug}
-          userId={userId}
-          mode='create'
-        />
+        <EventDetail event={placeholderEvent} trackSlug={trackSlug} userId={userId} mode='create' />
       )
 
       const cancelButton = screen.getByRole('button', { name: /cancel/i })

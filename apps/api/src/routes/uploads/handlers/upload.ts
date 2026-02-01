@@ -19,6 +19,7 @@ import {
   PRESIGNED_URL_EXPIRES_IN
 } from '../constants.js'
 import { EVENT_SELECT } from '../../events/constants.js'
+import { encryptEventContent, decryptEventContent } from '@/lib/crypto/index.js'
 
 export async function uploadUrl(c: Context<{ Variables: AppVariables }>) {
   try {
@@ -163,13 +164,51 @@ export async function uploadConfirm(c: Context<{ Variables: AppVariables }>) {
     }
 
     const updatedEvent = await withUserRls(prismaRuntime, userId, async (tx) => {
+      // Get existing event to decrypt content
+      const existingEvent = await tx.event.findUnique({
+        where: { id: eventId },
+        select: { content: { select: { contentEnc: true } } }
+      })
+
+      // Decrypt existing content or use defaults
+      let contentPayload = {
+        title: 'Untitled event',
+        notes: null as string | null,
+        fileUrl: null as string | null,
+        symptomType: null as string | null,
+        severity: null as number | null
+      }
+
+      if (existingEvent?.content?.contentEnc) {
+        try {
+          contentPayload = decryptEventContent(existingEvent.content.contentEnc)
+        } catch (error) {
+          console.error('Error decrypting existing content:', error)
+        }
+      }
+
+      // Update fileUrl in content
+      contentPayload.fileUrl = fileUrl
+
+      // Encrypt updated content
+      const contentEnc = encryptEventContent(contentPayload)
+
       return tx.event.update({
         where: {
           id: eventId
         },
         data: {
-          fileUrl,
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          content: {
+            upsert: {
+              create: {
+                contentEnc: new Uint8Array(contentEnc)
+              },
+              update: {
+                contentEnc: new Uint8Array(contentEnc)
+              }
+            }
+          }
         },
         select: EVENT_SELECT
       })

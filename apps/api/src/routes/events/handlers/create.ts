@@ -6,6 +6,7 @@ import { badRequestFromZod } from '../helpers.js'
 import { trackNotFoundResponse, verifyTrackExists, formatEvent } from '@/helpers/index.js'
 import { createEventSchema } from '../validators.js'
 import { EVENT_SELECT } from '../constants.js'
+import { encryptEventContent } from '@/lib/crypto/index.js'
 
 export async function handler(c: Context<{ Variables: AppVariables }>) {
   try {
@@ -22,6 +23,16 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
 
     const { title, type, date, notes, symptomType, severity } = parseResult.data
 
+    // Encrypt content payload
+    const contentPayload = {
+      title: title.trim(),
+      notes: notes ?? null,
+      fileUrl: null,
+      symptomType: symptomType ?? null,
+      severity: severity ?? null
+    }
+    const contentEnc = encryptEventContent(contentPayload)
+
     const newEvent = await withUserRls(prismaRuntime, userId, async (tx) => {
       const track = await verifyTrackExists(tx, slug)
       if (!track) {
@@ -31,12 +42,13 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
       return tx.event.create({
         data: {
           trackId: track.id,
-          title: title.trim(),
           type,
           date,
-          notes,
-          symptomType,
-          severity
+          content: {
+            create: {
+              contentEnc: new Uint8Array(contentEnc)
+            }
+          }
         },
         select: EVENT_SELECT
       })

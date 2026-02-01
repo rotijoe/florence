@@ -71,28 +71,49 @@ Options:
 
 ---
 
-### 3.3 Field-level encryption (strongly recommended)
+### 3.3 Field-level encryption (implemented)
 
-This is what you mentioned — and yes, it’s important.
+Event content is encrypted **before writing to Postgres**:
 
-Encrypt **before writing to Postgres**:
+- Medical notes (`notes`)
+- Event titles (`title`)
+- Document URLs (`fileUrl`)
+- Symptom data (`symptomType`, `severity`)
 
-- Medical notes
-- Diagnoses
-- Free-text clinician comments
-- Document contents (or URLs to documents)
+#### Implementation
 
-Typical approach:
+**Architecture:**
 
-- Encrypt in your API layer
-- Store ciphertext in DB
-- Decrypt only when authorised user requests it
+- Queryable metadata stored in `Event` table (id, trackId, date, type, timestamps)
+- Encrypted content stored in `EventContent` table (one-to-one relation)
+- Single encrypted blob (`contentEnc`) containing JSON payload of all sensitive fields
+
+**Encryption details:**
+
+- Algorithm: **AES-256-GCM** (authenticated encryption)
+- Key management: Master key from KMS (via `ENCRYPTION_KEY` env var)
+- Encryption boundary: Entire content payload encrypted as single blob
+- No database extensions required (encryption handled in API layer)
+
+**Flow:**
+
+1. Client → API: Sends plaintext fields (title, notes, fileUrl, symptomType, severity)
+2. API: Encrypts fields into single blob using AES-256-GCM
+3. API → Prisma → Postgres: Stores encrypted blob in `EventContent.contentEnc`
+4. On read: API decrypts blob and returns plaintext fields to client
+
+**Benefits:**
+
+- Easier RLS (metadata-only queries don't require decryption)
+- Clear encryption boundary (entire content table vs per-column)
+- Reduced risk of accidental plaintext exposure
+- Simpler key rotation (single master key)
 
 #### Practical notes
 
-- Use **authenticated encryption** (e.g. AES-256-GCM)
-- Do **not** roll your own crypto
-- Keys must **not** live in the database
+- Keys stored in KMS (production) or `ENCRYPTION_KEY` env var (development)
+- Encryption/decryption utilities: `apps/api/src/lib/crypto/encrypt.ts`
+- Never store raw tokens (see token hashing section)
 
 ---
 

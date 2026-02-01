@@ -9,7 +9,8 @@ function isValidEventType(value: string | undefined): value is EventType {
 
 export default async function NewEventPage({ params, searchParams }: NewEventPageProps) {
   const { userId, trackSlug } = await params
-  const requestedType = searchParams?.type
+  const resolvedSearchParams = await searchParams
+  const requestedType = resolvedSearchParams?.type
   const initialType = isValidEventType(requestedType) ? requestedType : EventType.NOTE
 
   // Create a placeholder event object for create mode

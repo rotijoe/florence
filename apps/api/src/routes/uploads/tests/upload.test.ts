@@ -3,6 +3,14 @@ import { prismaRuntime } from '@packages/database'
 import { EventType } from '@packages/types'
 import { auth } from '@/auth'
 import { s3Client } from '@/lib/s3/index.js'
+import { encryptEventContent } from '@/lib/crypto/index.js'
+
+const mockFormatEvent = jest.fn()
+
+jest.mock('@/helpers/index.js', () => ({
+  ...jest.requireActual('@/helpers/index.js'),
+  formatEvent: (...args: unknown[]) => mockFormatEvent(...args)
+}))
 
 let mockS3Send: jest.Mock
 
@@ -646,36 +654,71 @@ describe('Uploads API - Upload Handler', () => {
         }
       }
 
-      const mockEvent = {
-        id: 'event-1',
-        trackId: 'track-1'
-      }
+      const fileUrl = 'https://bucket.s3.amazonaws.com/events/event-1/file.pdf'
+      const originalContentEnc = encryptEventContent({
+        title: 'Test Event',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
 
-      const updatedEvent = {
+      const mockEvent = {
         id: 'event-1',
         trackId: 'track-1',
         date: new Date('2024-01-01T00:00:00Z'),
         type: EventType.NOTE,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(originalContentEnc)
+        }
+      }
+
+      const updatedContentEnc = encryptEventContent({
         title: 'Test Event',
         notes: null,
-        fileUrl: 'https://bucket.s3.amazonaws.com/events/event-1/file.pdf',
+        fileUrl,
+        symptomType: null,
+        severity: null
+      })
+
+      const updatedEvent = {
+        ...mockEvent,
+        updatedAt: new Date('2024-01-02T00:00:00Z'),
+        content: {
+          contentEnc: new Uint8Array(updatedContentEnc)
+        }
+      }
+
+      const formattedEvent = {
+        id: 'event-1',
+        trackId: 'track-1',
+        date: '2024-01-02T00:00:00.000Z',
+        type: EventType.NOTE,
+        title: 'Test Event',
+        notes: null,
+        fileUrl: 'https://presigned-url.com/file.pdf',
         symptomType: null,
         severity: null,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z')
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-02T00:00:00.000Z'
       }
 
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
-      const findFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
-      const updateSpy = jest.spyOn(prismaRuntime.event, 'update')
+      const eventFindFirstSpy = jest.spyOn(prismaRuntime.event, 'findFirst')
+      const eventFindUniqueSpy = jest.spyOn(prismaRuntime.event, 'findUnique')
+      const eventUpdateSpy = jest.spyOn(prismaRuntime.event, 'update')
+      const eventContentUpsertSpy = jest.spyOn(prismaRuntime.eventContent, 'upsert')
 
       getSessionSpy.mockResolvedValue(mockSession)
-      findFirstSpy.mockResolvedValue(
-        mockEvent as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findFirst>>
-      )
-      updateSpy.mockResolvedValue(
-        updatedEvent as unknown as Awaited<ReturnType<typeof prismaRuntime.event.update>>
-      )
+      // First call: verifyEventInTrack
+      eventFindFirstSpy.mockResolvedValueOnce(mockEvent)
+      // Second call: findUnique, upsert, update
+      eventFindUniqueSpy.mockResolvedValue({ content: { contentEnc: new Uint8Array(originalContentEnc) } } as any)
+      eventContentUpsertSpy.mockResolvedValue({ eventId: 'event-1', contentEnc: new Uint8Array(originalContentEnc) } as any)
+      eventUpdateSpy.mockResolvedValue(updatedEvent)
+      mockFormatEvent.mockResolvedValue(formattedEvent)
 
       const res = await app.request(
         '/api/users/user-1/tracks/test-slug/events/event-1/upload-confirm',
@@ -695,8 +738,10 @@ describe('Uploads API - Upload Handler', () => {
       expect(json.data).toHaveProperty('fileUrl')
 
       getSessionSpy.mockRestore()
-      findFirstSpy.mockRestore()
-      updateSpy.mockRestore()
+      eventFindFirstSpy.mockRestore()
+      eventFindUniqueSpy.mockRestore()
+      eventUpdateSpy.mockRestore()
+      eventContentUpsertSpy.mockRestore()
     })
 
     it('returns 404 when track does not exist for upload-confirm', async () => {

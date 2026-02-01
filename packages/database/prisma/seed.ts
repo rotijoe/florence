@@ -1,8 +1,45 @@
 import { PrismaClient, EventType } from '@prisma/client'
 import { hashPassword } from 'better-auth/crypto'
+import {
+  encryptEventContent,
+  type EventContentPayload
+} from '../../../apps/api/src/lib/crypto/encrypt.js'
 
 const prisma = new PrismaClient()
 const DEFAULT_PASSWORD = '123456'
+
+const getRuntimeRole = () => {
+  const runtimeUrl = process.env.DATABASE_URL_RUNTIME
+  if (!runtimeUrl) return null
+  try {
+    const { username } = new URL(runtimeUrl)
+    return username || null
+  } catch (error) {
+    console.warn('Unable to parse DATABASE_URL_RUNTIME for role name', error)
+    return null
+  }
+}
+
+const ensureRuntimeRolePermissions = async () => {
+  const role = getRuntimeRole()
+  if (!role) return
+
+  try {
+    await prisma.$executeRawUnsafe(`GRANT USAGE ON SCHEMA public TO "${role}"`)
+    await prisma.$executeRawUnsafe(
+      `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO "${role}"`
+    )
+    await prisma.$executeRawUnsafe(`GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO "${role}"`)
+    await prisma.$executeRawUnsafe(
+      `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "${role}"`
+    )
+    await prisma.$executeRawUnsafe(
+      `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO "${role}"`
+    )
+  } catch (error) {
+    console.warn('Unable to grant app runtime permissions', error)
+  }
+}
 
 const users = [
   { email: 'alice@example.com', name: 'Alice' },
@@ -206,6 +243,7 @@ const additionalTracksForUser = [
 
 async function main() {
   const hashedPassword = await hashPassword(DEFAULT_PASSWORD)
+  await ensureRuntimeRolePermissions()
 
   for (const u of users) {
     const user = await prisma.user.upsert({
@@ -245,7 +283,28 @@ async function main() {
           title: t.title,
           slug: t.slug,
           description: t.description,
-          events: { create: t.events.map((e) => ({ ...e })) }
+          events: {
+            create: t.events.map((e) => {
+              const contentPayload: EventContentPayload = {
+                title: e.title,
+                notes: e.notes ?? null,
+                fileUrl: null,
+                symptomType: 'symptomType' in e ? e.symptomType ?? null : null,
+                severity: 'severity' in e ? e.severity ?? null : null
+              }
+              const contentEnc = encryptEventContent(contentPayload)
+
+              return {
+                type: e.type,
+                date: e.date,
+                content: {
+                  create: {
+                    contentEnc: Buffer.from(contentEnc)
+                  }
+                }
+              }
+            })
+          }
         }
       })
     }
@@ -262,7 +321,28 @@ async function main() {
           title: additionalTrack.title,
           slug: additionalTrack.slug,
           description: additionalTrack.description,
-          events: { create: additionalTrack.events.map((e) => ({ ...e })) }
+          events: {
+            create: additionalTrack.events.map((e) => {
+              const contentPayload: EventContentPayload = {
+                title: e.title,
+                notes: e.notes ?? null,
+                fileUrl: null,
+                symptomType: 'symptomType' in e ? e.symptomType ?? null : null,
+                severity: 'severity' in e ? e.severity ?? null : null
+              }
+              const contentEnc = encryptEventContent(contentPayload)
+
+              return {
+                type: e.type,
+                date: e.date,
+                content: {
+                  create: {
+                    contentEnc: Buffer.from(contentEnc)
+                  }
+                }
+              }
+            })
+          }
         }
       })
     }

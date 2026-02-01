@@ -2,6 +2,7 @@ import { createTestApp } from '@/test-setup'
 import { prismaRuntime } from '@packages/database'
 import { auth } from '@/auth'
 import { EventType } from '@packages/types'
+import { encryptEventContent } from '@/lib/crypto/index.js'
 
 describe('User API - Upcoming Appointments Handler', () => {
   let app: ReturnType<typeof createTestApp>
@@ -87,19 +88,38 @@ describe('User API - Upcoming Appointments Handler', () => {
       const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
 
+      const contentEnc1 = encryptEventContent({
+        title: 'Sooner appt',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+      const contentEnc2 = encryptEventContent({
+        title: 'Later appt',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       getSessionSpy.mockResolvedValue(mockSession)
       findManySpy.mockResolvedValue([
         {
           id: 'event-2',
-          title: 'Sooner appt',
           date: new Date('2025-01-01T12:00:00.000Z'),
-          track: { slug: 'sleep' }
+          track: { slug: 'sleep' },
+          content: {
+            contentEnc: new Uint8Array(contentEnc1)
+          }
         },
         {
           id: 'event-1',
-          title: 'Later appt',
           date: new Date('2025-01-02T12:00:00.000Z'),
-          track: { slug: 'pain' }
+          track: { slug: 'pain' },
+          content: {
+            contentEnc: new Uint8Array(contentEnc2)
+          }
         }
       ] as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findMany>>)
 
@@ -115,8 +135,8 @@ describe('User API - Upcoming Appointments Handler', () => {
         take: 6, // limit + 1 to check for hasMore
         select: {
           id: true,
-          title: true,
           date: true,
+          content: { select: { contentEnc: true } },
           track: { select: { slug: true } }
         }
       })
@@ -228,32 +248,69 @@ describe('User API - Upcoming Appointments Handler', () => {
       const findManySpy = jest.spyOn(prismaRuntime.event, 'findMany')
       const getSessionSpy = jest.spyOn(auth.api, 'getSession')
 
+      const contentEnc1 = encryptEventContent({
+        title: 'First appt',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+      const contentEnc2 = encryptEventContent({
+        title: 'Second appt',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+      const contentEnc3 = encryptEventContent({
+        title: 'Third appt',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+      const contentEnc4 = encryptEventContent({
+        title: 'Fourth appt',
+        notes: null,
+        fileUrl: null,
+        symptomType: null,
+        severity: null
+      })
+
       getSessionSpy.mockResolvedValue(mockSession)
       // Return 4 appointments when limit is 3 (3 + 1 to check hasMore)
       findManySpy.mockResolvedValue([
         {
           id: 'event-1',
-          title: 'First appt',
           date: new Date('2025-01-01T12:00:00.000Z'),
-          track: { slug: 'sleep' }
+          track: { slug: 'sleep' },
+          content: {
+            contentEnc: new Uint8Array(contentEnc1)
+          }
         },
         {
           id: 'event-2',
-          title: 'Second appt',
           date: new Date('2025-01-02T12:00:00.000Z'),
-          track: { slug: 'pain' }
+          track: { slug: 'pain' },
+          content: {
+            contentEnc: new Uint8Array(contentEnc2)
+          }
         },
         {
           id: 'event-3',
-          title: 'Third appt',
           date: new Date('2025-01-03T12:00:00.000Z'),
-          track: { slug: 'sleep' }
+          track: { slug: 'sleep' },
+          content: {
+            contentEnc: new Uint8Array(contentEnc3)
+          }
         },
         {
           id: 'event-4',
-          title: 'Fourth appt',
           date: new Date('2025-01-04T12:00:00.000Z'),
-          track: { slug: 'pain' }
+          track: { slug: 'pain' },
+          content: {
+            contentEnc: new Uint8Array(contentEnc4)
+          }
         }
       ] as unknown as Awaited<ReturnType<typeof prismaRuntime.event.findMany>>)
 
@@ -269,8 +326,8 @@ describe('User API - Upcoming Appointments Handler', () => {
         take: 4, // limit (3) + 1
         select: {
           id: true,
-          title: true,
           date: true,
+          content: { select: { contentEnc: true } },
           track: { select: { slug: true } }
         }
       })

@@ -9,10 +9,7 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log:
-      process.env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error']
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
   })
 
 // Runtime client - used for application queries (RLS enforced)
@@ -25,10 +22,7 @@ export const prismaRuntime =
         url: process.env.DATABASE_URL_RUNTIME || process.env.DATABASE_URL
       }
     },
-    log:
-      process.env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error']
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
   })
 
 if (process.env.NODE_ENV !== 'production') {

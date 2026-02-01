@@ -8,14 +8,19 @@ import type { EventAttachmentProps, FileDetails } from './types'
 import { DocumentViewer } from '@/components/document_viewer'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 
-export function EventAttachment({ fileUrl, onDelete }: EventAttachmentProps) {
+export function EventAttachment({ fileUrl, onDelete, onAdd }: EventAttachmentProps) {
   function renderEmptyState() {
     return (
       <Card className='space-y-2'>
         <CardHeader>
           <div className='flex items-center justify-between gap-3'>
             <CardTitle>Attachments</CardTitle>
-            <Button variant='outline' onClick={() => {}} aria-label='Add attachment'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => onAdd?.()}
+              aria-label='Add attachment'
+            >
               Add attachment
               <Plus className='size-4' />
             </Button>

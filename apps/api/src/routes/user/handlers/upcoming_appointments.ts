@@ -7,6 +7,7 @@ import {
   type UpcomingAppointmentResponse,
   type UpcomingAppointmentsResponse
 } from '@packages/types'
+import { decryptEventContent } from '@/lib/crypto/index.js'
 
 const DEFAULT_LIMIT = 5
 
@@ -32,9 +33,13 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
         take: limit + 1,
         select: {
           id: true,
-          title: true,
           date: true,
-          track: { select: { slug: true } }
+          track: { select: { slug: true } },
+          content: {
+            select: {
+              contentEnc: true
+            }
+          }
         }
       })
     })
@@ -45,12 +50,24 @@ export async function handler(c: Context<{ Variables: AppVariables }>) {
     // Return only the requested limit
     const eventsToReturn = events.slice(0, limit)
 
-    const appointments: UpcomingAppointmentResponse[] = eventsToReturn.map((event) => ({
-      eventId: event.id,
-      trackSlug: event.track.slug,
-      title: event.title,
-      date: event.date.toISOString()
-    }))
+    const appointments: UpcomingAppointmentResponse[] = eventsToReturn.map((event) => {
+      let title = 'Untitled event'
+      if (event.content?.contentEnc) {
+        try {
+          const content = decryptEventContent(event.content.contentEnc)
+          title = content.title
+        } catch (error) {
+          console.error('Error decrypting event content:', error)
+        }
+      }
+
+      return {
+        eventId: event.id,
+        trackSlug: event.track.slug,
+        title,
+        date: event.date.toISOString()
+      }
+    })
 
     const responseData: UpcomingAppointmentsResponse = {
       appointments,

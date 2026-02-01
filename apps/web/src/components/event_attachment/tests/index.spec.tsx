@@ -177,15 +177,33 @@ describe('EventAttachment', () => {
     expect(deleteButton).toBeInTheDocument()
   })
 
-  it('handles click on Add attachment button in empty state', async () => {
+  it('calls onAdd when Add attachment button is clicked', async () => {
+    const user = userEvent.setup()
+    const mockOnAdd = jest.fn()
+    render(<EventAttachment fileUrl={null} onAdd={mockOnAdd} />)
+
+    const addButton = screen.getByRole('button', { name: /add attachment/i })
+    await user.click(addButton)
+
+    expect(mockOnAdd).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call onAdd when Add attachment button is clicked but onAdd is not provided', async () => {
     const user = userEvent.setup()
     render(<EventAttachment fileUrl={null} />)
 
     const addButton = screen.getByRole('button', { name: /add attachment/i })
     await user.click(addButton)
 
-    // Button click should not throw error (handler is empty function)
+    // Should not throw error, just do nothing
     expect(addButton).toBeInTheDocument()
+  })
+
+  it('Add attachment button has type="button" to prevent form submission', () => {
+    render(<EventAttachment fileUrl={null} />)
+
+    const addButton = screen.getByRole('button', { name: /add attachment/i })
+    expect(addButton).toHaveAttribute('type', 'button')
   })
 
   it('handles getFileDetails returning null', () => {

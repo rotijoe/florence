@@ -244,6 +244,7 @@ export function EventDetail({ event, trackSlug, userId, mode }: EventDetailProps
           optimisticEvent,
           isEditing,
           handleDeleteAttachment,
+          handleUploadClick,
           isCreateMode,
           currentTitle,
           currentNotes,
@@ -402,6 +403,7 @@ function renderContent(
   event: EventResponse,
   isEditing: boolean,
   onDeleteAttachment?: () => void,
+  onAddAttachment?: () => void,
   isCreateMode?: boolean,
   currentTitle?: string,
   currentNotes?: string | null,
@@ -427,7 +429,7 @@ function renderContent(
         setCurrentTitle,
         setCurrentNotes
       )}
-      {!isCreateMode && renderAttachments(event.fileUrl, onDeleteAttachment)}
+      {!isCreateMode && renderAttachments(event.fileUrl, onDeleteAttachment, onAddAttachment)}
     </CardContent>
   )
 }
@@ -521,8 +523,12 @@ function renderAppointmentDateTime(currentDate?: string, setCurrentDate?: (value
   )
 }
 
-function renderAttachments(fileUrl: string | null | undefined, onDelete?: () => void) {
-  return <EventAttachment fileUrl={fileUrl} onDelete={onDelete} />
+function renderAttachments(
+  fileUrl: string | null | undefined,
+  onDelete?: () => void,
+  onAdd?: () => void
+) {
+  return <EventAttachment fileUrl={fileUrl} onDelete={onDelete} onAdd={onAdd} />
 }
 
 function renderFooter(event: EventResponse, isCreateMode: boolean) {
